@@ -15,6 +15,7 @@ app.use(cors({
     "https://megapodsindia.shop",
     "https://www.megapodsindia.shop",
     "http://localhost:5173"
+    
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
