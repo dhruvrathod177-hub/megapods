@@ -19,8 +19,6 @@ interface FormData {
 
 type ModalMode = "login" | "register" | "forgot" | "otp" | "reset";
 
-const API = import.meta.env.VITE_API_URL || "/api";
-
 export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: AuthModalProps) {
   const { login } = useAuth();
 
@@ -41,11 +39,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     fullName: "", contact: "", email: "", password: "", confirmPassword: "",
   });
 
-  useEffect(() => {
-    if (startOnForgot) { setCurrentMode("forgot"); }
-    else if (mode) { setCurrentMode(mode); }
-  }, [mode, startOnForgot]);
-
+  useEffect(() => { if (startOnForgot) { setCurrentMode("forgot"); } else if (mode) { setCurrentMode(mode); } }, [mode, startOnForgot]);
   useEffect(() => { setError(""); setSuccess(""); }, [currentMode]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -59,7 +53,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     if (formData.password.length < 6) { setError("Password must be at least 6 characters"); return; }
     setLoading(true);
     try {
-      const res = await fetch(`${API}/auth/register`, {
+      const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fullName: formData.fullName, contact: formData.contact, email: formData.email, password: formData.password }),
@@ -77,7 +71,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     setError("");
     setLoading(true);
     try {
-      const res = await fetch(`${API}/auth/login`, {
+      const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: formData.email, password: formData.password }),
@@ -95,7 +89,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     setError("");
     setLoading(true);
     try {
-      const res = await fetch(`${API}/auth/forgot-password`, {
+      const res = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail }),
@@ -122,7 +116,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     if (newPassword.length < 6) { setError("Password must be at least 6 characters"); return; }
     setLoading(true);
     try {
-      const res = await fetch(`${API}/auth/reset-password`, {
+      const res = await fetch("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail, otp: otpValue, newPassword }),
