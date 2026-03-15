@@ -1,10 +1,6 @@
 const BASE_URL = "https://megapods.onrender.com/api";
 
-export async function apiFetch(
-  endpoint: string,
-  options: RequestInit = {},
-  token?: string | null
-) {
+export async function apiFetch(endpoint: string, options: RequestInit = {}, token?: string | null) {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -16,7 +12,8 @@ export async function apiFetch(
     headers,
   });
 
-  const data = await res.json();
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : {};
 
   if (!res.ok) throw new Error(data.message || "Request failed");
 
