@@ -1,4 +1,4 @@
-const BASE_URL = "https://megapods-backend.onrender.com/api";
+const BASE_URL =  "https://megapods.onrender.com/api";
 
 export async function apiFetch(
   endpoint: string,
