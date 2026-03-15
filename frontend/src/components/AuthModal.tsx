@@ -49,59 +49,111 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
   const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
-    if (formData.password !== formData.confirmPassword) { setError("Passwords do not match"); return; }
-    if (formData.password.length < 6) { setError("Password must be at least 6 characters"); return; }
+  
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+  
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+  
     setLoading(true);
+  
     try {
-      const res = await fetch("/api/auth/register", {
+      const res = await fetch("https://megapods.onrender.com/api/auth/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullName: formData.fullName, contact: formData.contact, email: formData.email, password: formData.password }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fullName: formData.fullName,
+          contact: formData.contact,
+          email: formData.email,
+          password: formData.password,
+        }),
       });
+  
       const data = await res.json();
+  
       if (!res.ok) throw new Error(data.message || "Registration failed");
+  
       login(data.token, data.user);
       onClose();
-    } catch (err: any) { setError(err.message); }
-    finally { setLoading(false); }
+  
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setLoading(true);
+  
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch("https://megapods.onrender.com/api/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formData.email, password: formData.password }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
       });
+  
       const data = await res.json();
+  
       if (!res.ok) throw new Error(data.message || "Login failed");
+  
       login(data.token, data.user);
       onClose();
-    } catch (err: any) { setError(err.message); }
-    finally { setLoading(false); }
+  
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleForgotPassword = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setLoading(true);
+  
     try {
-      const res = await fetch("/api/auth/forgot-password", {
+      const res = await fetch("https://megapods.onrender.com/api/auth/forgot-password", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: forgotEmail }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: forgotEmail,
+        }),
       });
+  
       const data = await res.json();
+  
       if (!res.ok) throw new Error(data.message || "Failed to send OTP");
+  
       setSuccess("OTP sent! Please check your email inbox.");
-      setTimeout(() => { setSuccess(""); setCurrentMode("otp"); }, 2000);
-    } catch (err: any) { setError(err.message); }
-    finally { setLoading(false); }
+  
+      setTimeout(() => {
+        setSuccess("");
+        setCurrentMode("otp");
+      }, 2000);
+  
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
-
   const handleVerifyOtp = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
@@ -112,26 +164,52 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
   const handleResetPassword = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
-    if (newPassword !== confirmNewPassword) { setError("Passwords do not match"); return; }
-    if (newPassword.length < 6) { setError("Password must be at least 6 characters"); return; }
+  
+    if (newPassword !== confirmNewPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+  
+    if (newPassword.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+  
     setLoading(true);
+  
     try {
-      const res = await fetch("/api/auth/reset-password", {
+      const res = await fetch("https://megapods.onrender.com/api/auth/reset-password", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: forgotEmail, otp: otpValue, newPassword }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: forgotEmail,
+          otp: otpValue,
+          newPassword,
+        }),
       });
+  
       const data = await res.json();
+  
       if (!res.ok) throw new Error(data.message || "Reset failed");
+  
       setSuccess("Password reset successfully! Please login.");
+  
       setTimeout(() => {
         setCurrentMode("login");
-        setForgotEmail(""); setOtpValue(""); setNewPassword(""); setConfirmNewPassword("");
+        setForgotEmail("");
+        setOtpValue("");
+        setNewPassword("");
+        setConfirmNewPassword("");
       }, 2000);
-    } catch (err: any) { setError(err.message); }
-    finally { setLoading(false); }
+  
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
-
   if (!isOpen) return null;
 
   const titles: Record<ModalMode, string> = {
