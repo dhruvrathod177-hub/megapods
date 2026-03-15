@@ -197,6 +197,9 @@ export default function Header({ currentPage, onNavigate, openSignup, openForgot
             <a href="tel:+918758176693" className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg">
               <Phone size={20} /><span className="font-medium">+91 87581 76693</span>
             </a>
+            <a href="tel:+919265380907" className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg">
+              <Phone size={20} /><span className="font-medium">+91 92653 80907</span>
+            </a>
 
             {isAuthenticated ? (
               <button onClick={handleLogout}
