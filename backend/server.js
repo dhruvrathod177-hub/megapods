@@ -3,7 +3,6 @@ require("dotenv").config()
 const express   = require("express")
 const mongoose  = require("mongoose")
 const cors      = require("cors")
-app.use(cors());
 
 const authRoutes      = require("./routes/auth")
 const quotationRoutes = require("./routes/quotations")
@@ -11,7 +10,15 @@ const quotationRoutes = require("./routes/quotations")
 const app = express()
 
 /* ── CORS ── */
-app.use(cors({ origin: "http://localhost:5173" }))
+app.use(cors({
+  origin: [
+    "https://megapodsindia.shop",
+    "https://www.megapodsindia.shop",
+    "http://localhost:5173"
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}))
 
 /* ── BODY PARSER ── */
 app.use(express.json())
