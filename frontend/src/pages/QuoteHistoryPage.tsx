@@ -1,0 +1,158 @@
+import { useState, useEffect } from "react";
+import { FileText, Calendar, Package, RefreshCw, Calculator } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { apiFetch } from "../utils/api";
+
+interface SavedQuote {
+  _id: string;
+  quoteNumber: string;
+  materialType: string;
+  containerSize: string;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+  taxAmount: number;
+  total: number;
+  addons: { name: string; price: number }[];
+  createdAt: string;
+}
+
+const formatINR = (n: number) =>
+  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
+
+interface QuoteHistoryPageProps {
+  onNavigate: (page: string) => void;
+}
+
+export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) {
+  const { token } = useAuth();
+  const [quotes, setQuotes] = useState<SavedQuote[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  useEffect(() => {
+    apiFetch("/quotations/my-quotes", {}, token)
+      .then(setQuotes)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [token]);
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6">
+
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Quotation History</h1>
+            <p className="text-gray-500 mt-1">{quotes.length} saved quote{quotes.length !== 1 ? "s" : ""}</p>
+          </div>
+          <button
+            onClick={() => onNavigate("quotation")}
+            className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-5 py-3 rounded-xl font-semibold transition"
+          >
+            <Calculator size={18} /> New Quote
+          </button>
+        </div>
+
+        {/* Loading */}
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <RefreshCw size={32} className="animate-spin text-orange-400" />
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!loading && quotes.length === 0 && (
+          <div className="bg-white rounded-3xl shadow-xl p-12 text-center">
+            <div className="bg-orange-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FileText size={36} className="text-orange-300" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-400 mb-2">No quotes saved yet</h3>
+            <p className="text-gray-400 text-sm mb-6">Generate and save a quotation to see it here</p>
+            <button
+              onClick={() => onNavigate("quotation")}
+              className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-xl font-semibold transition"
+            >
+              Generate Your First Quote
+            </button>
+          </div>
+        )}
+
+        {/* Quote List */}
+        {!loading && quotes.length > 0 && (
+          <div className="space-y-4">
+            {quotes.map((quote) => (
+              <div key={quote._id} className="bg-white rounded-2xl shadow-lg overflow-hidden">
+
+                {/* Quote Row */}
+                <button
+                  onClick={() => setExpanded(expanded === quote._id ? null : quote._id)}
+                  className="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="bg-orange-100 p-3 rounded-xl">
+                      <Package size={20} className="text-orange-600" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-bold text-gray-900">{quote.quoteNumber}</p>
+                      <p className="text-sm text-gray-500">{quote.containerSize} · {quote.materialType} · Qty {quote.quantity}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-orange-600 text-lg">{formatINR(quote.total)}</p>
+                    <p className="text-xs text-gray-400 flex items-center gap-1 justify-end">
+                      <Calendar size={10} />
+                      {new Date(quote.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                    </p>
+                  </div>
+                </button>
+
+                {/* Expanded Details */}
+                {expanded === quote._id && (
+                  <div className="border-t border-gray-100 px-6 pb-6 pt-4 bg-gray-50">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-200">
+                          <th className="text-left py-2 text-gray-500 font-semibold">Item</th>
+                          <th className="text-right py-2 text-gray-500 font-semibold">Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        <tr>
+                          <td className="py-3">
+                            <p className="font-semibold text-gray-900">{quote.containerSize} Container × {quote.quantity}</p>
+                            <p className="text-xs text-gray-400">{quote.materialType}</p>
+                          </td>
+                          <td className="py-3 text-right font-semibold">{formatINR(quote.unitPrice * quote.quantity)}</td>
+                        </tr>
+                        {quote.addons?.map((addon) => (
+                          <tr key={addon.name}>
+                            <td className="py-2 text-gray-600">{addon.name}</td>
+                            <td className="py-2 text-right">{formatINR(addon.price)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+
+                    <div className="mt-4 space-y-1 pt-3 border-t border-gray-200">
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>Subtotal</span><span>{formatINR(quote.subtotal)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>GST (18%)</span><span>{formatINR(quote.taxAmount)}</span>
+                      </div>
+                      <div className="flex justify-between font-bold text-gray-900 text-base pt-2 border-t border-gray-300">
+                        <span>Total</span><span className="text-orange-600">{formatINR(quote.total)}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
