@@ -19,6 +19,8 @@ interface FormData {
 
 type ModalMode = "login" | "register" | "forgot" | "otp" | "reset";
 
+const API = import.meta.env.VITE_API_URL || "/api";
+
 export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: AuthModalProps) {
   const { login } = useAuth();
 
@@ -39,121 +41,78 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     fullName: "", contact: "", email: "", password: "", confirmPassword: "",
   });
 
-  useEffect(() => { if (startOnForgot) { setCurrentMode("forgot"); } else if (mode) { setCurrentMode(mode); } }, [mode, startOnForgot]);
+  useEffect(() => {
+    if (startOnForgot) { setCurrentMode("forgot"); }
+    else if (mode) { setCurrentMode(mode); }
+  }, [mode, startOnForgot]);
+
   useEffect(() => { setError(""); setSuccess(""); }, [currentMode]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  /* ── REGISTER — show login after, don't auto-login ── */
   const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
-  
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-  
-    if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters");
-      return;
-    }
-  
+    if (formData.password !== formData.confirmPassword) { setError("Passwords do not match"); return; }
+    if (formData.password.length < 6) { setError("Password must be at least 6 characters"); return; }
     setLoading(true);
-  
     try {
-      const res = await fetch("https://megapods.onrender.com/api/auth/register", {
+      const res = await fetch(`${API}/auth/register`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          fullName: formData.fullName,
-          contact: formData.contact,
-          email: formData.email,
-          password: formData.password,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fullName: formData.fullName, contact: formData.contact, email: formData.email, password: formData.password }),
       });
-  
       const data = await res.json();
-  
       if (!res.ok) throw new Error(data.message || "Registration failed");
-  
-      login(data.token, data.user);
-      onClose();
-  
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+      // ✅ FIX 1: Show success then redirect to login
+      setSuccess("Account created successfully! Please login.");
+      setFormData({ fullName: "", contact: "", email: formData.email, password: "", confirmPassword: "" });
+      setTimeout(() => { setSuccess(""); setCurrentMode("login"); }, 2000);
+    } catch (err: any) { setError(err.message); }
+    finally { setLoading(false); }
   };
 
+  /* ── LOGIN ── */
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setLoading(true);
-  
     try {
-      const res = await fetch("https://megapods.onrender.com/api/auth/login", {
+      const res = await fetch(`${API}/auth/login`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email, password: formData.password }),
       });
-  
       const data = await res.json();
-  
       if (!res.ok) throw new Error(data.message || "Login failed");
-  
       login(data.token, data.user);
       onClose();
-  
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err: any) { setError(err.message); }
+    finally { setLoading(false); }
   };
 
+  /* ── FORGOT PASSWORD ── */
   const handleForgotPassword = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setLoading(true);
-  
     try {
-      const res = await fetch("https://megapods.onrender.com/api/auth/forgot-password", {
+      const res = await fetch(`${API}/auth/forgot-password`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: forgotEmail,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail }),
       });
-  
       const data = await res.json();
-  
       if (!res.ok) throw new Error(data.message || "Failed to send OTP");
-  
       setSuccess("OTP sent! Please check your email inbox.");
-  
-      setTimeout(() => {
-        setSuccess("");
-        setCurrentMode("otp");
-      }, 2000);
-  
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+      setTimeout(() => { setSuccess(""); setCurrentMode("otp"); }, 2000);
+    } catch (err: any) { setError(err.message); }
+    finally { setLoading(false); }
   };
+
   const handleVerifyOtp = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
@@ -164,52 +123,26 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
   const handleResetPassword = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
-  
-    if (newPassword !== confirmNewPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-  
-    if (newPassword.length < 6) {
-      setError("Password must be at least 6 characters");
-      return;
-    }
-  
+    if (newPassword !== confirmNewPassword) { setError("Passwords do not match"); return; }
+    if (newPassword.length < 6) { setError("Password must be at least 6 characters"); return; }
     setLoading(true);
-  
     try {
-      const res = await fetch("https://megapods.onrender.com/api/auth/reset-password", {
+      const res = await fetch(`${API}/auth/reset-password`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: forgotEmail,
-          otp: otpValue,
-          newPassword,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail, otp: otpValue, newPassword }),
       });
-  
       const data = await res.json();
-  
       if (!res.ok) throw new Error(data.message || "Reset failed");
-  
       setSuccess("Password reset successfully! Please login.");
-  
       setTimeout(() => {
         setCurrentMode("login");
-        setForgotEmail("");
-        setOtpValue("");
-        setNewPassword("");
-        setConfirmNewPassword("");
+        setForgotEmail(""); setOtpValue(""); setNewPassword(""); setConfirmNewPassword("");
       }, 2000);
-  
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err: any) { setError(err.message); }
+    finally { setLoading(false); }
   };
+
   if (!isOpen) return null;
 
   const titles: Record<ModalMode, string> = {
@@ -226,7 +159,6 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden p-8">
 
-        {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-3">
             {backMode[currentMode] && (
@@ -319,7 +251,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
           </form>
         )}
 
-        {/* FORGOT PASSWORD */}
+        {/* FORGOT */}
         {currentMode === "forgot" && (
           <form className="space-y-4" onSubmit={handleForgotPassword}>
             <p className="text-gray-500 text-sm">Enter your registered email and we'll send you a 6-digit reset code.</p>
@@ -359,7 +291,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
           </form>
         )}
 
-        {/* RESET PASSWORD */}
+        {/* RESET */}
         {currentMode === "reset" && (
           <form className="space-y-4" onSubmit={handleResetPassword}>
             <p className="text-gray-500 text-sm">Enter your new password below.</p>

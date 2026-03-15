@@ -5,10 +5,8 @@ const jwt        = require("jsonwebtoken")
 const nodemailer = require("nodemailer")
 const User       = require("../models/User")
 
-/* ── In-memory OTP store ── */
 const otpStore = {}
 
-/* ── Email Transporter ── */
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -28,16 +26,8 @@ router.post("/register", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 12)
     const user = new User({ fullName, contact, email, password: hashedPassword })
     await user.save()
-    const token = jwt.sign(
-      { id: user._id, fullName: user.fullName, email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    )
-    res.status(201).json({
-      message: "Account created successfully",
-      token,
-      user: { id: user._id, fullName: user.fullName, email: user.email },
-    })
+    
+    res.status(201).json({ message: "Account created successfully" })
   } catch (err) {
     console.error("REGISTER ERROR:", err)
     res.status(500).json({ message: "Server error" })
@@ -57,14 +47,15 @@ router.post("/login", async (req, res) => {
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" })
     const token = jwt.sign(
-      { id: user._id, fullName: user.fullName, email: user.email },
+      // ✅ FIX 2: Include contact in JWT token
+      { id: user._id, fullName: user.fullName, email: user.email, contact: user.contact },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     )
     res.json({
       message: "Login successful",
       token,
-      user: { id: user._id, fullName: user.fullName, email: user.email },
+      user: { id: user._id, fullName: user.fullName, email: user.email, contact: user.contact },
     })
   } catch (err) {
     console.error("LOGIN ERROR:", err)
@@ -72,23 +63,18 @@ router.post("/login", async (req, res) => {
   }
 })
 
-/* ── FORGOT PASSWORD — send OTP via email ── */
+/* ── FORGOT PASSWORD ── */
 router.post("/forgot-password", async (req, res) => {
   try {
     const { email } = req.body
     if (!email)
       return res.status(400).json({ message: "Email is required" })
-
     const user = await User.findOne({ email })
     if (!user)
       return res.status(400).json({ message: "No account found with this email" })
-
     const otp = Math.floor(100000 + Math.random() * 900000).toString()
     otpStore[email] = { otp, expiresAt: Date.now() + 10 * 60 * 1000 }
-
     console.log(`🔑 OTP for ${email}: ${otp}`)
-
-    /* Send email */
     await transporter.sendMail({
       from: `"Megapodsindia" <${process.env.EMAIL_USER}>`,
       to: email,
@@ -112,7 +98,6 @@ router.post("/forgot-password", async (req, res) => {
         </div>
       `,
     })
-
     res.json({ message: "OTP sent to your email" })
   } catch (err) {
     console.error("FORGOT PASSWORD ERROR:", err)
@@ -126,7 +111,6 @@ router.post("/reset-password", async (req, res) => {
     const { email, otp, newPassword } = req.body
     if (!email || !otp || !newPassword)
       return res.status(400).json({ message: "All fields are required" })
-
     const record = otpStore[email]
     if (!record)
       return res.status(400).json({ message: "No OTP requested for this email" })
@@ -138,11 +122,9 @@ router.post("/reset-password", async (req, res) => {
       return res.status(400).json({ message: "Invalid OTP" })
     if (newPassword.length < 6)
       return res.status(400).json({ message: "Password must be at least 6 characters" })
-
     const hashedPassword = await bcrypt.hash(newPassword, 12)
     await User.findOneAndUpdate({ email }, { password: hashedPassword })
     delete otpStore[email]
-
     res.json({ message: "Password reset successfully" })
   } catch (err) {
     console.error("RESET PASSWORD ERROR:", err)

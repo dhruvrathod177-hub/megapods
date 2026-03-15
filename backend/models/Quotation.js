@@ -3,6 +3,9 @@ const mongoose = require("mongoose");
 const quotationSchema = new mongoose.Schema(
   {
     userId:        { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    // ✅ FIX 3: Store user name and contact in quotation
+    userName:      { type: String },
+    userContact:   { type: String },
     quoteNumber:   { type: String, required: true, unique: true },
     materialType:  { type: String, required: true },
     containerSize: { type: String, required: true },

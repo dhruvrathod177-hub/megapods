@@ -2,51 +2,48 @@ const express   = require("express");
 const router    = express.Router();
 const auth      = require("../middleware/auth");
 const Quotation = require("../models/Quotation");
+const User      = require("../models/User");
 
-/* ──────────────────────────────────────────
-   PRICING TABLES  (edit these to change rates)
-   ────────────────────────────────────────── */
 const MATERIAL_PRICES = {
-  "Standard Steel":    0,          // base — no surcharge
+  "Standard Steel":    0,
   "Corten Steel":      25000,
   "Galvanized Steel":  18000,
   "Aluminium":         35000,
 };
 
 const CONTAINER_BASE_PRICES = {
-  "10ft":  150000,
-  "20ft":  220000,
-  "40ft":  380000,
-  "40ft HC": 420000,   // High Cube
+  "10ft":    150000,
+  "20ft":    220000,
+  "40ft":    380000,
+  "40ft HC": 420000,
 };
 
 const ADDON_PRICES = {
-  "Air Conditioning":        15000,
-  "Solar Panels":            40000,
-  "Premium Insulation":      12000,
-  "Security System":         18000,
-  "Custom Branding Wrap":    20000,
+  "Air Conditioning":          15000,
+  "Solar Panels":              40000,
+  "Premium Insulation":        12000,
+  "Security System":           18000,
+  "Custom Branding Wrap":      20000,
   "Modular Furniture Package": 30000,
 };
 
-const TAX_RATE = 0.18; // 18 % GST
+const TAX_RATE = 0.18;
 
-/* ─── GET PRICING CONFIG (so frontend can build dropdowns) ─── */
+/* ── CONFIG ── */
 router.get("/config", auth, (req, res) => {
   res.json({
-    materials:  Object.keys(MATERIAL_PRICES),
-    sizes:      Object.keys(CONTAINER_BASE_PRICES),
-    addons:     Object.entries(ADDON_PRICES).map(([name, price]) => ({ name, price })),
-    taxRate:    TAX_RATE,
+    materials:          Object.keys(MATERIAL_PRICES),
+    sizes:              Object.keys(CONTAINER_BASE_PRICES),
+    addons:             Object.entries(ADDON_PRICES).map(([name, price]) => ({ name, price })),
+    taxRate:            TAX_RATE,
     materialSurcharges: MATERIAL_PRICES,
-    basePrices: CONTAINER_BASE_PRICES,
+    basePrices:         CONTAINER_BASE_PRICES,
   });
 });
 
-/* ─── CALCULATE QUOTE (preview, not saved) ─── */
+/* ── CALCULATE ── */
 router.post("/calculate", auth, (req, res) => {
   const { materialType, containerSize, quantity, selectedAddons = [] } = req.body;
-
   if (!materialType || !containerSize || !quantity)
     return res.status(400).json({ message: "Missing required fields" });
 
@@ -54,49 +51,38 @@ router.post("/calculate", auth, (req, res) => {
   const materialExtra = MATERIAL_PRICES[materialType] ?? 0;
   const unitPrice     = basePrice + materialExtra;
 
-  const addonBreakdown = selectedAddons.map((name) => ({
-    name,
-    price: ADDON_PRICES[name] ?? 0,
-  }));
-  const addonTotal = addonBreakdown.reduce((s, a) => s + a.price, 0);
+  const addonBreakdown = selectedAddons.map((name) => ({ name, price: ADDON_PRICES[name] ?? 0 }));
+  const addonTotal     = addonBreakdown.reduce((s, a) => s + a.price, 0);
+  const subtotal       = unitPrice * quantity + addonTotal;
+  const taxAmount      = parseFloat((subtotal * TAX_RATE).toFixed(2));
+  const total          = parseFloat((subtotal + taxAmount).toFixed(2));
 
-  const subtotal  = unitPrice * quantity + addonTotal;
-  const taxAmount = parseFloat((subtotal * TAX_RATE).toFixed(2));
-  const total     = parseFloat((subtotal + taxAmount).toFixed(2));
-
-  res.json({
-    materialType,
-    containerSize,
-    quantity,
-    unitPrice,
-    addonBreakdown,
-    addonTotal,
-    subtotal,
-    taxRate: TAX_RATE,
-    taxAmount,
-    total,
-  });
+  res.json({ materialType, containerSize, quantity, unitPrice, addonBreakdown, addonTotal, subtotal, taxRate: TAX_RATE, taxAmount, total });
 });
 
-/* ─── SAVE QUOTE ─── */
+/* ── SAVE QUOTE ── */
 router.post("/save", auth, async (req, res) => {
   try {
     const { materialType, containerSize, quantity, selectedAddons = [] } = req.body;
+
+    // ✅ FIX 3: Fetch user details to store in quotation
+    const user = await User.findById(req.user.id);
 
     const basePrice     = CONTAINER_BASE_PRICES[containerSize] ?? 0;
     const materialExtra = MATERIAL_PRICES[materialType] ?? 0;
     const unitPrice     = basePrice + materialExtra;
 
-    const addons    = selectedAddons.map((name) => ({ name, price: ADDON_PRICES[name] ?? 0 }));
+    const addons     = selectedAddons.map((name) => ({ name, price: ADDON_PRICES[name] ?? 0 }));
     const addonTotal = addons.reduce((s, a) => s + a.price, 0);
-    const subtotal  = unitPrice * quantity + addonTotal;
-    const taxAmount = parseFloat((subtotal * TAX_RATE).toFixed(2));
-    const total     = parseFloat((subtotal + taxAmount).toFixed(2));
-
+    const subtotal   = unitPrice * quantity + addonTotal;
+    const taxAmount  = parseFloat((subtotal * TAX_RATE).toFixed(2));
+    const total      = parseFloat((subtotal + taxAmount).toFixed(2));
     const quoteNumber = `MPI-${Date.now()}`;
 
     const quotation = new Quotation({
-      userId: req.user.id,
+      userId:      req.user.id,
+      userName:    user?.fullName || req.user.fullName,
+      userContact: user?.contact  || "",
       quoteNumber,
       materialType,
       containerSize,
@@ -116,7 +102,7 @@ router.post("/save", auth, async (req, res) => {
   }
 });
 
-/* ─── GET USER'S SAVED QUOTES ─── */
+/* ── MY QUOTES ── */
 router.get("/my-quotes", auth, async (req, res) => {
   try {
     const quotes = await Quotation.find({ userId: req.user.id }).sort({ createdAt: -1 });

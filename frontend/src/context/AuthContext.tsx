@@ -1,9 +1,10 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 interface User {
+  id: string;
   fullName: string;
   email: string;
-  phone?: string;
+  contact?: string; // ✅ FIX 2: Added contact field
 }
 
 interface AuthContextType {
@@ -20,7 +21,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user,  setUser]  = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
-  // Restore session on page load
   useEffect(() => {
     const savedToken = localStorage.getItem("mp_token");
     const savedUser  = localStorage.getItem("mp_user");
