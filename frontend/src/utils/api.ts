@@ -1,4 +1,4 @@
-const BASE_URL = "/api";
+const BASE_URL = "https://dhruvrathod177-hub-megapods.onrender.com/api";
 
 export async function apiFetch(
   endpoint: string,
@@ -11,9 +11,14 @@ export async function apiFetch(
     ...(options.headers as Record<string, string> || {}),
   };
 
-  const res = await fetch(`${BASE_URL}${endpoint}`, { ...options, headers });
+  const res = await fetch(`${BASE_URL}${endpoint}`, {
+    ...options,
+    headers,
+  });
+
   const data = await res.json();
 
   if (!res.ok) throw new Error(data.message || "Request failed");
+
   return data;
 }
