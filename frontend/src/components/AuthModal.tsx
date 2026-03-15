@@ -19,7 +19,7 @@ interface FormData {
 
 type ModalMode = "login" | "register" | "forgot" | "otp" | "reset";
 
-const API = import.meta.env.VITE_API_URL || "/api";
+const API = import.meta.env.VITE_API_URL || "https://megapods-backend.onrender.com/api";
 
 export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: AuthModalProps) {
   const { login } = useAuth();
