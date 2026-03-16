@@ -1,4 +1,49 @@
 import { Target, Eye, Lightbulb, Shield, Zap, Heart, ArrowRight } from 'lucide-react';
+import { useRef } from 'react';
+
+type HTMLTag = 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'span' | 'div';
+
+interface Heading3DProps {
+  children: React.ReactNode;
+  className?: string;
+  tag?: HTMLTag;
+}
+
+function Heading3D({ children, className = '', tag: Tag = 'h2' }: Heading3DProps) {
+  const ref = useRef<HTMLElement>(null);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+    const rotateX = ((y - cy) / cy) * -10;
+    const rotateY = ((x - cx) / cx) * 14;
+    el.style.transform = `perspective(600px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.04)`;
+    el.style.textShadow = `${-rotateY * 0.6}px ${rotateX * 0.6}px 18px rgba(234,88,12,0.22), 0 2px 32px rgba(0,0,0,0.10)`;
+  };
+
+  const handleMouseLeave = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.transform = 'perspective(600px) rotateX(0deg) rotateY(0deg) scale(1)';
+    el.style.textShadow = 'none';
+  };
+
+  return (
+    <Tag
+      ref={ref as React.RefObject<HTMLHeadingElement>}
+      className={`heading-3d ${className}`}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      {children}
+    </Tag>
+  );
+}
 
 interface AboutProps {
   onNavigate: (page: string) => void;
@@ -43,13 +88,13 @@ export default function About({ onNavigate }: AboutProps) {
 
           <div className="text-center mb-12">
 
-            <h1 className={`text-4xl sm:text-5xl font-bold text-gray-900 mb-6 ${hover3D}`}>
+            <Heading3D tag="h1" className={`text-4xl sm:text-5xl font-bold text-gray-900 mb-6 ${hover3D}`}>
               About <span className="text-orange-600">Megapodsindia</span>
-            </h1>
+            </Heading3D>
 
-            <p className={`text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed ${hover3D}`}>
+            <Heading3D tag="p" className={`text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed ${hover3D}`}>
               We are pioneers in the container conversion industry, bringing innovative modular solutions to businesses across India.
-            </p>
+            </Heading3D>
 
           </div>
 
@@ -78,21 +123,21 @@ export default function About({ onNavigate }: AboutProps) {
 
             <div>
 
-              <h2 className={`text-3xl font-bold text-gray-900 mb-6 ${hover3D}`}>
+              <Heading3D tag="h2" className={`text-3xl font-bold text-gray-900 mb-6 ${hover3D}`}>
                 Transforming Containers into Possibilities
-              </h2>
+              </Heading3D>
 
-              <p className={`text-gray-600 leading-relaxed mb-4 ${hover3D}`}>
+              <Heading3D tag="p" className={`text-gray-600 leading-relaxed mb-4 ${hover3D}`}>
                 Megapods India is a leading provider of premium container conversion solutions based in Surat, Gujarat.
-              </p>
+              </Heading3D>
 
-              <p className={`text-gray-600 leading-relaxed mb-4 ${hover3D}`}>
+              <Heading3D tag="p" className={`text-gray-600 leading-relaxed mb-4 ${hover3D}`}>
                 Our expertise spans across container cafes, offices, public toilets, and custom modular structures.
-              </p>
+              </Heading3D>
 
-              <p className={`text-gray-600 leading-relaxed mb-6 ${hover3D}`}>
+              <Heading3D tag="p" className={`text-gray-600 leading-relaxed mb-6 ${hover3D}`}>
                 Our team comprises experienced professionals who understand the nuances of modular construction.
-              </p>
+              </Heading3D>
 
               <button
                 onClick={() => onNavigate('solutions')}
@@ -125,13 +170,13 @@ export default function About({ onNavigate }: AboutProps) {
                 <Target className="text-orange-600" size={32} />
               </div>
 
-              <h2 className={`text-2xl font-bold text-gray-900 mb-4 ${hover3D}`}>
+              <Heading3D tag="h2" className={`text-2xl font-bold text-gray-900 mb-4 ${hover3D}`}>
                 Our Mission
-              </h2>
+              </Heading3D>
 
-              <p className={`text-gray-600 leading-relaxed ${hover3D}`}>
+              <Heading3D tag="p" className={`text-gray-600 leading-relaxed ${hover3D}`}>
                 To revolutionize the way businesses think about space by providing high-quality container solutions.
-              </p>
+              </Heading3D>
 
             </div>
 
@@ -141,13 +186,13 @@ export default function About({ onNavigate }: AboutProps) {
                 <Eye className="text-orange-600" size={32} />
               </div>
 
-              <h2 className={`text-2xl font-bold text-gray-900 mb-4 ${hover3D}`}>
+              <Heading3D tag="h2" className={`text-2xl font-bold text-gray-900 mb-4 ${hover3D}`}>
                 Our Vision
-              </h2>
+              </Heading3D>
 
-              <p className={`text-gray-600 leading-relaxed ${hover3D}`}>
+              <Heading3D tag="p" className={`text-gray-600 leading-relaxed ${hover3D}`}>
                 To become India's leading provider of innovative container conversion solutions.
-              </p>
+              </Heading3D>
 
             </div>
 
@@ -166,13 +211,13 @@ export default function About({ onNavigate }: AboutProps) {
 
           <div className="text-center mb-12">
 
-            <h2 className={`text-3xl sm:text-4xl font-bold text-gray-900 mb-4 ${hover3D}`}>
+            <Heading3D tag="h2" className={`text-3xl sm:text-4xl font-bold text-gray-900 mb-4 ${hover3D}`}>
               Our Core Values
-            </h2>
+            </Heading3D>
 
-            <p className={`text-lg text-gray-600 max-w-2xl mx-auto ${hover3D}`}>
+            <Heading3D tag="p" className={`text-lg text-gray-600 max-w-2xl mx-auto ${hover3D}`}>
               The principles that guide every decision we make
-            </p>
+            </Heading3D>
 
           </div>
 
@@ -186,13 +231,13 @@ export default function About({ onNavigate }: AboutProps) {
                   <value.icon className="text-orange-600" size={28} />
                 </div>
 
-                <h3 className={`text-xl font-bold text-gray-900 mb-3 ${hover3D}`}>
+                <Heading3D tag="h3" className={`text-xl font-bold text-gray-900 mb-3 ${hover3D}`}>
                   {value.title}
-                </h3>
+                </Heading3D>
 
-                <p className={`text-gray-600 leading-relaxed ${hover3D}`}>
+                <Heading3D tag="p" className={`text-gray-600 leading-relaxed ${hover3D}`}>
                   {value.description}
-                </p>
+                </Heading3D>
 
               </div>
 
