@@ -10,15 +10,12 @@ const User       = require("../models/User")
 const otpStore = {}
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
+  host: process.env.BREVO_SMTP_HOST,
+  port: parseInt(process.env.BREVO_SMTP_PORT),
+  secure: false,
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
+    user: process.env.BREVO_SMTP_USER,
+    pass: process.env.BREVO_SMTP_PASS,
   },
 })
 
@@ -81,7 +78,7 @@ router.post("/forgot-password", async (req, res) => {
     otpStore[email] = { otp, expiresAt: Date.now() + 10 * 60 * 1000 }
     console.log(`🔑 OTP for ${email}: ${otp}`)
     await transporter.sendMail({
-      from: `"Megapodsindia" <${process.env.EMAIL_USER}>`,
+      from: '"Megapodsindia" <dhruvrathod177@gmail.com>',
       to: email,
       subject: "Your Password Reset OTP - Megapodsindia",
       html: `
@@ -106,7 +103,7 @@ router.post("/forgot-password", async (req, res) => {
     res.json({ message: "OTP sent to your email" })
   } catch (err) {
     console.error("FORGOT PASSWORD ERROR:", err)
-    res.status(500).json({ message: "Failed to send email. Check EMAIL_USER and EMAIL_PASS in .env" })
+    res.status(500).json({ message: "Failed to send email. Check BREVO SMTP credentials in env" })
   }
 })
 
