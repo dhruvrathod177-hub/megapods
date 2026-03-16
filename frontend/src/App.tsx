@@ -14,7 +14,8 @@ import QuoteHistoryPage from "./pages/QuoteHistoryPage";
 import Footer from "./components/Footer";
 import WhatsAppButton from "./components/WhatsAppButton";
 
-const PROTECTED_PAGES = ["home", "about", "solutions", "gallery", "contact", "quotation", "account", "quote-history"];
+// ✅ Only these pages require login
+const PROTECTED_PAGES = ["quotation", "account", "quote-history"];
 
 function AppInner() {
   const [currentPage, setCurrentPage] = useState("home");
@@ -41,9 +42,16 @@ function AppInner() {
       }
     };
 
+    // Only protect quotation, account and quote-history
     if (PROTECTED_PAGES.includes(currentPage)) {
-      return <ProtectedRoute onOpenLogin={openLogin}>{pageContent()}</ProtectedRoute>;
+      return (
+        <ProtectedRoute onOpenLogin={openLogin}>
+          {pageContent()}
+        </ProtectedRoute>
+      );
     }
+
+    // All other pages are public — no login required
     return pageContent();
   };
 
