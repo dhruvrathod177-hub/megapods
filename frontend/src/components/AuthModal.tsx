@@ -21,13 +21,11 @@ type ModalMode = "login" | "register" | "forgot" | "otp" | "reset";
 const API = import.meta.env.VITE_API_URL || "https://megapods.onrender.com/api";
 
 export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: AuthModalProps) {
+
   const { login } = useAuth();
 
   const [currentMode, setCurrentMode] = useState<ModalMode>("login");
-  const [] = useState(false);
-  const [] = useState(false);
-  const [] = useState(false);
-  const [, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -54,17 +52,17 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     setSuccess("");
   }, [currentMode]);
 
-
-  /* REGISTER */
-
   /* LOGIN */
+
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
+
     e.preventDefault();
 
     setLoading(true);
     setError("");
 
     try {
+
       const res = await fetch(`${API}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -81,21 +79,35 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
       login(data.token, data.user);
 
       onClose();
+
     } catch (err: any) {
+
       setError(err.message);
+
     } finally {
+
       setLoading(false);
+
     }
+
   };
 
-  /* SEND OTP EMAIL */
+  /* SEND OTP */
+
   const handleForgotPassword = async (e: FormEvent<HTMLFormElement>) => {
+
     e.preventDefault();
+
+    if (!forgotEmail) {
+      setError("Email is required");
+      return;
+    }
 
     setLoading(true);
     setError("");
 
     try {
+
       const res = await fetch(`${API}/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -113,15 +125,23 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
       setTimeout(() => {
         setCurrentMode("otp");
       }, 1500);
+
     } catch (err: any) {
+
       setError(err.message);
+
     } finally {
+
       setLoading(false);
+
     }
+
   };
 
   /* VERIFY OTP */
+
   const handleVerifyOtp = (e: FormEvent<HTMLFormElement>) => {
+
     e.preventDefault();
 
     if (otpValue.length !== 6) {
@@ -130,10 +150,13 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     }
 
     setCurrentMode("reset");
+
   };
 
   /* RESET PASSWORD */
+
   const handleResetPassword = async (e: FormEvent<HTMLFormElement>) => {
+
     e.preventDefault();
 
     if (newPassword !== confirmNewPassword) {
@@ -144,6 +167,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     setLoading(true);
 
     try {
+
       const res = await fetch(`${API}/auth/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -161,37 +185,49 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
       setSuccess("Password reset successful");
 
       setTimeout(() => {
+
         setCurrentMode("login");
         setForgotEmail("");
         setOtpValue("");
+
       }, 2000);
+
     } catch (err: any) {
+
       setError(err.message);
+
     } finally {
+
       setLoading(false);
+
     }
+
   };
 
   if (!isOpen) return null;
 
   return (
+
     <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
 
       <div className="bg-white p-8 rounded-3xl w-full max-w-md">
 
         <h2 className="text-2xl font-bold mb-4 text-center">
+
           {currentMode === "login" && "Welcome Back"}
-          {currentMode === "register" && "Create Account"}
           {currentMode === "forgot" && "Forgot Password"}
           {currentMode === "otp" && "Enter OTP"}
           {currentMode === "reset" && "Reset Password"}
+
         </h2>
 
         {error && <p className="text-red-500 mb-3">{error}</p>}
         {success && <p className="text-green-600 mb-3">{success}</p>}
 
         {/* LOGIN */}
+
         {currentMode === "login" && (
+
           <form onSubmit={handleLogin} className="space-y-4">
 
             <input
@@ -212,30 +248,29 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
               className="w-full border p-3 rounded-xl"
             />
 
-            <button className="w-full bg-orange-600 text-white py-3 rounded-xl">
-              Login
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-orange-600 text-white py-3 rounded-xl"
+            >
+              {loading ? "Logging in..." : "Login"}
             </button>
 
-            <p className="text-sm text-center cursor-pointer text-orange-600"
-               onClick={()=>setCurrentMode("forgot")}>
+            <p
+              className="text-sm text-center cursor-pointer text-orange-600"
+              onClick={()=>setCurrentMode("forgot")}
+            >
               Forgot Password?
             </p>
 
-            <p className="text-sm text-center">
-              Don't have account?
-              <span
-                className="text-orange-600 cursor-pointer"
-                onClick={()=>setCurrentMode("register")}
-              >
-                Register
-              </span>
-            </p>
-
           </form>
+
         )}
 
         {/* FORGOT EMAIL */}
+
         {currentMode === "forgot" && (
+
           <form onSubmit={handleForgotPassword} className="space-y-4">
 
             <input
@@ -247,15 +282,22 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
               className="w-full border p-3 rounded-xl"
             />
 
-            <button className="w-full bg-orange-600 text-white py-3 rounded-xl">
-              Send OTP
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-orange-600 text-white py-3 rounded-xl"
+            >
+              {loading ? "Sending OTP..." : "Send OTP"}
             </button>
 
           </form>
+
         )}
 
         {/* OTP */}
+
         {currentMode === "otp" && (
+
           <form onSubmit={handleVerifyOtp} className="space-y-4">
 
             <input
@@ -267,15 +309,21 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
               className="w-full border p-3 rounded-xl text-center"
             />
 
-            <button className="w-full bg-orange-600 text-white py-3 rounded-xl">
+            <button
+              type="submit"
+              className="w-full bg-orange-600 text-white py-3 rounded-xl"
+            >
               Verify OTP
             </button>
 
           </form>
+
         )}
 
         {/* RESET */}
+
         {currentMode === "reset" && (
+
           <form onSubmit={handleResetPassword} className="space-y-4">
 
             <input
@@ -296,14 +344,20 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
               className="w-full border p-3 rounded-xl"
             />
 
-            <button className="w-full bg-orange-600 text-white py-3 rounded-xl">
+            <button
+              type="submit"
+              className="w-full bg-orange-600 text-white py-3 rounded-xl"
+            >
               Reset Password
             </button>
 
           </form>
+
         )}
 
       </div>
+
     </div>
+
   );
 }
