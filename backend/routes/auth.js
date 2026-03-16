@@ -1,25 +1,12 @@
-const express    = require("express")
-const router     = express.Router()
-const bcrypt     = require("bcryptjs")
-const jwt        = require("jsonwebtoken")
-const nodemailer = require("nodemailer")
-const User       = require("../models/User")
+const express = require("express")
+const router  = require("express").Router()
+const bcrypt  = require("bcryptjs")
+const jwt     = require("jsonwebtoken")
+const { Resend } = require("resend")
+const User    = require("../models/User")
 
 const otpStore = {}
-
-/* ── SMTP port 587 (TLS) — works on Render free tier ── */
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-})
+const resend   = new Resend(process.env.RESEND_API_KEY)
 
 /* ── REGISTER ── */
 router.post("/register", async (req, res) => {
@@ -73,14 +60,17 @@ router.post("/forgot-password", async (req, res) => {
     const { email } = req.body
     if (!email)
       return res.status(400).json({ message: "Email is required" })
+
     const user = await User.findOne({ email })
     if (!user)
       return res.status(400).json({ message: "No account found with this email" })
+
     const otp = Math.floor(100000 + Math.random() * 900000).toString()
     otpStore[email] = { otp, expiresAt: Date.now() + 10 * 60 * 1000 }
     console.log(`🔑 OTP for ${email}: ${otp}`)
-    await transporter.sendMail({
-      from: `"Megapodsindia" <${process.env.EMAIL_USER}>`,
+
+    await resend.emails.send({
+      from: "Megapodsindia <onboarding@resend.dev>",
       to: email,
       subject: "Your Password Reset OTP - Megapodsindia",
       html: `
@@ -102,10 +92,11 @@ router.post("/forgot-password", async (req, res) => {
         </div>
       `,
     })
+
     res.json({ message: "OTP sent to your email" })
   } catch (err) {
     console.error("FORGOT PASSWORD ERROR:", err)
-    res.status(500).json({ message: "Failed to send email. Check EMAIL_USER and EMAIL_PASS in .env" })
+    res.status(500).json({ message: "Failed to send OTP. Please try again." })
   }
 })
 
