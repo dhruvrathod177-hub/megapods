@@ -110,10 +110,12 @@ router.post("/forgot-password", async (req, res) => {
     console.log(`OTP for ${phone}: ${otp}`)
 
     const response = await axios.get("https://www.fast2sms.com/dev/bulkV2", {
+      headers: {
+        authorization: process.env.FAST2SMS_API_KEY
+      },
       params: {
-        authorization: process.env.FAST2SMS_API_KEY,
-        variables_values: otp,
         route: "otp",
+        variables_values: otp,
         numbers: phone
       }
     })
@@ -125,7 +127,7 @@ router.post("/forgot-password", async (req, res) => {
     })
 
   } catch (err) {
-    console.error("FORGOT PASSWORD ERROR:", err)
+    console.error("FORGOT PASSWORD ERROR:", err.response?.data || err.message)
     res.status(500).json({ message: "Failed to send OTP. Please try again." })
   }
 })
