@@ -3,11 +3,11 @@ const router = express.Router()
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
 const axios = require("axios")
-const { Resend } = require("resend")
+
 const User = require("../models/User")
 
 const otpStore = {}
-const resend = new Resend(process.env.RESEND_API_KEY)
+
 
 /* ── REGISTER ── */
 router.post("/register", async (req, res) => {
