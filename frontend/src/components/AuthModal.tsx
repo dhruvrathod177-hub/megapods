@@ -32,7 +32,8 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const [forgotEmail, setForgotEmail] = useState("");
+  // Phone-based forgot password
+  const [forgotPhone, setForgotPhone] = useState("");
   const [otpValue, setOtpValue] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
@@ -52,7 +53,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  /* ── REGISTER — show login after, don't auto-login ── */
+  /* ── REGISTER ── */
   const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
@@ -67,7 +68,6 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Registration failed");
-      // ✅ FIX 1: Show success then redirect to login
       setSuccess("Account created successfully! Please login.");
       setFormData({ fullName: "", contact: "", email: formData.email, password: "", confirmPassword: "" });
       setTimeout(() => { setSuccess(""); setCurrentMode("login"); }, 2000);
@@ -94,25 +94,27 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     finally { setLoading(false); }
   };
 
-  /* ── FORGOT PASSWORD ── */
+  /* ── FORGOT PASSWORD — phone OTP ── */
   const handleForgotPassword = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
+    if (forgotPhone.length < 10) { setError("Please enter a valid 10-digit phone number"); return; }
     setLoading(true);
     try {
       const res = await fetch(`${API}/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: forgotEmail }),
+        body: JSON.stringify({ phone: forgotPhone }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to send OTP");
-      setSuccess("OTP sent! Please check your email inbox.");
+      setSuccess(`OTP sent to +91 ${forgotPhone}! Check your messages.`);
       setTimeout(() => { setSuccess(""); setCurrentMode("otp"); }, 2000);
     } catch (err: any) { setError(err.message); }
     finally { setLoading(false); }
   };
 
+  /* ── VERIFY OTP ── */
   const handleVerifyOtp = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
@@ -120,6 +122,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     setCurrentMode("reset");
   };
 
+  /* ── RESET PASSWORD ── */
   const handleResetPassword = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
@@ -130,14 +133,14 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
       const res = await fetch(`${API}/auth/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: forgotEmail, otp: otpValue, newPassword }),
+        body: JSON.stringify({ phone: forgotPhone, otp: otpValue, newPassword }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Reset failed");
       setSuccess("Password reset successfully! Please login.");
       setTimeout(() => {
         setCurrentMode("login");
-        setForgotEmail(""); setOtpValue(""); setNewPassword(""); setConfirmNewPassword("");
+        setForgotPhone(""); setOtpValue(""); setNewPassword(""); setConfirmNewPassword("");
       }, 2000);
     } catch (err: any) { setError(err.message); }
     finally { setLoading(false); }
@@ -159,6 +162,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden p-8">
 
+        {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-3">
             {backMode[currentMode] && (
@@ -191,7 +195,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
               </span>
             </div>
             <div className="text-right -mt-2">
-              <button type="button" onClick={() => { setCurrentMode("forgot"); setForgotEmail(formData.email); }}
+              <button type="button" onClick={() => setCurrentMode("forgot")}
                 className="text-sm text-orange-600 hover:text-orange-700 font-semibold">
                 Forgot Password?
               </button>
@@ -214,7 +218,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
               value={formData.fullName} onChange={handleChange}
               className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none"
             />
-            <input type="tel" name="contact" placeholder="Contact Number" required
+            <input type="tel" name="contact" placeholder="Contact Number (10 digits)" required
               value={formData.contact} onChange={handleChange}
               className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none"
             />
@@ -251,17 +255,25 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
           </form>
         )}
 
-        {/* FORGOT */}
+        {/* FORGOT PASSWORD — phone number */}
         {currentMode === "forgot" && (
           <form className="space-y-4" onSubmit={handleForgotPassword}>
-            <p className="text-gray-500 text-sm">Enter your registered email and we'll send you a 6-digit reset code.</p>
-            <input type="email" placeholder="Email Address" required
-              value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)}
-              className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none"
-            />
+            <p className="text-gray-500 text-sm">Enter your registered phone number and we'll send you a 6-digit OTP via SMS.</p>
+            <div className="flex gap-2">
+              <div className="bg-gray-50 border border-gray-200 rounded-2xl px-4 flex items-center text-gray-500 font-medium text-sm">
+                +91
+              </div>
+              <input
+                type="tel" placeholder="10-digit phone number" required
+                maxLength={10}
+                value={forgotPhone}
+                onChange={(e) => setForgotPhone(e.target.value.replace(/\D/g, ""))}
+                className="flex-1 p-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none"
+              />
+            </div>
             <button type="submit" disabled={loading}
               className="w-full bg-orange-600 hover:bg-orange-700 disabled:opacity-60 text-white py-4 rounded-2xl font-bold shadow-lg transition">
-              {loading ? "Sending OTP…" : "Send Reset Code"}
+              {loading ? "Sending OTP…" : "Send OTP via SMS"}
             </button>
             <p className="text-center text-sm text-gray-500">
               Remember password?{" "}
@@ -274,7 +286,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
         {currentMode === "otp" && (
           <form className="space-y-4" onSubmit={handleVerifyOtp}>
             <p className="text-gray-500 text-sm">
-              Enter the 6-digit code sent to <span className="font-semibold text-gray-800">{forgotEmail}</span>
+              Enter the 6-digit OTP sent to <span className="font-semibold text-gray-800">+91 {forgotPhone}</span>
             </p>
             <input type="text" placeholder="Enter OTP" required maxLength={6}
               value={otpValue} onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, ""))}
@@ -282,7 +294,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
             />
             <button type="submit"
               className="w-full bg-orange-600 hover:bg-orange-700 text-white py-4 rounded-2xl font-bold shadow-lg transition">
-              Verify Code
+              Verify OTP
             </button>
             <p className="text-center text-sm text-gray-500">
               Didn't get it?{" "}
@@ -291,7 +303,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
           </form>
         )}
 
-        {/* RESET */}
+        {/* RESET PASSWORD */}
         {currentMode === "reset" && (
           <form className="space-y-4" onSubmit={handleResetPassword}>
             <p className="text-gray-500 text-sm">Enter your new password below.</p>

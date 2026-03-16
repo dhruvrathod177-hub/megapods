@@ -1,9 +1,10 @@
-const express = require("express")
-const router  = require("express").Router()
-const bcrypt  = require("bcryptjs")
-const jwt     = require("jsonwebtoken")
+const express    = require("express")
+const router     = express.Router()
+const bcrypt     = require("bcryptjs")
+const jwt        = require("jsonwebtoken")
+const axios      = require("axios")
 const { Resend } = require("resend")
-const User    = require("../models/User")
+const User       = require("../models/User")
 
 const otpStore = {}
 const resend   = new Resend(process.env.RESEND_API_KEY)
@@ -54,72 +55,70 @@ router.post("/login", async (req, res) => {
   }
 })
 
-/* ── FORGOT PASSWORD ── */
+/* ── FORGOT PASSWORD — send OTP via SMS to phone number ── */
 router.post("/forgot-password", async (req, res) => {
   try {
-    const { email } = req.body
-    if (!email)
-      return res.status(400).json({ message: "Email is required" })
+    const { phone } = req.body
+    if (!phone)
+      return res.status(400).json({ message: "Phone number is required" })
 
-    const user = await User.findOne({ email })
+    // Find user by contact number
+    const user = await User.findOne({ contact: phone })
     if (!user)
-      return res.status(400).json({ message: "No account found with this email" })
+      return res.status(400).json({ message: "No account found with this phone number" })
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString()
-    otpStore[email] = { otp, expiresAt: Date.now() + 10 * 60 * 1000 }
-    console.log(`🔑 OTP for ${email}: ${otp}`)
+    // Store OTP against phone number
+    otpStore[phone] = { otp, email: user.email, expiresAt: Date.now() + 10 * 60 * 1000 }
+    console.log(`🔑 OTP for ${phone}: ${otp}`)
 
-    await resend.emails.send({
-      from: "Megapodsindia <onboarding@resend.dev>",
-      to: email,
-      subject: "Your Password Reset OTP - Megapodsindia",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px; border: 1px solid #e5e7eb; border-radius: 12px;">
-          <div style="text-align: center; margin-bottom: 24px;">
-            <h2 style="color: #ea580c; margin: 0;">Megapodsindia</h2>
-            <p style="color: #6b7280; margin: 4px 0;">Password Reset Request</p>
-          </div>
-          <p style="color: #374151;">Hello <strong>${user.fullName}</strong>,</p>
-          <p style="color: #374151;">We received a request to reset your password. Use the OTP below:</p>
-          <div style="background: #fff7ed; border: 2px solid #ea580c; border-radius: 12px; padding: 24px; text-align: center; margin: 24px 0;">
-            <p style="margin: 0; color: #6b7280; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Your OTP</p>
-            <p style="margin: 8px 0 0; font-size: 42px; font-weight: bold; color: #ea580c; letter-spacing: 8px;">${otp}</p>
-          </div>
-          <p style="color: #6b7280; font-size: 13px;">⏱ This OTP is valid for <strong>10 minutes</strong>.</p>
-          <p style="color: #6b7280; font-size: 13px;">If you didn't request this, please ignore this email.</p>
-          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
-          <p style="color: #9ca3af; font-size: 12px; text-align: center;">© 2025 Megapodsindia · Surat, Gujarat, India</p>
-        </div>
-      `,
+    // Send SMS via Fast2SMS
+    const response = await axios.get("https://www.fast2sms.com/dev/bulkV2", {
+      params: {
+        authorization: process.env.FAST2SMS_API_KEY,
+        variables_values: otp,
+        route: "otp",
+        numbers: phone,
+      },
     })
 
-    res.json({ message: "OTP sent to your email" })
+    console.log("Fast2SMS response:", response.data)
+
+    if (response.data.return === false) {
+      throw new Error(response.data.message || "SMS sending failed")
+    }
+
+    res.json({ message: "OTP sent to your phone number" })
   } catch (err) {
     console.error("FORGOT PASSWORD ERROR:", err)
     res.status(500).json({ message: "Failed to send OTP. Please try again." })
   }
 })
 
-/* ── RESET PASSWORD ── */
+/* ── RESET PASSWORD — verify OTP + update password ── */
 router.post("/reset-password", async (req, res) => {
   try {
-    const { email, otp, newPassword } = req.body
-    if (!email || !otp || !newPassword)
+    const { phone, otp, newPassword } = req.body
+    if (!phone || !otp || !newPassword)
       return res.status(400).json({ message: "All fields are required" })
-    const record = otpStore[email]
+
+    const record = otpStore[phone]
     if (!record)
-      return res.status(400).json({ message: "No OTP requested for this email" })
+      return res.status(400).json({ message: "No OTP requested for this phone number" })
     if (Date.now() > record.expiresAt) {
-      delete otpStore[email]
+      delete otpStore[phone]
       return res.status(400).json({ message: "OTP expired. Please request a new one." })
     }
     if (record.otp !== otp)
       return res.status(400).json({ message: "Invalid OTP" })
     if (newPassword.length < 6)
       return res.status(400).json({ message: "Password must be at least 6 characters" })
+
     const hashedPassword = await bcrypt.hash(newPassword, 12)
-    await User.findOneAndUpdate({ email }, { password: hashedPassword })
-    delete otpStore[email]
+    // Update password using email stored in OTP record
+    await User.findOneAndUpdate({ email: record.email }, { password: hashedPassword })
+    delete otpStore[phone]
+
     res.json({ message: "Password reset successfully" })
   } catch (err) {
     console.error("RESET PASSWORD ERROR:", err)
