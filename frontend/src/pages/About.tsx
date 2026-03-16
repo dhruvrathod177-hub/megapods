@@ -92,9 +92,9 @@ export default function About({ onNavigate }: AboutProps) {
               About <span className="text-orange-600">Megapodsindia</span>
             </Heading3D>
 
-            <Heading3D tag="p" className={`text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed ${hover3D}`}>
+            <p className={`text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed ${hover3D}`}>
               We are pioneers in the container conversion industry, bringing innovative modular solutions to businesses across India.
-            </Heading3D>
+            </p>
 
           </div>
 
@@ -127,17 +127,17 @@ export default function About({ onNavigate }: AboutProps) {
                 Transforming Containers into Possibilities
               </Heading3D>
 
-              <Heading3D tag="p" className={`text-gray-600 leading-relaxed mb-4 ${hover3D}`}>
+              <p className={`text-gray-600 leading-relaxed mb-4 ${hover3D}`}>
                 Megapods India is a leading provider of premium container conversion solutions based in Surat, Gujarat.
-              </Heading3D>
+              </p>
 
-              <Heading3D tag="p" className={`text-gray-600 leading-relaxed mb-4 ${hover3D}`}>
+              <p className={`text-gray-600 leading-relaxed mb-4 ${hover3D}`}>
                 Our expertise spans across container cafes, offices, public toilets, and custom modular structures.
-              </Heading3D>
+              </p>
 
-              <Heading3D tag="p" className={`text-gray-600 leading-relaxed mb-6 ${hover3D}`}>
+              <p className={`text-gray-600 leading-relaxed mb-6 ${hover3D}`}>
                 Our team comprises experienced professionals who understand the nuances of modular construction.
-              </Heading3D>
+              </p>
 
               <button
                 onClick={() => onNavigate('solutions')}
@@ -174,9 +174,9 @@ export default function About({ onNavigate }: AboutProps) {
                 Our Mission
               </Heading3D>
 
-              <Heading3D tag="p" className={`text-gray-600 leading-relaxed ${hover3D}`}>
+              <p className={`text-gray-600 leading-relaxed ${hover3D}`}>
                 To revolutionize the way businesses think about space by providing high-quality container solutions.
-              </Heading3D>
+              </p>
 
             </div>
 
@@ -190,9 +190,9 @@ export default function About({ onNavigate }: AboutProps) {
                 Our Vision
               </Heading3D>
 
-              <Heading3D tag="p" className={`text-gray-600 leading-relaxed ${hover3D}`}>
+              <p className={`text-gray-600 leading-relaxed ${hover3D}`}>
                 To become India's leading provider of innovative container conversion solutions.
-              </Heading3D>
+              </p>
 
             </div>
 
@@ -215,9 +215,9 @@ export default function About({ onNavigate }: AboutProps) {
               Our Core Values
             </Heading3D>
 
-            <Heading3D tag="p" className={`text-lg text-gray-600 max-w-2xl mx-auto ${hover3D}`}>
+            <p className={`text-lg text-gray-600 max-w-2xl mx-auto ${hover3D}`}>
               The principles that guide every decision we make
-            </Heading3D>
+            </p>
 
           </div>
 
@@ -235,9 +235,9 @@ export default function About({ onNavigate }: AboutProps) {
                   {value.title}
                 </Heading3D>
 
-                <Heading3D tag="p" className={`text-gray-600 leading-relaxed ${hover3D}`}>
+                <p className={`text-gray-600 leading-relaxed ${hover3D}`}>
                   {value.description}
-                </Heading3D>
+                </p>
 
               </div>
 
