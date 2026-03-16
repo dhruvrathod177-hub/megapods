@@ -29,6 +29,9 @@ export default function About({ onNavigate }: AboutProps) {
     },
   ];
 
+  const hover3D =
+    "transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:drop-shadow-[0_8px_8px_rgba(0,0,0,0.25)]";
+
   return (
     <div>
 
@@ -40,11 +43,11 @@ export default function About({ onNavigate }: AboutProps) {
 
           <div className="text-center mb-12">
 
-            <h1 className="text-3d-medisphere mb-6">
-              About Megapodsindia
+            <h1 className={`text-4xl sm:text-5xl font-bold text-gray-900 mb-6 ${hover3D}`}>
+              About <span className="text-orange-600">Megapodsindia</span>
             </h1>
 
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            <p className={`text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed ${hover3D}`}>
               We are pioneers in the container conversion industry, bringing innovative modular solutions to businesses across India.
             </p>
 
@@ -68,27 +71,27 @@ export default function About({ onNavigate }: AboutProps) {
               <img
                 src="/img/img7.jpg"
                 alt="Megapods India Container Solutions"
-                className="w-full rounded-2xl shadow-2xl border-2 border-transparent transition-all duration-300 hover:scale-105 hover:border-orange-500"
+                className="w-full rounded-2xl shadow-2xl transition-all duration-300 hover:scale-105 hover:border-orange-500 border-2 border-transparent"
               />
 
             </div>
 
             <div>
 
-              <h2 className="text-3d-medisphere mb-6">
+              <h2 className={`text-3xl font-bold text-gray-900 mb-6 ${hover3D}`}>
                 Transforming Containers into Possibilities
               </h2>
 
-              <p className="text-gray-600 leading-relaxed mb-4">
-                Megapods India is a leading provider of premium container conversion solutions based in Surat, Gujarat. We specialize in transforming standard shipping containers into functional, aesthetically pleasing spaces that serve diverse business needs.
+              <p className={`text-gray-600 leading-relaxed mb-4 ${hover3D}`}>
+                Megapods India is a leading provider of premium container conversion solutions based in Surat, Gujarat.
               </p>
 
-              <p className="text-gray-600 leading-relaxed mb-4">
-                Our expertise spans across container cafes, offices, public toilets, and custom modular structures. Each project is approached with meticulous attention to detail.
+              <p className={`text-gray-600 leading-relaxed mb-4 ${hover3D}`}>
+                Our expertise spans across container cafes, offices, public toilets, and custom modular structures.
               </p>
 
-              <p className="text-gray-600 leading-relaxed mb-6">
-                As a new company, we bring fresh perspectives and innovative approaches to the container conversion industry.
+              <p className={`text-gray-600 leading-relaxed mb-6 ${hover3D}`}>
+                Our team comprises experienced professionals who understand the nuances of modular construction.
               </p>
 
               <button
@@ -122,12 +125,12 @@ export default function About({ onNavigate }: AboutProps) {
                 <Target className="text-orange-600" size={32} />
               </div>
 
-              <h2 className="text-3d-medisphere mb-4">
+              <h2 className={`text-2xl font-bold text-gray-900 mb-4 ${hover3D}`}>
                 Our Mission
               </h2>
 
-              <p className="text-gray-600 leading-relaxed">
-                To revolutionize the way businesses think about space by providing high-quality, cost-effective, and sustainable container solutions.
+              <p className={`text-gray-600 leading-relaxed ${hover3D}`}>
+                To revolutionize the way businesses think about space by providing high-quality container solutions.
               </p>
 
             </div>
@@ -138,11 +141,11 @@ export default function About({ onNavigate }: AboutProps) {
                 <Eye className="text-orange-600" size={32} />
               </div>
 
-              <h2 className="text-3d-medisphere mb-4">
+              <h2 className={`text-2xl font-bold text-gray-900 mb-4 ${hover3D}`}>
                 Our Vision
               </h2>
 
-              <p className="text-gray-600 leading-relaxed">
+              <p className={`text-gray-600 leading-relaxed ${hover3D}`}>
                 To become India's leading provider of innovative container conversion solutions.
               </p>
 
@@ -155,7 +158,7 @@ export default function About({ onNavigate }: AboutProps) {
       </section>
 
 
-      {/* CORE VALUES */}
+      {/* VALUES */}
 
       <section className="py-16 bg-white">
 
@@ -163,12 +166,12 @@ export default function About({ onNavigate }: AboutProps) {
 
           <div className="text-center mb-12">
 
-            <h2 className="text-3d-medisphere mb-4">
+            <h2 className={`text-3xl sm:text-4xl font-bold text-gray-900 mb-4 ${hover3D}`}>
               Our Core Values
             </h2>
 
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              The principles that guide every decision we make and every project we deliver
+            <p className={`text-lg text-gray-600 max-w-2xl mx-auto ${hover3D}`}>
+              The principles that guide every decision we make
             </p>
 
           </div>
@@ -177,60 +180,23 @@ export default function About({ onNavigate }: AboutProps) {
 
             {values.map((value, index) => (
 
-              <div key={index} className="bg-gray-50 rounded-xl p-6 hover:shadow-lg transition-shadow">
+              <div key={index} className="bg-gray-50 rounded-xl p-6 hover:shadow-xl transition">
 
                 <div className="bg-orange-100 w-14 h-14 rounded-lg flex items-center justify-center mb-4">
                   <value.icon className="text-orange-600" size={28} />
                 </div>
 
-                <h3 className="text-3d-medisphere mb-3">
+                <h3 className={`text-xl font-bold text-gray-900 mb-3 ${hover3D}`}>
                   {value.title}
                 </h3>
 
-                <p className="text-gray-600 leading-relaxed">
+                <p className={`text-gray-600 leading-relaxed ${hover3D}`}>
                   {value.description}
                 </p>
 
               </div>
 
             ))}
-
-          </div>
-
-        </div>
-
-      </section>
-
-
-      {/* CTA */}
-
-      <section className="py-16 bg-gradient-to-br from-orange-600 to-orange-700 text-white">
-
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-
-          <h2 className="text-3d-medisphere mb-4">
-            Let's Build Something Amazing Together
-          </h2>
-
-          <p className="text-xl mb-8 text-orange-100">
-            Partner with Megapods India and bring your vision to life
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-
-            <button
-              onClick={() => onNavigate('contact')}
-              className="bg-white text-orange-600 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition"
-            >
-              Get Free Consultation
-            </button>
-
-            <button
-              onClick={() => onNavigate('solutions')}
-              className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-orange-800 transition"
-            >
-              View Solutions
-            </button>
 
           </div>
 
