@@ -2,7 +2,7 @@ const express = require("express")
 const router = express.Router()
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
-const axios = require("axios")
+const nodemailer = require("nodemailer")
 
 const User = require("../models/User")
 
@@ -38,6 +38,7 @@ router.post("/register", async (req, res) => {
     res.status(500).json({ message: "Server error" })
   }
 })
+
 
 /* ── LOGIN ── */
 router.post("/login", async (req, res) => {
@@ -85,66 +86,73 @@ router.post("/login", async (req, res) => {
   }
 })
 
-/* ── FORGOT PASSWORD (PHONE OTP) ── */
+
+/* ── FORGOT PASSWORD (EMAIL OTP) ── */
 router.post("/forgot-password", async (req, res) => {
   try {
 
-    const phone = req.body.phone || req.body.contact
+    const { email } = req.body
 
-    if (!phone)
-      return res.status(400).json({ message: "Phone number is required" })
+    if (!email)
+      return res.status(400).json({ message: "Email is required" })
 
-    const user = await User.findOne({ contact: phone })
+    const user = await User.findOne({ email })
 
     if (!user)
-      return res.status(400).json({ message: "No account found with this phone number" })
+      return res.status(400).json({ message: "No account found with this email" })
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString()
 
-    otpStore[phone] = {
+    otpStore[email] = {
       otp,
-      email: user.email,
       expiresAt: Date.now() + 10 * 60 * 1000
     }
 
-    console.log("OTP generated")
-    await axios.get("https://www.fast2sms.com/dev/bulkV2", {
-      params: {
-        authorization: process.env.FAST2SMS_API_KEY,
-        route: "q",
-        message: `Your OTP for Megapods password reset is ${otp}`,
-        language: "english",
-        numbers: phone
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
       }
     })
-    console.log("Fast2SMS:", response.data)
 
-    res.json({
-      message: "OTP sent to your phone number"
+    await transporter.sendMail({
+      from: `"Megapods Support" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Megapods Password Reset OTP",
+      html: `
+        <h2>Password Reset</h2>
+        <p>Your OTP is:</p>
+        <h1>${otp}</h1>
+        <p>This OTP will expire in 10 minutes.</p>
+      `
     })
 
+    res.json({ message: "OTP sent to your email" })
+
   } catch (err) {
-    console.error("FORGOT PASSWORD ERROR:", err.response?.data || err.message)
-    res.status(500).json({ message: "Failed to send OTP. Please try again." })
+    console.error("FORGOT PASSWORD ERROR:", err)
+    res.status(500).json({ message: "Failed to send OTP" })
   }
 })
+
 
 /* ── VERIFY OTP ── */
 router.post("/verify-otp", async (req, res) => {
   try {
 
-    const { phone, otp } = req.body
+    const { email, otp } = req.body
 
-    if (!phone || !otp)
-      return res.status(400).json({ message: "Phone and OTP are required" })
+    if (!email || !otp)
+      return res.status(400).json({ message: "Email and OTP are required" })
 
-    const record = otpStore[phone]
+    const record = otpStore[email]
 
     if (!record)
-      return res.status(400).json({ message: "No OTP requested for this phone number" })
+      return res.status(400).json({ message: "No OTP requested for this email" })
 
     if (Date.now() > record.expiresAt) {
-      delete otpStore[phone]
+      delete otpStore[email]
       return res.status(400).json({ message: "OTP expired" })
     }
 
@@ -159,22 +167,23 @@ router.post("/verify-otp", async (req, res) => {
   }
 })
 
+
 /* ── RESET PASSWORD ── */
 router.post("/reset-password", async (req, res) => {
   try {
 
-    const { phone, otp, newPassword } = req.body
+    const { email, otp, newPassword } = req.body
 
-    if (!phone || !otp || !newPassword)
+    if (!email || !otp || !newPassword)
       return res.status(400).json({ message: "All fields are required" })
 
-    const record = otpStore[phone]
+    const record = otpStore[email]
 
     if (!record)
-      return res.status(400).json({ message: "No OTP requested for this phone number" })
+      return res.status(400).json({ message: "No OTP requested for this email" })
 
     if (Date.now() > record.expiresAt) {
-      delete otpStore[phone]
+      delete otpStore[email]
       return res.status(400).json({ message: "OTP expired. Request a new one." })
     }
 
@@ -184,11 +193,11 @@ router.post("/reset-password", async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPassword, 12)
 
     await User.findOneAndUpdate(
-      { email: record.email },
+      { email },
       { password: hashedPassword }
     )
 
-    delete otpStore[phone]
+    delete otpStore[email]
 
     res.json({ message: "Password reset successfully" })
 
@@ -197,5 +206,6 @@ router.post("/reset-password", async (req, res) => {
     res.status(500).json({ message: "Server error" })
   }
 })
+
 
 module.exports = router
