@@ -4,8 +4,9 @@ const express = require("express")
 const router = express.Router()
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
-const fetch = (...args) =>
-  import("node-fetch").then(({ default: fetch }) => fetch(...args))
+
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+
 const User = require("../models/User")
 
 const otpStore = {}
