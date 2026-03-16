@@ -108,17 +108,20 @@ router.post("/forgot-password", async (req, res) => {
     }
 
     console.log(`OTP for ${phone}: ${otp}`)
-
-    const response = await axios.get("https://www.fast2sms.com/dev/bulkV2", {
-      headers: {
-        authorization: process.env.FAST2SMS_API_KEY
-      },
-      params: {
+    await axios.post(
+      "https://www.fast2sms.com/dev/bulkV2",
+      {
         route: "otp",
         variables_values: otp,
         numbers: phone
+      },
+      {
+        headers: {
+          authorization: process.env.FAST2SMS_API_KEY,
+          "Content-Type": "application/json"
+        }
       }
-    })
+    )
 
     console.log("Fast2SMS:", response.data)
 
