@@ -108,20 +108,17 @@ router.post("/forgot-password", async (req, res) => {
     }
 
     console.log(`OTP for ${phone}: ${otp}`)
-    await axios.post(
-      "https://www.fast2sms.com/dev/bulkV2",
-      {
-        route: "otp",
-        variables_values: otp,
-        numbers: phone
+    await axios.get("https://www.fast2sms.com/dev/bulkV2", {
+      headers: {
+        authorization: process.env.FAST2SMS_API_KEY
       },
-      {
-        headers: {
-          authorization: process.env.FAST2SMS_API_KEY,
-          "Content-Type": "application/json"
-        }
+      params: {
+        route: "q",
+        message: `Your OTP for Megapods password reset is ${otp}`,
+        language: "english",
+        numbers: phone
       }
-    )
+    })
 
     console.log("Fast2SMS:", response.data)
 
