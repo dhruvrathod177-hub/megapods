@@ -3,6 +3,50 @@ import { Calculator, Download, Printer, Save, CheckCircle, RefreshCw } from "luc
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
 
+type HTMLTag = 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'span' | 'div';
+
+interface Heading3DProps {
+  children: React.ReactNode;
+  className?: string;
+  tag?: HTMLTag;
+}
+
+function Heading3D({ children, className = '', tag: Tag = 'h2' }: Heading3DProps) {
+  const ref = useRef<HTMLElement>(null);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+    const rotateX = ((y - cy) / cy) * -10;
+    const rotateY = ((x - cx) / cx) * 14;
+    el.style.transform = `perspective(600px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.04)`;
+    el.style.textShadow = `${-rotateY * 0.6}px ${rotateX * 0.6}px 18px rgba(234,88,12,0.22), 0 2px 32px rgba(0,0,0,0.10)`;
+  };
+
+  const handleMouseLeave = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.transform = 'perspective(600px) rotateX(0deg) rotateY(0deg) scale(1)';
+    el.style.textShadow = 'none';
+  };
+
+  return (
+    <Tag
+      ref={ref as React.RefObject<HTMLHeadingElement>}
+      className={`heading-3d ${className}`}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      {children}
+    </Tag>
+  );
+}
+
 interface AddonOption {
   name: string;
   price: number;
@@ -47,9 +91,9 @@ export default function QuotationPage() {
   const [quoteDate] = useState(new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }));
 
   const [form, setForm] = useState({
-    materialType:   "",
-    containerSize:  "",
-    quantity:       1,
+    materialType: "",
+    containerSize: "",
+    quantity: 1,
     selectedAddons: [] as string[],
   });
 
@@ -118,46 +162,51 @@ export default function QuotationPage() {
   return (
     <div className="min-h-screen bg-gray-50">
 
-      {/* ── PRINT STYLES ── */}
       <style>{`
         @media print {
           body * { visibility: hidden; }
           #print-area, #print-area * { visibility: visible; }
           #print-area {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            box-shadow: none !important;
-            border-radius: 0 !important;
+            position: absolute; left: 0; top: 0; width: 100%;
+            box-shadow: none !important; border-radius: 0 !important;
           }
           .no-print { display: none !important; }
         }
       `}</style>
 
-      {/* Hero — hidden on print */}
+      {/* HERO */}
+
       <section className="no-print bg-gradient-to-br from-orange-600 to-orange-700 text-white py-12 lg:py-16">
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+
           <div className="flex items-center justify-center gap-3 mb-4">
             <Calculator size={36} />
-            <h1 className="text-4xl sm:text-5xl font-bold">Quotation Generator</h1>
+            <Heading3D tag="h1" className="text-4xl sm:text-5xl font-bold">
+              Quotation Generator
+            </Heading3D>
           </div>
+
           <p className="text-xl text-orange-100 max-w-2xl mx-auto">
             Get an instant price estimate for your container solution — customized to your exact needs.
           </p>
+
         </div>
+
       </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid lg:grid-cols-2 gap-12">
 
-          {/* ── FORM — hidden on print ── */}
+          {/* FORM */}
+
           <div className="no-print">
             <div className="bg-white rounded-3xl shadow-xl p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+
+              <Heading3D tag="h2" className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                 <span className="bg-orange-100 text-orange-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold">1</span>
                 Configure Your Container
-              </h2>
+              </Heading3D>
 
               {error && (
                 <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">{error}</div>
@@ -170,7 +219,6 @@ export default function QuotationPage() {
               ) : (
                 <div className="space-y-6">
 
-                  {/* Container Size */}
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-3">Container Size *</label>
                     <div className="grid grid-cols-2 gap-3">
@@ -191,7 +239,6 @@ export default function QuotationPage() {
                     </div>
                   </div>
 
-                  {/* Material Type */}
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-3">Material Type *</label>
                     <select
@@ -208,7 +255,6 @@ export default function QuotationPage() {
                     </select>
                   </div>
 
-                  {/* Quantity */}
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-3">
                       Quantity: <span className="text-orange-600">{form.quantity}</span>
@@ -230,7 +276,6 @@ export default function QuotationPage() {
                     </div>
                   </div>
 
-                  {/* Add-ons */}
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-3">Additional Options</label>
                     <div className="space-y-2">
@@ -258,7 +303,6 @@ export default function QuotationPage() {
                     </div>
                   </div>
 
-                  {/* Buttons */}
                   <div className="flex gap-3 pt-2">
                     <button
                       onClick={handleCalculate}
@@ -278,20 +322,22 @@ export default function QuotationPage() {
             </div>
           </div>
 
-          {/* ── QUOTE RESULT ── */}
+          {/* QUOTE RESULT */}
+
           <div id="quote-result">
             {!quote ? (
               <div className="no-print bg-white rounded-3xl shadow-xl p-8 flex flex-col items-center justify-center text-center min-h-[400px]">
                 <div className="bg-orange-50 w-24 h-24 rounded-full flex items-center justify-center mb-6">
                   <Calculator size={40} className="text-orange-300" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-400 mb-2">Your quote will appear here</h3>
+                <Heading3D tag="h3" className="text-xl font-bold text-gray-400 mb-2">
+                  Your quote will appear here
+                </Heading3D>
                 <p className="text-gray-400 text-sm">Fill in the form and click "Generate Quote"</p>
               </div>
             ) : (
               <div ref={printRef} id="print-area" className="bg-white rounded-3xl shadow-xl overflow-hidden">
 
-                {/* Quote Header */}
                 <div className="bg-gradient-to-br from-orange-600 to-orange-700 text-white p-8">
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-3 mb-2">
@@ -314,7 +360,6 @@ export default function QuotationPage() {
                   </div>
                 </div>
 
-                {/* Line Items */}
                 <div className="p-8">
                   <table className="w-full text-sm">
                     <thead>
@@ -349,29 +394,22 @@ export default function QuotationPage() {
                     </tbody>
                   </table>
 
-                  {/* Totals */}
                   <div className="mt-6 border-t border-gray-200 pt-4 space-y-2">
                     <div className="flex justify-between text-gray-600">
-                      <span>Subtotal</span>
-                      <span>{formatINR(quote.subtotal)}</span>
+                      <span>Subtotal</span><span>{formatINR(quote.subtotal)}</span>
                     </div>
                     <div className="flex justify-between text-gray-600">
-                      <span>GST ({(quote.taxRate * 100).toFixed(0)}%)</span>
-                      <span>{formatINR(quote.taxAmount)}</span>
+                      <span>GST ({(quote.taxRate * 100).toFixed(0)}%)</span><span>{formatINR(quote.taxAmount)}</span>
                     </div>
                     <div className="flex justify-between text-xl font-bold text-gray-900 border-t-2 border-gray-900 pt-3 mt-3">
-                      <span>TOTAL</span>
-                      <span className="text-orange-600">{formatINR(quote.total)}</span>
+                      <span>TOTAL</span><span className="text-orange-600">{formatINR(quote.total)}</span>
                     </div>
                   </div>
 
-                  {/* Note */}
                   <p className="text-xs text-gray-400 mt-6 italic">
-                    * This is an indicative quotation. Final pricing may vary based on site conditions, customizations, and delivery location.
-                    Valid for 30 days from the date of issue.
+                    * This is an indicative quotation. Final pricing may vary based on site conditions, customizations, and delivery location. Valid for 30 days from the date of issue.
                   </p>
 
-                  {/* Action Buttons — hidden on print */}
                   <div className="no-print flex flex-wrap gap-3 mt-6">
                     <button
                       onClick={handleDownloadPDF}
@@ -399,11 +437,14 @@ export default function QuotationPage() {
                     </button>
                   </div>
                 </div>
+
               </div>
             )}
           </div>
+
         </div>
       </div>
+
     </div>
   );
 }

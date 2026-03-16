@@ -1,4 +1,49 @@
 import { Coffee, Building2, DoorOpen, Box, CheckCircle, ArrowRight } from 'lucide-react';
+import { useRef } from 'react';
+
+type HTMLTag = 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'span' | 'div';
+
+interface Heading3DProps {
+  children: React.ReactNode;
+  className?: string;
+  tag?: HTMLTag;
+}
+
+function Heading3D({ children, className = '', tag: Tag = 'h2' }: Heading3DProps) {
+  const ref = useRef<HTMLElement>(null);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+    const rotateX = ((y - cy) / cy) * -10;
+    const rotateY = ((x - cx) / cx) * 14;
+    el.style.transform = `perspective(600px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.04)`;
+    el.style.textShadow = `${-rotateY * 0.6}px ${rotateX * 0.6}px 18px rgba(234,88,12,0.22), 0 2px 32px rgba(0,0,0,0.10)`;
+  };
+
+  const handleMouseLeave = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.transform = 'perspective(600px) rotateX(0deg) rotateY(0deg) scale(1)';
+    el.style.textShadow = 'none';
+  };
+
+  return (
+    <Tag
+      ref={ref as React.RefObject<HTMLHeadingElement>}
+      className={`heading-3d ${className}`}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      {children}
+    </Tag>
+  );
+}
 
 interface SolutionsProps {
   onNavigate: (page: string) => void;
@@ -69,9 +114,9 @@ export default function Solutions({ onNavigate }: SolutionsProps) {
       <section className="bg-gradient-to-br from-orange-50 to-white py-16 lg:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
+            <Heading3D tag="h1" className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
               Our <span className="text-orange-600">Container Solutions</span>
-            </h1>
+            </Heading3D>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
               Discover how our innovative container conversions can transform your business space and elevate your brand
             </p>
@@ -91,12 +136,16 @@ export default function Solutions({ onNavigate }: SolutionsProps) {
                   <div className="bg-orange-100 w-16 h-16 rounded-xl flex items-center justify-center mb-6">
                     <solution.icon className="text-orange-600" size={32} />
                   </div>
-                  <h2 className="text-3xl font-bold text-gray-900 mb-4">{solution.title}</h2>
+                  <Heading3D tag="h2" className="text-3xl font-bold text-gray-900 mb-4">
+                    {solution.title}
+                  </Heading3D>
                   <p className="text-lg text-gray-600 leading-relaxed mb-6">
                     {solution.description}
                   </p>
                   <div className="mb-6">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Key Features:</h3>
+                    <Heading3D tag="h3" className="text-xl font-semibold text-gray-900 mb-4">
+                      Key Features:
+                    </Heading3D>
                     <ul className="space-y-3">
                       {solution.features.map((feature, idx) => (
                         <li key={idx} className="flex items-start gap-3">
@@ -130,18 +179,8 @@ export default function Solutions({ onNavigate }: SolutionsProps) {
                         : '/img/img8.jpg'
                     }
                     alt={solution.title}
-                    className="
-                    w-full
-                    rounded-2xl
-                    shadow-2xl
-                    border-2 border-transparent
-                    transition-all duration-300
-                    hover:scale-105
-                    hover:border-orange-500"
-
-/>
-
-                  
+                    className="w-full rounded-2xl shadow-2xl border-2 border-transparent transition-all duration-300 hover:scale-105 hover:border-orange-500"
+                  />
                   <p className="text-sm text-gray-500 mt-3 italic text-center">
                     *Design concept for illustration purposes. Final design will be customized to your requirements.
                   </p>
@@ -155,36 +194,36 @@ export default function Solutions({ onNavigate }: SolutionsProps) {
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-2xl p-8 lg:p-12 shadow-xl">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+            <Heading3D tag="h2" className="text-3xl font-bold text-gray-900 mb-8 text-center">
               What Makes Our Solutions Special?
-            </h2>
+            </Heading3D>
             <div className="grid md:grid-cols-3 gap-8">
               <div className="text-center">
                 <div className="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl font-bold text-orange-600">100%</span>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Customizable</h3>
-                <p className="text-gray-600">
-                  Every project is tailored to your specific needs, brand identity, and budget requirements
-                </p>
+                <Heading3D tag="h3" className="text-xl font-semibold text-gray-900 mb-2">
+                  Customizable
+                </Heading3D>
+                <p className="text-gray-600">Every project is tailored to your specific needs, brand identity, and budget requirements</p>
               </div>
               <div className="text-center">
                 <div className="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl font-bold text-orange-600">ISO</span>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Quality Certified</h3>
-                <p className="text-gray-600">
-                  We use only premium, certified materials that meet international quality standards
-                </p>
+                <Heading3D tag="h3" className="text-xl font-semibold text-gray-900 mb-2">
+                  Quality Certified
+                </Heading3D>
+                <p className="text-gray-600">We use only premium, certified materials that meet international quality standards</p>
               </div>
               <div className="text-center">
                 <div className="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl font-bold text-orange-600">24/7</span>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Support</h3>
-                <p className="text-gray-600">
-                  Comprehensive after-sales support to ensure your container solution performs perfectly
-                </p>
+                <Heading3D tag="h3" className="text-xl font-semibold text-gray-900 mb-2">
+                  Support
+                </Heading3D>
+                <p className="text-gray-600">Comprehensive after-sales support to ensure your container solution performs perfectly</p>
               </div>
             </div>
           </div>
@@ -193,9 +232,9 @@ export default function Solutions({ onNavigate }: SolutionsProps) {
 
       <section className="py-16 bg-gradient-to-br from-orange-600 to-orange-700 text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+          <Heading3D tag="h2" className="text-3xl sm:text-4xl font-bold mb-4">
             Ready to Start Your Project?
-          </h2>
+          </Heading3D>
           <p className="text-xl mb-8 text-orange-100">
             Get a free consultation and custom quote for your container solution
           </p>

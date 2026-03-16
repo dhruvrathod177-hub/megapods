@@ -1,7 +1,51 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FileText, Calendar, Package, RefreshCw, Calculator } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
+
+type HTMLTag = 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'span' | 'div';
+
+interface Heading3DProps {
+  children: React.ReactNode;
+  className?: string;
+  tag?: HTMLTag;
+}
+
+function Heading3D({ children, className = '', tag: Tag = 'h2' }: Heading3DProps) {
+  const ref = useRef<HTMLElement>(null);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+    const rotateX = ((y - cy) / cy) * -10;
+    const rotateY = ((x - cx) / cx) * 14;
+    el.style.transform = `perspective(600px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.04)`;
+    el.style.textShadow = `${-rotateY * 0.6}px ${rotateX * 0.6}px 18px rgba(234,88,12,0.22), 0 2px 32px rgba(0,0,0,0.10)`;
+  };
+
+  const handleMouseLeave = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.transform = 'perspective(600px) rotateX(0deg) rotateY(0deg) scale(1)';
+    el.style.textShadow = 'none';
+  };
+
+  return (
+    <Tag
+      ref={ref as React.RefObject<HTMLHeadingElement>}
+      className={`heading-3d ${className}`}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      {children}
+    </Tag>
+  );
+}
 
 interface SavedQuote {
   _id: string;
@@ -44,7 +88,9 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Quotation History</h1>
+            <Heading3D tag="h1" className="text-3xl font-bold text-gray-900">
+              Quotation History
+            </Heading3D>
             <p className="text-gray-500 mt-1">{quotes.length} saved quote{quotes.length !== 1 ? "s" : ""}</p>
           </div>
           <button
@@ -85,7 +131,6 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
             {quotes.map((quote) => (
               <div key={quote._id} className="bg-white rounded-2xl shadow-lg overflow-hidden">
 
-                {/* Quote Row */}
                 <button
                   onClick={() => setExpanded(expanded === quote._id ? null : quote._id)}
                   className="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors"
@@ -108,7 +153,6 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
                   </div>
                 </button>
 
-                {/* Expanded Details */}
                 {expanded === quote._id && (
                   <div className="border-t border-gray-100 px-6 pb-6 pt-4 bg-gray-50">
                     <table className="w-full text-sm">

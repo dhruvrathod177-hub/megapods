@@ -1,6 +1,50 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { User, Mail, Phone, Calendar, Key, CheckCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+
+type HTMLTag = 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'span' | 'div';
+
+interface Heading3DProps {
+  children: React.ReactNode;
+  className?: string;
+  tag?: HTMLTag;
+}
+
+function Heading3D({ children, className = '', tag: Tag = 'h2' }: Heading3DProps) {
+  const ref = useRef<HTMLElement>(null);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+    const rotateX = ((y - cy) / cy) * -10;
+    const rotateY = ((x - cx) / cx) * 14;
+    el.style.transform = `perspective(600px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.04)`;
+    el.style.textShadow = `${-rotateY * 0.6}px ${rotateX * 0.6}px 18px rgba(234,88,12,0.22), 0 2px 32px rgba(0,0,0,0.10)`;
+  };
+
+  const handleMouseLeave = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.transform = 'perspective(600px) rotateX(0deg) rotateY(0deg) scale(1)';
+    el.style.textShadow = 'none';
+  };
+
+  return (
+    <Tag
+      ref={ref as React.RefObject<HTMLHeadingElement>}
+      className={`heading-3d ${className}`}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      {children}
+    </Tag>
+  );
+}
 
 interface AccountPageProps {
   onOpenForgotPassword: () => void;
@@ -21,7 +65,9 @@ export default function AccountPage({ onOpenForgotPassword }: AccountPageProps) 
       <div className="max-w-2xl mx-auto px-4 sm:px-6">
 
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Account Details</h1>
+          <Heading3D tag="h1" className="text-3xl font-bold text-gray-900">
+            Account Details
+          </Heading3D>
           <p className="text-gray-500 mt-1">View and manage your account information</p>
         </div>
 
@@ -43,7 +89,9 @@ export default function AccountPage({ onOpenForgotPassword }: AccountPageProps) 
 
         {/* Info Card */}
         <div className="bg-white rounded-3xl shadow-xl p-8 mb-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">Personal Information</h3>
+          <Heading3D tag="h3" className="text-lg font-bold text-gray-900 mb-6">
+            Personal Information
+          </Heading3D>
           <div className="space-y-4">
 
             <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl">
@@ -66,7 +114,6 @@ export default function AccountPage({ onOpenForgotPassword }: AccountPageProps) 
               </div>
             </div>
 
-            {/* ✅ FIX 2: Show contact from user object */}
             <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl">
               <div className="bg-orange-100 p-2 rounded-xl">
                 <Phone size={20} className="text-orange-600" />
@@ -96,7 +143,9 @@ export default function AccountPage({ onOpenForgotPassword }: AccountPageProps) 
 
         {/* Security Card */}
         <div className="bg-white rounded-3xl shadow-xl p-8">
-          <h3 className="text-lg font-bold text-gray-900 mb-2">Security</h3>
+          <Heading3D tag="h3" className="text-lg font-bold text-gray-900 mb-2">
+            Security
+          </Heading3D>
           <p className="text-gray-500 text-sm mb-6">Manage your password and account security</p>
           <button
             onClick={handlePasswordClick}

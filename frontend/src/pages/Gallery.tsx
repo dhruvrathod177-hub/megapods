@@ -1,4 +1,49 @@
 import { AlertCircle } from 'lucide-react';
+import { useRef } from 'react';
+
+type HTMLTag = 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'span' | 'div';
+
+interface Heading3DProps {
+  children: React.ReactNode;
+  className?: string;
+  tag?: HTMLTag;
+}
+
+function Heading3D({ children, className = '', tag: Tag = 'h2' }: Heading3DProps) {
+  const ref = useRef<HTMLElement>(null);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+    const rotateX = ((y - cy) / cy) * -10;
+    const rotateY = ((x - cx) / cx) * 14;
+    el.style.transform = `perspective(600px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.04)`;
+    el.style.textShadow = `${-rotateY * 0.6}px ${rotateX * 0.6}px 18px rgba(234,88,12,0.22), 0 2px 32px rgba(0,0,0,0.10)`;
+  };
+
+  const handleMouseLeave = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.transform = 'perspective(600px) rotateX(0deg) rotateY(0deg) scale(1)';
+    el.style.textShadow = 'none';
+  };
+
+  return (
+    <Tag
+      ref={ref as React.RefObject<HTMLHeadingElement>}
+      className={`heading-3d ${className}`}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      {children}
+    </Tag>
+  );
+}
 
 interface GalleryProps {
   onNavigate: (page: string) => void;
@@ -33,9 +78,9 @@ export default function Gallery({ onNavigate }: GalleryProps) {
       <section className="bg-gradient-to-br from-orange-50 to-white py-16 lg:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
-            <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
+            <Heading3D tag="h1" className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
               Design <span className="text-orange-600">Gallery</span>
-            </h1>
+            </Heading3D>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
               Explore our concept designs and get inspired for your next container project
             </p>
@@ -44,7 +89,9 @@ export default function Gallery({ onNavigate }: GalleryProps) {
             <div className="flex items-start gap-3">
               <AlertCircle className="text-orange-600 flex-shrink-0 mt-1" size={24} />
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Concept Designs Disclaimer</h3>
+                <Heading3D tag="h3" className="font-semibold text-gray-900 mb-2">
+                  Concept Designs Disclaimer
+                </Heading3D>
                 <p className="text-gray-700 leading-relaxed">
                   The images and designs shown in this gallery are concept references and for illustration purposes only.
                   Final designs, materials, finishes, and specifications will be fully customized based on your specific
@@ -93,12 +140,14 @@ export default function Gallery({ onNavigate }: GalleryProps) {
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-2xl p-8 lg:p-12 shadow-xl">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">
+            <Heading3D tag="h2" className="text-3xl font-bold text-gray-900 mb-6 text-center">
               Your Design, Your Vision
-            </h2>
+            </Heading3D>
             <div className="grid md:grid-cols-2 gap-8 mb-8">
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">Customization Options</h3>
+                <Heading3D tag="h3" className="text-xl font-semibold text-gray-900 mb-3">
+                  Customization Options
+                </Heading3D>
                 <ul className="space-y-2 text-gray-600">
                   <li>• External color schemes and branding</li>
                   <li>• Interior layouts and finishes</li>
@@ -109,7 +158,9 @@ export default function Gallery({ onNavigate }: GalleryProps) {
                 </ul>
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">Our Design Process</h3>
+                <Heading3D tag="h3" className="text-xl font-semibold text-gray-900 mb-3">
+                  Our Design Process
+                </Heading3D>
                 <ul className="space-y-2 text-gray-600">
                   <li>• Initial consultation to understand your needs</li>
                   <li>• 3D design mockups for visualization</li>
@@ -138,9 +189,9 @@ export default function Gallery({ onNavigate }: GalleryProps) {
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <Heading3D tag="h2" className="text-3xl font-bold text-gray-900 mb-4">
               What Can We Build For You?
-            </h2>
+            </Heading3D>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               From compact cafes to expansive office spaces, we bring your vision to reality
             </p>
@@ -168,9 +219,9 @@ export default function Gallery({ onNavigate }: GalleryProps) {
 
       <section className="py-16 bg-gradient-to-br from-orange-600 to-orange-700 text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+          <Heading3D tag="h2" className="text-3xl sm:text-4xl font-bold mb-4">
             Let's Design Your Perfect Container Solution
-          </h2>
+          </Heading3D>
           <p className="text-xl mb-8 text-orange-100">
             Schedule a free consultation to discuss your ideas and get a custom design proposal
           </p>
