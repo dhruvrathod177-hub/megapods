@@ -1,3 +1,5 @@
+require("dotenv").config()
+
 const express    = require("express")
 const router     = express.Router()
 const bcrypt     = require("bcryptjs")
@@ -8,10 +10,15 @@ const User       = require("../models/User")
 const otpStore = {}
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
+  },
+  tls: {
+    rejectUnauthorized: false,
   },
 })
 
@@ -26,7 +33,6 @@ router.post("/register", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 12)
     const user = new User({ fullName, contact, email, password: hashedPassword })
     await user.save()
-    
     res.status(201).json({ message: "Account created successfully" })
   } catch (err) {
     console.error("REGISTER ERROR:", err)
@@ -47,7 +53,6 @@ router.post("/login", async (req, res) => {
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" })
     const token = jwt.sign(
-      // ✅ FIX 2: Include contact in JWT token
       { id: user._id, fullName: user.fullName, email: user.email, contact: user.contact },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
