@@ -12,8 +12,8 @@ const Admin    = require("../models/Admin");
 async function main() {
   await mongoose.connect(process.env.MONGO_URI);
 
-  const email    = "admin@megapodsindia.shop";   // ← change this
-  const password = "MegaAdmin@2026";             // ← change this
+  const email    = "dhruvrathod177@gmail.com";   // ← change this
+  const password = "Dhruv@16rathod";             // ← change this
   const name     = "Megapods Admin";
 
   const existing = await Admin.findOne({ email });
