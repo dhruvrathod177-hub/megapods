@@ -10,7 +10,7 @@ import Gallery from "./pages/Gallery";
 import Contact from "./pages/Contact";
 import QuotationPage from "./pages/QuotationPage";
 import AccountPage from "./pages/AccountPage";
-import QuoteHistoryPage from "./pages/QuoteHistoryPage_neg.tsx";
+import QuoteHistoryPage from "./pages/QuoteHistoryPage.tsx";
 import Footer from "./components/Footer";
 import WhatsAppButton from "./components/WhatsAppButton";
 
