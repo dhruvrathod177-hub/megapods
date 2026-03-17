@@ -65,7 +65,6 @@ router.post("/save", auth, async (req, res) => {
   try {
     const { materialType, containerSize, quantity, selectedAddons = [] } = req.body;
 
-    // ✅ FIX 3: Fetch user details to store in quotation
     const user = await User.findById(req.user.id);
 
     const basePrice     = CONTAINER_BASE_PRICES[containerSize] ?? 0;
@@ -108,6 +107,26 @@ router.get("/my-quotes", auth, async (req, res) => {
     const quotes = await Quotation.find({ userId: req.user.id }).sort({ createdAt: -1 });
     res.json(quotes);
   } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+/* ── DELETE QUOTE ── */
+router.delete("/:id", auth, async (req, res) => {
+  try {
+    const quotation = await Quotation.findById(req.params.id);
+
+    if (!quotation)
+      return res.status(404).json({ message: "Quote not found" });
+
+    // Make sure the quote belongs to the logged-in user
+    if (quotation.userId.toString() !== req.user.id.toString())
+      return res.status(403).json({ message: "Not authorised to delete this quote" });
+
+    await quotation.deleteOne();
+    res.json({ message: "Quote deleted successfully" });
+  } catch (err) {
+    console.error("DELETE QUOTE ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
