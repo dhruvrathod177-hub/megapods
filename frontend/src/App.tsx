@@ -20,10 +20,10 @@ const PROTECTED_PAGES = ["quotation", "account", "quote-history"];
 function AppInner() {
   const [currentPage, setCurrentPage] = useState("home");
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<"login" | "register">("register");
+  const [authMode, setAuthMode] = useState<"login" | "register">("login"); // ✅ FIXED: was "register"
   const [startOnForgot, setStartOnForgot] = useState(false);
 
-  const openSignup = () => { setAuthMode("register"); setStartOnForgot(false); setAuthModalOpen(true); };
+  const openSignup = () => { setAuthMode("login"); setStartOnForgot(false); setAuthModalOpen(true); }; // ✅ FIXED: was "register"
   const openLogin  = () => { setAuthMode("login");    setStartOnForgot(false); setAuthModalOpen(true); };
   const openForgotPassword = () => { setStartOnForgot(true); setAuthModalOpen(true); };
 
@@ -42,7 +42,6 @@ function AppInner() {
       }
     };
 
-    // Only protect quotation, account and quote-history
     if (PROTECTED_PAGES.includes(currentPage)) {
       return (
         <ProtectedRoute onOpenLogin={openLogin}>
@@ -51,7 +50,6 @@ function AppInner() {
       );
     }
 
-    // All other pages are public — no login required
     return pageContent();
   };
 
