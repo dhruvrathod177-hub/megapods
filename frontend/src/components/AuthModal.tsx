@@ -42,34 +42,14 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
   });
 
   useEffect(() => {
-    if (!isOpen) return;
     if (startOnForgot) { setCurrentMode("forgot"); }
     else if (mode) { setCurrentMode(mode); }
-    else { setCurrentMode("login"); }
-  }, [isOpen, mode, startOnForgot]);
+  }, [mode, startOnForgot]);
 
   useEffect(() => { setError(""); setSuccess(""); }, [currentMode]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    try {
-      const res = await fetch(`${API}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formData.email, password: formData.password }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Login failed");
-      login(data.token, data.user);
-      onClose();
-    } catch (err: any) { setError(err.message); }
-    finally { setLoading(false); }
   };
 
   const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
@@ -89,6 +69,24 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
       setSuccess("Account created successfully! Please login.");
       setFormData({ fullName: "", contact: "", email: formData.email, password: "", confirmPassword: "" });
       setTimeout(() => { setSuccess(""); setCurrentMode("login"); }, 2000);
+    } catch (err: any) { setError(err.message); }
+    finally { setLoading(false); }
+  };
+
+  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const res = await fetch(`${API}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email, password: formData.password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Login failed");
+      login(data.token, data.user);
+      onClose();
     } catch (err: any) { setError(err.message); }
     finally { setLoading(false); }
   };
@@ -163,209 +161,243 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     forgot: "login", otp: "forgot", reset: "otp",
   };
 
+  // ── GLASSY WHITE THEME ──
   const inputClass =
-    "w-full px-4 py-3.5 bg-[#1a1a1a] border border-[#2e2e2e] rounded-xl text-white placeholder-[#555] text-sm focus:outline-none focus:border-[#f97316] focus:ring-1 focus:ring-[#f97316] transition-all duration-200";
-
+    "w-full px-4 py-3.5 rounded-xl text-gray-800 placeholder-gray-400 text-sm focus:outline-none transition-all duration-200"
+  const inputStyle = {
+    background: "rgba(255,255,255,0.7)",
+    border: "1px solid rgba(255,255,255,0.9)",
+    boxShadow: "inset 0 1px 3px rgba(0,0,0,0.06)",
+  };
   const eyeButtonClass =
-    "absolute right-4 top-1/2 -translate-y-1/2 text-[#555] hover:text-[#f97316] transition-colors duration-200 cursor-pointer";
+    "absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-500 transition-colors duration-200 cursor-pointer";
+
+  const labelStyle: React.CSSProperties = {
+    fontSize: "11px",
+    color: "#6b7280",
+    letterSpacing: "0.08em",
+    textTransform: "uppercase",
+    fontWeight: 600,
+    display: "block",
+    marginBottom: "6px",
+  };
 
   return (
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
 
-        .auth-modal-overlay {
-          animation: fadeIn 0.2s ease;
-        }
-        .auth-modal-card {
-          animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
+        .auth-modal-overlay { animation: fadeIn 0.2s ease; }
+        .auth-modal-card    { animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+
         @keyframes fadeIn {
           from { opacity: 0; }
-          to { opacity: 1; }
+          to   { opacity: 1; }
         }
         @keyframes slideUp {
-          from { opacity: 0; transform: translateY(24px) scale(0.97); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
+          from { opacity: 0; transform: translateY(28px) scale(0.96); }
+          to   { opacity: 1; transform: translateY(0)    scale(1);    }
         }
-        .auth-btn-primary {
-          position: relative;
-          overflow: hidden;
-        }
-        .auth-btn-primary::before {
+
+        /* Shimmer on primary button hover */
+        .auth-btn-primary { position: relative; overflow: hidden; }
+        .auth-btn-primary::after {
           content: '';
           position: absolute;
           inset: 0;
-          background: linear-gradient(135deg, #fb923c, #ea580c, #c2410c);
+          background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 60%);
           opacity: 0;
           transition: opacity 0.3s ease;
         }
-        .auth-btn-primary:hover::before {
-          opacity: 1;
+        .auth-btn-primary:hover::after { opacity: 1; }
+        .auth-btn-primary span { position: relative; z-index: 1; }
+
+        /* Ghost button hover */
+        .auth-btn-ghost:hover {
+          background: rgba(249,115,22,0.06) !important;
+          border-color: #f97316 !important;
+          color: #ea580c !important;
         }
-        .auth-btn-primary span {
-          position: relative;
-          z-index: 1;
+
+        /* Input hover glow */
+        .glass-input:hover {
+          background: rgba(255,255,255,0.85) !important;
+          border-color: rgba(249,115,22,0.4) !important;
         }
+        .glass-input:focus {
+          background: rgba(255,255,255,0.95) !important;
+          border-color: #f97316 !important;
+          box-shadow: 0 0 0 3px rgba(249,115,22,0.12), inset 0 1px 3px rgba(0,0,0,0.04) !important;
+          outline: none;
+        }
+
         .otp-input {
           letter-spacing: 0.8rem;
           font-family: 'Syne', sans-serif;
         }
-        .orb-1 {
-          position: absolute;
-          width: 220px;
-          height: 220px;
-          border-radius: 50%;
-          background: radial-gradient(circle, rgba(249,115,22,0.12) 0%, transparent 70%);
-          top: -60px;
-          right: -60px;
-          pointer-events: none;
-        }
-        .orb-2 {
-          position: absolute;
-          width: 160px;
-          height: 160px;
-          border-radius: 50%;
-          background: radial-gradient(circle, rgba(249,115,22,0.07) 0%, transparent 70%);
-          bottom: -40px;
-          left: -40px;
-          pointer-events: none;
-        }
-        .divider-line {
+
+        .glass-divider {
           flex: 1;
           height: 1px;
-          background: linear-gradient(to right, transparent, #2e2e2e, transparent);
+          background: linear-gradient(to right, transparent, rgba(0,0,0,0.1), transparent);
+        }
+
+        /* Floating blobs behind card */
+        .blob-1 {
+          position: absolute; width: 280px; height: 280px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(251,146,60,0.35) 0%, rgba(249,115,22,0.1) 50%, transparent 70%);
+          top: -100px; right: -80px; pointer-events: none; filter: blur(2px);
+        }
+        .blob-2 {
+          position: absolute; width: 200px; height: 200px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(255,237,213,0.8) 0%, rgba(254,215,170,0.4) 40%, transparent 70%);
+          bottom: -60px; left: -60px; pointer-events: none; filter: blur(4px);
+        }
+        .blob-3 {
+          position: absolute; width: 120px; height: 120px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, transparent 70%);
+          top: 40%; left: -30px; pointer-events: none; filter: blur(6px);
         }
       `}</style>
 
-      <div className="auth-modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
-        style={{ fontFamily: "'DM Sans', sans-serif" }}>
-
-        {/* Backdrop */}
+      <div
+        className="auth-modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
+        style={{ fontFamily: "'DM Sans', sans-serif" }}
+      >
+        {/* Backdrop — warm blurred overlay */}
         <div
           className="absolute inset-0"
-          style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(12px)" }}
+          style={{
+            background: "linear-gradient(135deg, rgba(255,237,213,0.55) 0%, rgba(251,191,36,0.15) 40%, rgba(255,255,255,0.4) 100%)",
+            backdropFilter: "blur(18px) saturate(1.4)",
+            WebkitBackdropFilter: "blur(18px) saturate(1.4)",
+          }}
           onClick={onClose}
         />
 
-        {/* Card */}
+        {/* Glass Card */}
         <div
-          className="auth-modal-card relative w-full max-w-[420px] rounded-2xl overflow-hidden"
+          className="auth-modal-card relative w-full max-w-[420px] rounded-3xl overflow-hidden"
           style={{
-            background: "linear-gradient(160deg, #141414 0%, #0f0f0f 100%)",
-            border: "1px solid #232323",
-            boxShadow: "0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03)",
+            background: "linear-gradient(145deg, rgba(255,255,255,0.82) 0%, rgba(255,250,245,0.88) 100%)",
+            border: "1px solid rgba(255,255,255,0.95)",
+            boxShadow:
+              "0 8px 32px rgba(249,115,22,0.12), 0 24px 64px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,1)",
+            backdropFilter: "blur(24px)",
+            WebkitBackdropFilter: "blur(24px)",
           }}
         >
-          {/* Decorative orbs */}
-          <div className="orb-1" />
-          <div className="orb-2" />
+          {/* Decorative blobs inside card */}
+          <div className="blob-1" />
+          <div className="blob-2" />
+          <div className="blob-3" />
 
-          {/* Top accent line */}
-          <div style={{ height: "2px", background: "linear-gradient(90deg, transparent, #f97316, transparent)" }} />
+          {/* Top gradient bar */}
+          <div style={{
+            height: "3px",
+            background: "linear-gradient(90deg, #fed7aa, #f97316, #fb923c, #fed7aa)",
+          }} />
 
           <div className="relative p-8">
 
-            {/* Header */}
+            {/* ── HEADER ── */}
             <div className="flex justify-between items-start mb-7">
               <div className="flex items-center gap-3">
                 {backMode[currentMode] && (
                   <button
                     type="button"
                     onClick={() => setCurrentMode(backMode[currentMode]!)}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-[#666] hover:text-white hover:bg-[#1e1e1e] transition-all duration-200 text-base"
+                    className="w-8 h-8 flex items-center justify-center rounded-xl transition-all duration-200 text-base"
+                    style={{ color: "#9ca3af", background: "rgba(0,0,0,0.04)", border: "1px solid rgba(0,0,0,0.08)" }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(249,115,22,0.08)")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "rgba(0,0,0,0.04)")}
                   >
                     ←
                   </button>
                 )}
                 <div>
-
-                  {/* Logo + Company Name */}
+                  {/* Brand badge */}
                   <div className="flex items-center gap-2 mb-2">
-                    <img
-                      src="/favicon.ico"
-                      alt="MegapodsIndia Logo"
-                      className="w-7 h-7 object-contain"
-                    />
-                    <span
-                      style={{
-                        fontSize: "11px",
-                        letterSpacing: "0.18em",
-                        color: "#f97316",
-                        fontWeight: 700,
-                        textTransform: "uppercase"
-                      }}
-                    >
-                      MEGAPODSINDIA
+                    <div style={{
+                      width: "26px", height: "26px", borderRadius: "8px",
+                      background: "linear-gradient(135deg, #f97316, #ea580c)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      boxShadow: "0 4px 12px rgba(249,115,22,0.35)",
+                    }}>
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    <span style={{
+                      fontSize: "11px", letterSpacing: "0.14em",
+                      color: "#ea580c", fontWeight: 700, textTransform: "uppercase",
+                    }}>
+                      Megapods
                     </span>
                   </div>
                   <h2 style={{
                     fontFamily: "'Syne', sans-serif",
-                    fontSize: "22px",
-                    fontWeight: 700,
-                    color: "#ffffff",
-                    lineHeight: 1.2,
-                    letterSpacing: "-0.02em"
+                    fontSize: "23px", fontWeight: 800,
+                    color: "#1c1917", lineHeight: 1.15, letterSpacing: "-0.02em",
                   }}>
                     {titles[currentMode]}
                   </h2>
-                  <p style={{ fontSize: "13px", color: "#666", marginTop: "3px" }}>
+                  <p style={{ fontSize: "13px", color: "#78716c", marginTop: "3px" }}>
                     {subtitles[currentMode]}
                   </p>
                 </div>
               </div>
+
               <button
                 onClick={onClose}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-[#555] hover:text-white hover:bg-[#1e1e1e] transition-all duration-200"
-                style={{ fontSize: "16px", marginTop: "2px" }}
+                className="w-8 h-8 flex items-center justify-center rounded-xl transition-all duration-200"
+                style={{ fontSize: "15px", color: "#9ca3af", background: "rgba(0,0,0,0.04)", border: "1px solid rgba(0,0,0,0.08)", marginTop: "2px" }}
+                onMouseEnter={e => { e.currentTarget.style.background = "rgba(239,68,68,0.08)"; e.currentTarget.style.color = "#ef4444"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,0,0,0.04)"; e.currentTarget.style.color = "#9ca3af"; }}
               >
                 ✕
               </button>
             </div>
 
-            {/* Alerts */}
+            {/* ── ALERTS ── */}
             {error && (
-              <div className="mb-5 flex items-start gap-3 px-4 py-3 rounded-xl text-sm"
-                style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171" }}>
-                <span style={{ fontSize: "15px", marginTop: "1px" }}>⚠</span>
+              <div className="mb-5 flex items-start gap-3 px-4 py-3 rounded-2xl text-sm"
+                style={{ background: "rgba(254,226,226,0.7)", border: "1px solid rgba(252,165,165,0.6)", color: "#dc2626", backdropFilter: "blur(8px)" }}>
+                <span style={{ fontSize: "14px", marginTop: "1px" }}>⚠</span>
                 <span>{error}</span>
               </div>
             )}
             {success && (
-              <div className="mb-5 flex items-start gap-3 px-4 py-3 rounded-xl text-sm"
-                style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", color: "#4ade80" }}>
-                <span style={{ fontSize: "15px", marginTop: "1px" }}>✓</span>
+              <div className="mb-5 flex items-start gap-3 px-4 py-3 rounded-2xl text-sm"
+                style={{ background: "rgba(220,252,231,0.7)", border: "1px solid rgba(134,239,172,0.6)", color: "#16a34a", backdropFilter: "blur(8px)" }}>
+                <span style={{ fontSize: "14px", marginTop: "1px" }}>✓</span>
                 <span>{success}</span>
               </div>
             )}
 
             {/* ── LOGIN ── */}
             {currentMode === "login" && (
-              <form className="space-y-3" onSubmit={handleLogin}>
+              <form className="space-y-4" onSubmit={handleLogin}>
                 <div>
-                  <label style={{ fontSize: "11px", color: "#555", letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 500, display: "block", marginBottom: "6px" }}>
-                    Email
-                  </label>
+                  <label style={labelStyle}>Email</label>
                   <input type="email" name="email" placeholder="you@example.com" required
                     value={formData.email} onChange={handleChange}
-                    className={inputClass}
+                    className={`${inputClass} glass-input`} style={inputStyle}
                   />
                 </div>
                 <div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                    <label style={{ fontSize: "11px", color: "#555", letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 500 }}>
-                      Password
-                    </label>
+                    <label style={labelStyle}>Password</label>
                     <button type="button"
                       onClick={() => { setCurrentMode("forgot"); setForgotEmail(formData.email); }}
-                      style={{ fontSize: "12px", color: "#f97316", fontWeight: 500, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                      style={{ fontSize: "12px", color: "#f97316", fontWeight: 600, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
                       Forgot?
                     </button>
                   </div>
                   <div className="relative">
                     <input type={showPassword ? "text" : "password"} name="password" placeholder="••••••••" required
                       value={formData.password} onChange={handleChange}
-                      className={inputClass} style={{ paddingRight: "44px" }}
+                      className={`${inputClass} glass-input`} style={{ ...inputStyle, paddingRight: "44px" }}
                     />
                     <span onClick={() => setShowPassword(!showPassword)} className={eyeButtonClass}>
                       {showPassword ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
@@ -375,24 +407,30 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
 
                 <div style={{ paddingTop: "4px" }}>
                   <button type="submit" disabled={loading}
-                    className="auth-btn-primary w-full py-3.5 rounded-xl font-semibold text-sm text-white transition-all duration-300 disabled:opacity-50"
-                    style={{ background: "linear-gradient(135deg, #f97316, #ea580c)", letterSpacing: "0.02em" }}>
+                    className="auth-btn-primary w-full py-3.5 rounded-2xl font-bold text-sm text-white disabled:opacity-60 transition-all duration-300"
+                    style={{
+                      background: "linear-gradient(135deg, #f97316 0%, #ea580c 100%)",
+                      boxShadow: "0 6px 20px rgba(249,115,22,0.4), 0 2px 6px rgba(249,115,22,0.2)",
+                      letterSpacing: "0.02em",
+                    }}>
                     <span>{loading ? "Signing in…" : "Sign In"}</span>
                   </button>
                 </div>
 
                 <div className="flex items-center gap-3 py-1">
-                  <div className="divider-line" />
-                  <span style={{ fontSize: "11px", color: "#444", whiteSpace: "nowrap" }}>New here?</span>
-                  <div className="divider-line" />
+                  <div className="glass-divider" />
+                  <span style={{ fontSize: "11px", color: "#a8a29e", whiteSpace: "nowrap" }}>New here?</span>
+                  <div className="glass-divider" />
                 </div>
 
-                <button type="button"
-                  onClick={() => setCurrentMode("register")}
-                  className="w-full py-3.5 rounded-xl font-medium text-sm transition-all duration-200"
-                  style={{ background: "transparent", border: "1px solid #2e2e2e", color: "#aaa", letterSpacing: "0.02em" }}
-                  onMouseEnter={e => { (e.target as HTMLButtonElement).style.borderColor = "#f97316"; (e.target as HTMLButtonElement).style.color = "#f97316"; }}
-                  onMouseLeave={e => { (e.target as HTMLButtonElement).style.borderColor = "#2e2e2e"; (e.target as HTMLButtonElement).style.color = "#aaa"; }}>
+                <button type="button" onClick={() => setCurrentMode("register")}
+                  className="auth-btn-ghost w-full py-3.5 rounded-2xl font-semibold text-sm transition-all duration-200"
+                  style={{
+                    background: "rgba(255,255,255,0.5)",
+                    border: "1px solid rgba(0,0,0,0.1)",
+                    color: "#78716c",
+                    letterSpacing: "0.02em",
+                  }}>
                   Create an Account
                 </button>
               </form>
@@ -407,12 +445,10 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                   { label: "Email", name: "email", type: "email", placeholder: "you@example.com" },
                 ].map(field => (
                   <div key={field.name}>
-                    <label style={{ fontSize: "11px", color: "#555", letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 500, display: "block", marginBottom: "6px" }}>
-                      {field.label}
-                    </label>
+                    <label style={labelStyle}>{field.label}</label>
                     <input type={field.type} name={field.name} placeholder={field.placeholder} required
                       value={formData[field.name as keyof FormData]} onChange={handleChange}
-                      className={inputClass}
+                      className={`${inputClass} glass-input`} style={inputStyle}
                     />
                   </div>
                 ))}
@@ -422,13 +458,11 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                   { label: "Confirm Password", value: formData.confirmPassword, name: "confirmPassword", show: showConfirmPassword, toggle: () => setShowConfirmPassword(!showConfirmPassword) },
                 ].map(field => (
                   <div key={field.name}>
-                    <label style={{ fontSize: "11px", color: "#555", letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 500, display: "block", marginBottom: "6px" }}>
-                      {field.label}
-                    </label>
+                    <label style={labelStyle}>{field.label}</label>
                     <div className="relative">
                       <input type={field.show ? "text" : "password"} name={field.name} placeholder="••••••••" required
                         value={field.value} onChange={handleChange}
-                        className={inputClass} style={{ paddingRight: "44px" }}
+                        className={`${inputClass} glass-input`} style={{ ...inputStyle, paddingRight: "44px" }}
                       />
                       <span onClick={field.toggle} className={eyeButtonClass}>
                         {field.show ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
@@ -439,15 +473,18 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
 
                 <div style={{ paddingTop: "4px" }}>
                   <button type="submit" disabled={loading}
-                    className="auth-btn-primary w-full py-3.5 rounded-xl font-semibold text-sm text-white transition-all duration-300 disabled:opacity-50"
-                    style={{ background: "linear-gradient(135deg, #f97316, #ea580c)", letterSpacing: "0.02em" }}>
+                    className="auth-btn-primary w-full py-3.5 rounded-2xl font-bold text-sm text-white disabled:opacity-60 transition-all duration-300"
+                    style={{
+                      background: "linear-gradient(135deg, #f97316 0%, #ea580c 100%)",
+                      boxShadow: "0 6px 20px rgba(249,115,22,0.4), 0 2px 6px rgba(249,115,22,0.2)",
+                    }}>
                     <span>{loading ? "Creating Account…" : "Create Account"}</span>
                   </button>
                 </div>
-                <p style={{ textAlign: "center", fontSize: "13px", color: "#555" }}>
+                <p style={{ textAlign: "center", fontSize: "13px", color: "#78716c" }}>
                   Already a member?{" "}
                   <span onClick={() => setCurrentMode("login")}
-                    style={{ color: "#f97316", cursor: "pointer", fontWeight: 500 }}>
+                    style={{ color: "#f97316", cursor: "pointer", fontWeight: 600 }}>
                     Sign In
                   </span>
                 </p>
@@ -458,25 +495,26 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
             {currentMode === "forgot" && (
               <form className="space-y-4" onSubmit={handleForgotPassword}>
                 <div>
-                  <label style={{ fontSize: "11px", color: "#555", letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 500, display: "block", marginBottom: "6px" }}>
-                    Email Address
-                  </label>
+                  <label style={labelStyle}>Email Address</label>
                   <input type="email" placeholder="you@example.com" required
                     value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)}
-                    className={inputClass}
+                    className={`${inputClass} glass-input`} style={inputStyle}
                   />
                 </div>
                 <div style={{ paddingTop: "4px" }}>
                   <button type="submit" disabled={loading}
-                    className="auth-btn-primary w-full py-3.5 rounded-xl font-semibold text-sm text-white transition-all duration-300 disabled:opacity-50"
-                    style={{ background: "linear-gradient(135deg, #f97316, #ea580c)", letterSpacing: "0.02em" }}>
+                    className="auth-btn-primary w-full py-3.5 rounded-2xl font-bold text-sm text-white disabled:opacity-60 transition-all duration-300"
+                    style={{
+                      background: "linear-gradient(135deg, #f97316 0%, #ea580c 100%)",
+                      boxShadow: "0 6px 20px rgba(249,115,22,0.4)",
+                    }}>
                     <span>{loading ? "Sending Code…" : "Send Reset Code"}</span>
                   </button>
                 </div>
-                <p style={{ textAlign: "center", fontSize: "13px", color: "#555" }}>
+                <p style={{ textAlign: "center", fontSize: "13px", color: "#78716c" }}>
                   Remembered it?{" "}
                   <span onClick={() => setCurrentMode("login")}
-                    style={{ color: "#f97316", cursor: "pointer", fontWeight: 500 }}>
+                    style={{ color: "#f97316", cursor: "pointer", fontWeight: 600 }}>
                     Back to Sign In
                   </span>
                 </p>
@@ -486,31 +524,37 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
             {/* ── OTP ── */}
             {currentMode === "otp" && (
               <form className="space-y-4" onSubmit={handleVerifyOtp}>
-                <div style={{ padding: "16px", borderRadius: "12px", background: "#1a1a1a", border: "1px solid #2a2a2a", marginBottom: "4px" }}>
-                  <p style={{ fontSize: "12px", color: "#666", marginBottom: "2px" }}>Code sent to</p>
-                  <p style={{ fontSize: "14px", color: "#f97316", fontWeight: 600 }}>{forgotEmail}</p>
+                <div style={{
+                  padding: "14px 16px", borderRadius: "16px",
+                  background: "rgba(255,237,213,0.6)",
+                  border: "1px solid rgba(249,115,22,0.2)",
+                  backdropFilter: "blur(8px)",
+                }}>
+                  <p style={{ fontSize: "12px", color: "#a8a29e", marginBottom: "2px" }}>Code sent to</p>
+                  <p style={{ fontSize: "14px", color: "#ea580c", fontWeight: 700 }}>{forgotEmail}</p>
                 </div>
                 <div>
-                  <label style={{ fontSize: "11px", color: "#555", letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 500, display: "block", marginBottom: "6px" }}>
-                    6-Digit OTP
-                  </label>
+                  <label style={labelStyle}>6-Digit OTP</label>
                   <input type="text" placeholder="000000" required maxLength={6}
                     value={otpValue} onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, ""))}
-                    className={`${inputClass} otp-input`}
-                    style={{ textAlign: "center", fontSize: "22px", fontWeight: 700, paddingRight: "16px" }}
+                    className={`${inputClass} glass-input otp-input`}
+                    style={{ ...inputStyle, textAlign: "center", fontSize: "22px", fontWeight: 700, paddingRight: "16px", color: "#1c1917" }}
                   />
                 </div>
                 <div style={{ paddingTop: "4px" }}>
                   <button type="submit"
-                    className="auth-btn-primary w-full py-3.5 rounded-xl font-semibold text-sm text-white transition-all duration-300"
-                    style={{ background: "linear-gradient(135deg, #f97316, #ea580c)", letterSpacing: "0.02em" }}>
+                    className="auth-btn-primary w-full py-3.5 rounded-2xl font-bold text-sm text-white transition-all duration-300"
+                    style={{
+                      background: "linear-gradient(135deg, #f97316 0%, #ea580c 100%)",
+                      boxShadow: "0 6px 20px rgba(249,115,22,0.4)",
+                    }}>
                     <span>Verify Code</span>
                   </button>
                 </div>
-                <p style={{ textAlign: "center", fontSize: "13px", color: "#555" }}>
+                <p style={{ textAlign: "center", fontSize: "13px", color: "#78716c" }}>
                   Didn't receive it?{" "}
                   <span onClick={() => setCurrentMode("forgot")}
-                    style={{ color: "#f97316", cursor: "pointer", fontWeight: 500 }}>
+                    style={{ color: "#f97316", cursor: "pointer", fontWeight: 600 }}>
                     Resend
                   </span>
                 </p>
@@ -525,13 +569,11 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                   { label: "Confirm New Password", value: confirmNewPassword, setter: setConfirmNewPassword, show: showConfirmPassword, toggle: () => setShowConfirmPassword(!showConfirmPassword) },
                 ].map((field, i) => (
                   <div key={i}>
-                    <label style={{ fontSize: "11px", color: "#555", letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 500, display: "block", marginBottom: "6px" }}>
-                      {field.label}
-                    </label>
+                    <label style={labelStyle}>{field.label}</label>
                     <div className="relative">
                       <input type={field.show ? "text" : "password"} placeholder="••••••••" required
                         value={field.value} onChange={(e) => field.setter(e.target.value)}
-                        className={inputClass} style={{ paddingRight: "44px" }}
+                        className={`${inputClass} glass-input`} style={{ ...inputStyle, paddingRight: "44px" }}
                       />
                       <span onClick={field.toggle} className={eyeButtonClass}>
                         {field.show ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
@@ -541,8 +583,11 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                 ))}
                 <div style={{ paddingTop: "4px" }}>
                   <button type="submit" disabled={loading}
-                    className="auth-btn-primary w-full py-3.5 rounded-xl font-semibold text-sm text-white transition-all duration-300 disabled:opacity-50"
-                    style={{ background: "linear-gradient(135deg, #f97316, #ea580c)", letterSpacing: "0.02em" }}>
+                    className="auth-btn-primary w-full py-3.5 rounded-2xl font-bold text-sm text-white disabled:opacity-60 transition-all duration-300"
+                    style={{
+                      background: "linear-gradient(135deg, #f97316 0%, #ea580c 100%)",
+                      boxShadow: "0 6px 20px rgba(249,115,22,0.4)",
+                    }}>
                     <span>{loading ? "Resetting…" : "Reset Password"}</span>
                   </button>
                 </div>
