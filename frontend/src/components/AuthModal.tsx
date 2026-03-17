@@ -41,9 +41,14 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     fullName: "", contact: "", email: "", password: "", confirmPassword: "",
   });
 
+  // useEffect(() => {
+  //   if (startOnForgot) { setCurrentMode("forgot"); }
+  //   else if (mode) { setCurrentMode(mode); }
+  // }, [mode, startOnForgot]);
   useEffect(() => {
     if (startOnForgot) { setCurrentMode("forgot"); }
     else if (mode) { setCurrentMode(mode); }
+    else { setCurrentMode("login"); }
   }, [mode, startOnForgot]);
 
   useEffect(() => { setError(""); setSuccess(""); }, [currentMode]);
@@ -68,7 +73,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
       login(data.token, data.user);
       onClose();
     } catch (err: any) { setError(err.message); }
-    finally { setLoading(true); }
+    finally { setLoading(false); }
   };
 
   const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
@@ -76,7 +81,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     setError("");
     if (formData.password !== formData.confirmPassword) { setError("Passwords do not match"); return; }
     if (formData.password.length < 6) { setError("Password must be at least 6 characters"); return; }
-    setLoading(false);
+    setLoading(true);
     try {
       const res = await fetch(`${API}/auth/register`, {
         method: "POST",
