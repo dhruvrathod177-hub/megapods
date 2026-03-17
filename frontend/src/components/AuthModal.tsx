@@ -185,7 +185,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
 
         .auth-modal-overlay { animation: fadeIn 0.2s ease; }
         .auth-modal-card    { animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -329,16 +329,17 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                       }}
                     />
                     <span style={{
-                      fontSize: "11px", letterSpacing: "0.14em",
-                      color: "#ea580c", fontWeight: 700, textTransform: "uppercase",
+                      fontSize: "12px", letterSpacing: "0.2em",
+                      color: "#ea580c", fontWeight: 900, textTransform: "uppercase",
+                      fontFamily: "'Archivo Black', sans-serif",
                     }}>
-                      Megapodsindia.
+                      Megapodsindia
                     </span>
                   </div>
                   <h2 style={{
-                    fontFamily: "'Syne', sans-serif",
-                    fontSize: "23px", fontWeight: 800,
-                    color: "#1c1917", lineHeight: 1.15, letterSpacing: "-0.02em",
+                    fontFamily: "'Archivo Black', sans-serif",
+                    fontSize: "26px", fontWeight: 900,
+                    color: "#1c1917", lineHeight: 1.1, letterSpacing: "-0.01em",
                   }}>
                     {titles[currentMode]}
                   </h2>
