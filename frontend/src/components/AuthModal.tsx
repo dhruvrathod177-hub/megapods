@@ -89,7 +89,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
       setFormData({ fullName: "", contact: "", email: formData.email, password: "", confirmPassword: "" });
       setTimeout(() => { setSuccess(""); setCurrentMode("login"); }, 2000);
     } catch (err: any) { setError(err.message); }
-    finally { setLoading(true); }
+    finally { setLoading(false); }
   };
 
   
