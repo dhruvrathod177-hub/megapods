@@ -52,6 +52,25 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  
+  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const res = await fetch(`${API}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email, password: formData.password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Login failed");
+      login(data.token, data.user);
+      onClose();
+    } catch (err: any) { setError(err.message); }
+    finally { setLoading(false); }
+  };
+
   const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
@@ -73,24 +92,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     finally { setLoading(false); }
   };
 
-  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    try {
-      const res = await fetch(`${API}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formData.email, password: formData.password }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Login failed");
-      login(data.token, data.user);
-      onClose();
-    } catch (err: any) { setError(err.message); }
-    finally { setLoading(false); }
-  };
-
+  
   const handleForgotPassword = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
