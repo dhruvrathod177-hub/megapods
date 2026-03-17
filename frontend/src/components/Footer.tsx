@@ -5,10 +5,24 @@ interface FooterProps {
 }
 
 export default function Footer({ onNavigate }: FooterProps) {
+
+  // ✅ ADD THIS FUNCTION
+  const handleNavigate = (page: string) => {
+    onNavigate(page);
+
+    setTimeout(() => {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }, 50);
+  };
+
   return (
     <footer className="bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+          
           <div>
             <div className="flex items-center gap-2 mb-4">
               <img
@@ -29,27 +43,27 @@ export default function Footer({ onNavigate }: FooterProps) {
             <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2">
               <li>
-                <button onClick={() => onNavigate('home')} className="text-gray-400 hover:text-orange-500 transition-colors">
+                <button onClick={() => handleNavigate('home')} className="text-gray-400 hover:text-orange-500 transition-colors">
                   Home
                 </button>
               </li>
               <li>
-                <button onClick={() => onNavigate('about')} className="text-gray-400 hover:text-orange-500 transition-colors">
+                <button onClick={() => handleNavigate('about')} className="text-gray-400 hover:text-orange-500 transition-colors">
                   About Us
                 </button>
               </li>
               <li>
-                <button onClick={() => onNavigate('solutions')} className="text-gray-400 hover:text-orange-500 transition-colors">
+                <button onClick={() => handleNavigate('solutions')} className="text-gray-400 hover:text-orange-500 transition-colors">
                   Solutions
                 </button>
               </li>
               <li>
-                <button onClick={() => onNavigate('gallery')} className="text-gray-400 hover:text-orange-500 transition-colors">
+                <button onClick={() => handleNavigate('gallery')} className="text-gray-400 hover:text-orange-500 transition-colors">
                   Gallery
                 </button>
               </li>
               <li>
-                <button onClick={() => onNavigate('contact')} className="text-gray-400 hover:text-orange-500 transition-colors">
+                <button onClick={() => handleNavigate('contact')} className="text-gray-400 hover:text-orange-500 transition-colors">
                   Contact Us
                 </button>
               </li>
@@ -91,7 +105,6 @@ export default function Footer({ onNavigate }: FooterProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-gray-800 p-3 rounded-lg hover:bg-orange-600 transition-colors"
-                aria-label="Open website in new tab"
               >
                 <Instagram size={20} />
               </a>
@@ -100,27 +113,27 @@ export default function Footer({ onNavigate }: FooterProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-gray-800 p-3 rounded-lg hover:bg-orange-600 transition-colors"
-                aria-label="Open website in new tab"
               >
                 <Facebook size={20} />
               </a>
               <a
-  href="https://share.google/Y0sBn8WEMHjAFcjl7"
-  target="_blank"
-  rel="noopener noreferrer"
-  className="bg-gray-800 p-3 rounded-lg hover:bg-orange-600 transition-colors"
-  aria-label="Open website in new tab"
->
-  <Globe size={20} />
-</a>
+                href="https://share.google/Y0sBn8WEMHjAFcjl7"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-gray-800 p-3 rounded-lg hover:bg-orange-600 transition-colors"
+              >
+                <Globe size={20} />
+              </a>
             </div>
+
             <button
-              onClick={() => onNavigate('contact')}
+              onClick={() => handleNavigate('contact')}
               className="bg-orange-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-orange-700 transition-colors w-full"
             >
               Get Free Consultation
             </button>
           </div>
+
         </div>
 
         <div className="border-t border-gray-800 pt-6">
@@ -133,6 +146,7 @@ export default function Footer({ onNavigate }: FooterProps) {
             </p>
           </div>
         </div>
+
       </div>
     </footer>
   );
