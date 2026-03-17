@@ -141,8 +141,17 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
 
   if (!isOpen) return null;
 
+  // Preload font via link tag injection (more reliable than @import)
+  if (typeof document !== "undefined" && !document.getElementById("archivo-black-font")) {
+    const link = document.createElement("link");
+    link.id = "archivo-black-font";
+    link.rel = "stylesheet";
+    link.href = "https://fonts.googleapis.com/css2?family=Archivo+Black&display=swap";
+    document.head.appendChild(link);
+  }
+
   const titles: Record<ModalMode, string> = {
-    login: "Welcome Back",
+    login: "Welcome Back!",
     register: "Create Account",
     forgot: "Reset Password",
     otp: "Verify Code",
@@ -336,14 +345,15 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                       Megapodsindia
                     </span>
                   </div>
-                  <h2 style={{
-                    fontFamily: "'Archivo Black', sans-serif",
-                    fontSize: "26px", fontWeight: 900,
-                    color: "#1c1917", lineHeight: 1.1, letterSpacing: "-0.01em",
+                  <h2 className="heading-3d" style={{
+                    fontFamily: "'Archivo Black', Georgia, serif",
+                    fontSize: "28px", fontWeight: 900,
+                    color: "#111111", lineHeight: 1.1, letterSpacing: "-0.01em",
+                    display: "inline-block", visibility: "visible",
                   }}>
                     {titles[currentMode]}
                   </h2>
-                  <p style={{ fontSize: "13px", color: "#78716c", marginTop: "3px" }}>
+                  <p style={{ fontSize: "13px", color: "#78716c", marginTop: "4px", display: "block" }}>
                     {subtitles[currentMode]}
                   </p>
                 </div>
