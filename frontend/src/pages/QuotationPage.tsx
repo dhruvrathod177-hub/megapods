@@ -74,7 +74,6 @@ interface QuoteResult {
   total: number;
 }
 
-// The shape of a saved quote passed in for editing
 export interface SavedQuote {
   _id: string;
   quoteNumber: string;
@@ -87,14 +86,17 @@ export interface SavedQuote {
   total: number;
   addons: { name: string; price: number }[];
   createdAt: string;
+  containerSizeNote?: string;
+  materialTypeNote?: string;
+  addonsNote?: string;
 }
 
 const formatINR = (n: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
 
 interface QuotationPageProps {
-  editQuote?: SavedQuote | null;       // passed from QuoteHistoryPage when editing
-  onEditSaved?: () => void;            // called after a successful update so history can refresh
+  editQuote?: SavedQuote | null;
+  onEditSaved?: () => void;
 }
 
 export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageProps) {
@@ -113,10 +115,13 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
   const [quoteDate] = useState(new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }));
 
   const [form, setForm] = useState({
-    materialType: editQuote?.materialType ?? "",
-    containerSize: editQuote?.containerSize ?? "",
-    quantity: editQuote?.quantity ?? 1,
-    selectedAddons: editQuote?.addons?.map((a) => a.name) ?? [] as string[],
+    materialType:      editQuote?.materialType      ?? "",
+    containerSize:     editQuote?.containerSize     ?? "",
+    quantity:          editQuote?.quantity          ?? 1,
+    selectedAddons:    editQuote?.addons?.map((a) => a.name) ?? [] as string[],
+    containerSizeNote: editQuote?.containerSizeNote ?? "",
+    materialTypeNote:  editQuote?.materialTypeNote  ?? "",
+    addonsNote:        editQuote?.addonsNote        ?? "",
   });
 
   useEffect(() => {
@@ -167,7 +172,6 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
     }
   };
 
-  // Save (new) or Update (edit mode)
   const handleSave = async () => {
     setSaveLoading(true);
     try {
@@ -178,7 +182,7 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
           token
         );
         setSaved(true);
-        onEditSaved?.(); // notify parent to refresh history list
+        onEditSaved?.();
       } else {
         await apiFetch("/quotations/save", { method: "POST", body: JSON.stringify(form) }, token);
         setSaved(true);
@@ -235,11 +239,17 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
   };
 
   const handleReset = () => {
-    setForm({ materialType: "", containerSize: "", quantity: 1, selectedAddons: [] });
+    setForm({
+      materialType: "", containerSize: "", quantity: 1, selectedAddons: [],
+      containerSizeNote: "", materialTypeNote: "", addonsNote: "",
+    });
     setQuote(null);
     setSaved(false);
     setError("");
   };
+
+  // Shared textarea style
+  const noteStyle = "mt-3 w-full px-4 py-3 border-2 border-dashed border-gray-200 rounded-2xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none text-sm text-gray-700 placeholder-gray-400 resize-none bg-orange-50/30";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -296,6 +306,7 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
               ) : (
                 <div className="space-y-6">
 
+                  {/* Container Size */}
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-3">Container Size *</label>
                     <div className="grid grid-cols-2 gap-3">
@@ -314,8 +325,16 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
                         </button>
                       ))}
                     </div>
+                    <textarea
+                      value={form.containerSizeNote}
+                      onChange={(e) => setForm((p) => ({ ...p, containerSizeNote: e.target.value }))}
+                      placeholder="Any custom size requirement? e.g. Need extra ventilation, modified door placement, non-standard dimensions…"
+                      rows={2}
+                      className={noteStyle}
+                    />
                   </div>
 
+                  {/* Material Type */}
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-3">Material Type *</label>
                     <select
@@ -330,8 +349,16 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
                         </option>
                       ))}
                     </select>
+                    <textarea
+                      value={form.materialTypeNote}
+                      onChange={(e) => setForm((p) => ({ ...p, materialTypeNote: e.target.value }))}
+                      placeholder="Any material preference or special treatment? e.g. Anti-rust coating, thicker gauge, specific finish…"
+                      rows={2}
+                      className={noteStyle}
+                    />
                   </div>
 
+                  {/* Quantity */}
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-3">
                       Quantity: <span className="text-orange-600">{form.quantity}</span>
@@ -353,6 +380,7 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
                     </div>
                   </div>
 
+                  {/* Additional Options */}
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-3">Additional Options</label>
                     <div className="space-y-2">
@@ -378,6 +406,13 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
                         </label>
                       ))}
                     </div>
+                    <textarea
+                      value={form.addonsNote}
+                      onChange={(e) => setForm((p) => ({ ...p, addonsNote: e.target.value }))}
+                      placeholder="Need something not listed? e.g. Custom lighting, specific AC brand, extra shelving, partition walls…"
+                      rows={2}
+                      className={noteStyle}
+                    />
                   </div>
 
                   <div className="flex gap-3 pt-2">
@@ -414,6 +449,7 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
             ) : (
               <div ref={printRef} id="print-area" className="bg-white rounded-3xl shadow-xl overflow-hidden">
 
+                {/* Quote Header */}
                 <div className="bg-gradient-to-br from-orange-600 to-orange-700 text-white p-8">
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-3 mb-2">
@@ -437,6 +473,8 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
                 </div>
 
                 <div className="p-8">
+
+                  {/* Line items */}
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b-2 border-gray-200">
@@ -470,6 +508,7 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
                     </tbody>
                   </table>
 
+                  {/* Totals */}
                   <div className="mt-6 border-t border-gray-200 pt-4 space-y-2">
                     <div className="flex justify-between text-gray-600">
                       <span>Subtotal</span><span>{formatINR(quote.subtotal)}</span>
@@ -482,10 +521,40 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
                     </div>
                   </div>
 
+                  {/* Customer Notes — only shown if at least one note is filled */}
+                  {(form.containerSizeNote || form.materialTypeNote || form.addonsNote) && (
+                    <div className="mt-6 bg-orange-50 border border-orange-100 rounded-2xl p-5">
+                      <p className="text-xs font-bold text-orange-500 uppercase tracking-widest mb-4">
+                        Customer Requirements &amp; Notes
+                      </p>
+                      <div className="space-y-4">
+                        {form.containerSizeNote && (
+                          <div>
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Container Size</p>
+                            <p className="text-sm text-gray-700 leading-relaxed">{form.containerSizeNote}</p>
+                          </div>
+                        )}
+                        {form.materialTypeNote && (
+                          <div>
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Material Type</p>
+                            <p className="text-sm text-gray-700 leading-relaxed">{form.materialTypeNote}</p>
+                          </div>
+                        )}
+                        {form.addonsNote && (
+                          <div>
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Additional Options</p>
+                            <p className="text-sm text-gray-700 leading-relaxed">{form.addonsNote}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   <p className="text-xs text-gray-400 mt-6 italic">
                     * This is an indicative quotation. Final pricing may vary based on site conditions, customizations, and delivery location. Valid for 30 days from the date of issue.
                   </p>
 
+                  {/* Actions */}
                   <div className="no-print flex flex-wrap gap-3 mt-6">
                     <button
                       onClick={handleDownloadPDF}
@@ -516,8 +585,8 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
                         : (isEditMode ? "Save Changes" : "Save Quote")}
                     </button>
                   </div>
-                </div>
 
+                </div>
               </div>
             )}
           </div>

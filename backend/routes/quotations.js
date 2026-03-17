@@ -63,7 +63,10 @@ router.post("/calculate", auth, (req, res) => {
 /* ── SAVE QUOTE ── */
 router.post("/save", auth, async (req, res) => {
   try {
-    const { materialType, containerSize, quantity, selectedAddons = [] } = req.body;
+    const {
+      materialType, containerSize, quantity, selectedAddons = [],
+      containerSizeNote = "", materialTypeNote = "", addonsNote = "",
+    } = req.body;
 
     const user = await User.findById(req.user.id);
 
@@ -91,6 +94,9 @@ router.post("/save", auth, async (req, res) => {
       subtotal,
       taxAmount,
       total,
+      containerSizeNote,
+      materialTypeNote,
+      addonsNote,
     });
 
     await quotation.save();
@@ -122,7 +128,10 @@ router.put("/:id", auth, async (req, res) => {
     if (quotation.userId.toString() !== req.user.id.toString())
       return res.status(403).json({ message: "Not authorised to update this quote" });
 
-    const { materialType, containerSize, quantity, selectedAddons = [] } = req.body;
+    const {
+      materialType, containerSize, quantity, selectedAddons = [],
+      containerSizeNote = "", materialTypeNote = "", addonsNote = "",
+    } = req.body;
 
     const basePrice     = CONTAINER_BASE_PRICES[containerSize] ?? 0;
     const materialExtra = MATERIAL_PRICES[materialType] ?? 0;
@@ -134,14 +143,17 @@ router.put("/:id", auth, async (req, res) => {
     const taxAmount  = parseFloat((subtotal * TAX_RATE).toFixed(2));
     const total      = parseFloat((subtotal + taxAmount).toFixed(2));
 
-    quotation.materialType  = materialType;
-    quotation.containerSize = containerSize;
-    quotation.quantity      = quantity;
-    quotation.addons        = addons;
-    quotation.unitPrice     = unitPrice;
-    quotation.subtotal      = subtotal;
-    quotation.taxAmount     = taxAmount;
-    quotation.total         = total;
+    quotation.materialType      = materialType;
+    quotation.containerSize     = containerSize;
+    quotation.quantity          = quantity;
+    quotation.addons            = addons;
+    quotation.unitPrice         = unitPrice;
+    quotation.subtotal          = subtotal;
+    quotation.taxAmount         = taxAmount;
+    quotation.total             = total;
+    quotation.containerSizeNote = containerSizeNote;
+    quotation.materialTypeNote  = materialTypeNote;
+    quotation.addonsNote        = addonsNote;
 
     await quotation.save();
     res.json({ message: "Quotation updated", quotation });
@@ -159,7 +171,6 @@ router.delete("/:id", auth, async (req, res) => {
     if (!quotation)
       return res.status(404).json({ message: "Quote not found" });
 
-    // Make sure the quote belongs to the logged-in user
     if (quotation.userId.toString() !== req.user.id.toString())
       return res.status(403).json({ message: "Not authorised to delete this quote" });
 
