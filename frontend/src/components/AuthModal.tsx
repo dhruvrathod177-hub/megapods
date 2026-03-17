@@ -277,21 +277,26 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                   </button>
                 )}
                 <div>
-                  {/* Logo mark */}
-                  <div className="flex items-center gap-2 mb-2">
-                    <div style={{
-                      width: "24px", height: "24px", borderRadius: "6px",
-                      background: "linear-gradient(135deg, #f97316, #ea580c)",
-                      display: "flex", alignItems: "center", justifyContent: "center"
-                    }}>
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
-                    <span style={{ fontSize: "11px", letterSpacing: "0.15em", color: "#f97316", fontWeight: 600, textTransform: "uppercase" }}>
-                      Megapods
-                    </span>
-                  </div>
+                  
+                  {/* Logo + Company Name */}
+<div className="flex items-center gap-2 mb-2">
+  <img
+    src="/favicon.ico"   // 👈 or use /logo.png if you upload better logo
+    alt="MegapodsIndia Logo"
+    className="w-7 h-7 object-contain"
+  />
+  <span
+    style={{
+      fontSize: "11px",
+      letterSpacing: "0.18em",
+      color: "#f97316",
+      fontWeight: 700,
+      textTransform: "uppercase"
+    }}
+  >
+    MEGAPODSINDIA
+  </span>
+</div>
                   <h2 style={{
                     fontFamily: "'Syne', sans-serif",
                     fontSize: "22px",
