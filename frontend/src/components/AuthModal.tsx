@@ -318,21 +318,21 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                 <div>
                   {/* Brand badge */}
                   <div className="flex items-center gap-2 mb-2">
-                    <div style={{
-                      width: "26px", height: "26px", borderRadius: "8px",
-                      background: "linear-gradient(135deg, #f97316, #ea580c)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      boxShadow: "0 4px 12px rgba(249,115,22,0.35)",
-                    }}>
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
+                    <img
+                      src="/img/logo1.JPG"
+                      alt="Megapods"
+                      style={{
+                        width: "36px", height: "36px", borderRadius: "8px",
+                        objectFit: "cover",
+                        boxShadow: "0 4px 12px rgba(249,115,22,0.25)",
+                        border: "1px solid rgba(249,115,22,0.15)",
+                      }}
+                    />
                     <span style={{
                       fontSize: "11px", letterSpacing: "0.14em",
                       color: "#ea580c", fontWeight: 700, textTransform: "uppercase",
                     }}>
-                      Megapods
+                      Megapodsindia.
                     </span>
                   </div>
                   <h2 style={{
