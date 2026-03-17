@@ -25,6 +25,13 @@ export default function Header({ currentPage, onNavigate, openSignup, openForgot
   ];
 
   const handleNavigate = (page: string) => {
+    // ✅ If user clicks "Get Quote" and is NOT logged in, open login modal instead
+    if (page === "quotation" && !isAuthenticated) {
+      openSignup();
+      setMobileMenuOpen(false);
+      setDropdownOpen(false);
+      return;
+    }
     onNavigate(page);
     setMobileMenuOpen(false);
     setDropdownOpen(false);
@@ -38,7 +45,6 @@ export default function Header({ currentPage, onNavigate, openSignup, openForgot
     setDropdownOpen(false);
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -82,7 +88,6 @@ export default function Header({ currentPage, onNavigate, openSignup, openForgot
             {/* AUTH AREA */}
             {isAuthenticated && user ? (
               <div className="relative flex-shrink-0" ref={dropdownRef}>
-                {/* Username Button */}
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                   className="flex items-center gap-2 bg-orange-50 border border-orange-200 px-4 py-2 rounded-full hover:bg-orange-100 transition-colors"
@@ -94,46 +99,31 @@ export default function Header({ currentPage, onNavigate, openSignup, openForgot
                   <ChevronDown size={14} className={`text-orange-600 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`} />
                 </button>
 
-                {/* Dropdown Menu */}
                 {dropdownOpen && (
                   <div className="absolute right-0 top-12 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50">
-                    {/* User Info Header */}
                     <div className="bg-orange-50 px-4 py-3 border-b border-orange-100">
                       <p className="font-bold text-gray-900 text-sm">{user.fullName}</p>
                       <p className="text-xs text-gray-500 truncate">{user.email}</p>
                     </div>
-
-                    {/* Menu Items */}
                     <div className="py-2">
-                      <button
-                        onClick={() => handleNavigate("account")}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
-                      >
+                      <button onClick={() => handleNavigate("account")}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors">
                         <User size={16} className="text-orange-500" />
                         Account Details
                       </button>
-
-                      <button
-                        onClick={() => handleNavigate("quote-history")}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
-                      >
+                      <button onClick={() => handleNavigate("quote-history")}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors">
                         <History size={16} className="text-orange-500" />
                         Quotation History
                       </button>
-
-                      <button
-                        onClick={() => { setDropdownOpen(false); openForgotPassword?.(); }}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
-                      >
+                      <button onClick={() => { setDropdownOpen(false); openForgotPassword?.(); }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors">
                         <Key size={16} className="text-orange-500" />
                         Change Password
                       </button>
-
                       <div className="border-t border-gray-100 mt-1 pt-1">
-                        <button
-                          onClick={handleLogout}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition-colors"
-                        >
+                        <button onClick={handleLogout}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition-colors">
                           <LogOut size={16} />
                           Logout
                         </button>
@@ -143,10 +133,8 @@ export default function Header({ currentPage, onNavigate, openSignup, openForgot
                 )}
               </div>
             ) : (
-              <button
-                onClick={openSignup}
-                className="flex-shrink-0 bg-orange-600 text-white px-6 py-2.5 rounded-full font-semibold hover:bg-orange-700 transition-colors hover:scale-105 duration-300 whitespace-nowrap"
-              >
+              <button onClick={openSignup}
+                className="flex-shrink-0 bg-orange-600 text-white px-6 py-2.5 rounded-full font-semibold hover:bg-orange-700 transition-colors hover:scale-105 duration-300 whitespace-nowrap">
                 Sign Up / Login
               </button>
             )}
