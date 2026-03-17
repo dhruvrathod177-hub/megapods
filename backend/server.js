@@ -4,8 +4,9 @@ const express   = require("express")
 const mongoose  = require("mongoose")
 const cors      = require("cors")
 
-const authRoutes      = require("./routes/auth")
-const quotationRoutes = require("./routes/quotations")
+const authRoutes         = require("./routes/auth")
+const quotationRoutes    = require("./routes/quotations")
+const negotiationRoutes  = require("./routes/negotiations")
 
 const app = express()
 
@@ -31,8 +32,9 @@ mongoose
   .catch((err) => console.log("❌  MongoDB Error:", err))
 
 /* ── ROUTES ── */
-app.use("/api/auth",       authRoutes)
-app.use("/api/quotations", quotationRoutes)
+app.use("/api/auth",         authRoutes)
+app.use("/api/quotations",   quotationRoutes)
+app.use("/api/negotiations", negotiationRoutes)
 
 app.get("/", (req, res) => res.send("Megapods Backend ✅"))
 
