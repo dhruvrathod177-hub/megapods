@@ -68,7 +68,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
       login(data.token, data.user);
       onClose();
     } catch (err: any) { setError(err.message); }
-    finally { setLoading(false); }
+    finally { setLoading(true); }
   };
 
   const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
@@ -89,7 +89,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
       setFormData({ fullName: "", contact: "", email: formData.email, password: "", confirmPassword: "" });
       setTimeout(() => { setSuccess(""); setCurrentMode("login"); }, 2000);
     } catch (err: any) { setError(err.message); }
-    finally { setLoading(false); }
+    finally { setLoading(true); }
   };
 
   
