@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { FileText, Calendar, Package, RefreshCw, Calculator } from "lucide-react";
+import { FileText, Calendar, Package, RefreshCw, Calculator, Trash2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
 
@@ -73,6 +73,7 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
   const [quotes, setQuotes] = useState<SavedQuote[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     apiFetch("/quotations/my-quotes", {}, token)
@@ -80,6 +81,23 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [token]);
+
+  const handleDelete = async (e: React.MouseEvent, quoteId: string) => {
+    e.stopPropagation(); // prevent card expand/collapse
+    if (!confirm("Are you sure you want to delete this quote?")) return;
+
+    setDeletingId(quoteId);
+    try {
+      await apiFetch(`/quotations/${quoteId}`, { method: "DELETE" }, token);
+      setQuotes((prev) => prev.filter((q) => q._id !== quoteId));
+      if (expanded === quoteId) setExpanded(null);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete quote. Please try again.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -131,27 +149,48 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
             {quotes.map((quote) => (
               <div key={quote._id} className="bg-white rounded-2xl shadow-lg overflow-hidden">
 
-                <button
-                  onClick={() => setExpanded(expanded === quote._id ? null : quote._id)}
-                  className="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-center gap-4">
+                <div className="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors">
+                  {/* Clickable area for expand/collapse */}
+                  <button
+                    onClick={() => setExpanded(expanded === quote._id ? null : quote._id)}
+                    className="flex items-center gap-4 flex-1 text-left"
+                  >
                     <div className="bg-orange-100 p-3 rounded-xl">
                       <Package size={20} className="text-orange-600" />
                     </div>
-                    <div className="text-left">
+                    <div>
                       <p className="font-bold text-gray-900">{quote.quoteNumber}</p>
                       <p className="text-sm text-gray-500">{quote.containerSize} · {quote.materialType} · Qty {quote.quantity}</p>
                     </div>
+                  </button>
+
+                  {/* Right side: price + date + delete */}
+                  <div className="flex items-center gap-4 ml-4">
+                    <button
+                      onClick={() => setExpanded(expanded === quote._id ? null : quote._id)}
+                      className="text-right"
+                    >
+                      <p className="font-bold text-orange-600 text-lg">{formatINR(quote.total)}</p>
+                      <p className="text-xs text-gray-400 flex items-center gap-1 justify-end">
+                        <Calendar size={10} />
+                        {new Date(quote.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                      </p>
+                    </button>
+
+                    {/* Delete button */}
+                    <button
+                      onClick={(e) => handleDelete(e, quote._id)}
+                      disabled={deletingId === quote._id}
+                      className="p-2 rounded-lg border border-gray-200 text-gray-400 hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Delete quote"
+                    >
+                      {deletingId === quote._id
+                        ? <RefreshCw size={16} className="animate-spin" />
+                        : <Trash2 size={16} />
+                      }
+                    </button>
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold text-orange-600 text-lg">{formatINR(quote.total)}</p>
-                    <p className="text-xs text-gray-400 flex items-center gap-1 justify-end">
-                      <Calendar size={10} />
-                      {new Date(quote.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                    </p>
-                  </div>
-                </button>
+                </div>
 
                 {expanded === quote._id && (
                   <div className="border-t border-gray-100 px-6 pb-6 pt-4 bg-gray-50">
