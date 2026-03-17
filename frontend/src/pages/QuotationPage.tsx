@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Calculator, Download, Printer, Save, CheckCircle, RefreshCw } from "lucide-react";
+import { Calculator, Download, Printer, Save, CheckCircle, RefreshCw, Pencil } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
 
@@ -74,12 +74,34 @@ interface QuoteResult {
   total: number;
 }
 
+// The shape of a saved quote passed in for editing
+export interface SavedQuote {
+  _id: string;
+  quoteNumber: string;
+  materialType: string;
+  containerSize: string;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+  taxAmount: number;
+  total: number;
+  addons: { name: string; price: number }[];
+  createdAt: string;
+}
+
 const formatINR = (n: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
 
-export default function QuotationPage() {
+interface QuotationPageProps {
+  editQuote?: SavedQuote | null;       // passed from QuoteHistoryPage when editing
+  onEditSaved?: () => void;            // called after a successful update so history can refresh
+}
+
+export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageProps) {
   const { token, user } = useAuth();
   const printRef = useRef<HTMLDivElement>(null);
+
+  const isEditMode = !!editQuote;
 
   const [config, setConfig] = useState<PricingConfig | null>(null);
   const [loading, setLoading] = useState(false);
@@ -87,14 +109,14 @@ export default function QuotationPage() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const [quote, setQuote] = useState<QuoteResult | null>(null);
-  const [quoteNumber] = useState(`MPI-${Date.now()}`);
+  const [quoteNumber] = useState(editQuote?.quoteNumber ?? `MPI-${Date.now()}`);
   const [quoteDate] = useState(new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }));
 
   const [form, setForm] = useState({
-    materialType: "",
-    containerSize: "",
-    quantity: 1,
-    selectedAddons: [] as string[],
+    materialType: editQuote?.materialType ?? "",
+    containerSize: editQuote?.containerSize ?? "",
+    quantity: editQuote?.quantity ?? 1,
+    selectedAddons: editQuote?.addons?.map((a) => a.name) ?? [] as string[],
   });
 
   useEffect(() => {
@@ -102,6 +124,14 @@ export default function QuotationPage() {
       .then(setConfig)
       .catch(() => setError("Failed to load pricing config. Check if backend is running."));
   }, [token]);
+
+  // Auto-calculate when opening in edit mode and config is ready
+  useEffect(() => {
+    if (isEditMode && config && form.materialType && form.containerSize) {
+      handleCalculate();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config]);
 
   const toggleAddon = (name: string) => {
     setForm((prev) => ({
@@ -137,11 +167,22 @@ export default function QuotationPage() {
     }
   };
 
+  // Save (new) or Update (edit mode)
   const handleSave = async () => {
     setSaveLoading(true);
     try {
-      await apiFetch("/quotations/save", { method: "POST", body: JSON.stringify(form) }, token);
-      setSaved(true);
+      if (isEditMode && editQuote) {
+        await apiFetch(
+          `/quotations/${editQuote._id}`,
+          { method: "PUT", body: JSON.stringify(form) },
+          token
+        );
+        setSaved(true);
+        onEditSaved?.(); // notify parent to refresh history list
+      } else {
+        await apiFetch("/quotations/save", { method: "POST", body: JSON.stringify(form) }, token);
+        setSaved(true);
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -157,29 +198,22 @@ export default function QuotationPage() {
           "Content-Type": "application/json",
           Authorization: token ? `Bearer ${token}` : "",
         },
-        body: JSON.stringify({
-          form,
-          quote,
-          user,
-        }),
+        body: JSON.stringify({ form, quote, user }),
       });
-  
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
-  
       const a = document.createElement("a");
       a.href = url;
-      a.target = "_blank"; // ✅ MOBILE FIX
+      a.target = "_blank";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-  
       window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error("Download failed", err);
     }
   };
-  
+
   const handlePrint = async () => {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || "https://megapods.onrender.com/api"}/quotations/generate-pdf`, {
@@ -188,27 +222,13 @@ export default function QuotationPage() {
           "Content-Type": "application/json",
           Authorization: token ? `Bearer ${token}` : "",
         },
-        body: JSON.stringify({
-          form,
-          quote,
-          user,
-        }),
+        body: JSON.stringify({ form, quote, user }),
       });
-  
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
-  
       const newWindow = window.open(url, "_blank");
-  
-      if (!newWindow) {
-        alert("Allow popup to print");
-        return;
-      }
-  
-      setTimeout(() => {
-        newWindow.print();
-      }, 500);
-  
+      if (!newWindow) { alert("Allow popup to print"); return; }
+      setTimeout(() => { newWindow.print(); }, 500);
     } catch (err) {
       console.error("Print failed", err);
     }
@@ -237,37 +257,32 @@ export default function QuotationPage() {
       `}</style>
 
       {/* HERO */}
-
       <section className="no-print bg-gradient-to-br from-orange-600 to-orange-700 text-white py-12 lg:py-16">
-
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-
           <div className="flex items-center justify-center gap-3 mb-4">
-            <Calculator size={36} />
+            {isEditMode ? <Pencil size={36} /> : <Calculator size={36} />}
             <Heading3D tag="h1" className="text-4xl sm:text-5xl font-bold">
-              Quotation Generator
+              {isEditMode ? `Editing ${editQuote.quoteNumber}` : "Quotation Generator"}
             </Heading3D>
           </div>
-
           <p className="text-xl text-orange-100 max-w-2xl mx-auto">
-            Get an instant price estimate for your container solution — customized to your exact needs.
+            {isEditMode
+              ? "Update the configuration below and save your changes."
+              : "Get an instant price estimate for your container solution — customized to your exact needs."}
           </p>
-
         </div>
-
       </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid lg:grid-cols-2 gap-12">
 
           {/* FORM */}
-
           <div className="no-print">
             <div className="bg-white rounded-3xl shadow-xl p-8">
 
               <Heading3D tag="h2" className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                 <span className="bg-orange-100 text-orange-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold">1</span>
-                Configure Your Container
+                {isEditMode ? "Update Configuration" : "Configure Your Container"}
               </Heading3D>
 
               {error && (
@@ -372,7 +387,7 @@ export default function QuotationPage() {
                       className="flex-1 bg-orange-600 hover:bg-orange-700 disabled:opacity-60 text-white py-4 rounded-2xl font-bold shadow-lg transition flex items-center justify-center gap-2"
                     >
                       {loading ? <RefreshCw size={18} className="animate-spin" /> : <Calculator size={18} />}
-                      {loading ? "Calculating…" : "Generate Quote"}
+                      {loading ? "Calculating…" : isEditMode ? "Recalculate" : "Generate Quote"}
                     </button>
                     <button onClick={handleReset} className="px-5 py-4 rounded-2xl border-2 border-gray-200 text-gray-500 hover:border-gray-300 transition">
                       <RefreshCw size={18} />
@@ -385,7 +400,6 @@ export default function QuotationPage() {
           </div>
 
           {/* QUOTE RESULT */}
-
           <div id="quote-result">
             {!quote ? (
               <div className="no-print bg-white rounded-3xl shadow-xl p-8 flex flex-col items-center justify-center text-center min-h-[400px]">
@@ -395,7 +409,7 @@ export default function QuotationPage() {
                 <Heading3D tag="h3" className="text-xl font-bold text-gray-400 mb-2">
                   Your quote will appear here
                 </Heading3D>
-                <p className="text-gray-400 text-sm">Fill in the form and click "Generate Quote"</p>
+                <p className="text-gray-400 text-sm">Fill in the form and click "{isEditMode ? "Recalculate" : "Generate Quote"}"</p>
               </div>
             ) : (
               <div ref={printRef} id="print-area" className="bg-white rounded-3xl shadow-xl overflow-hidden">
@@ -494,8 +508,12 @@ export default function QuotationPage() {
                           : "border-2 border-orange-300 hover:border-orange-500 text-orange-600"
                       }`}
                     >
-                      {saved ? <CheckCircle size={18} /> : <Save size={18} />}
-                      {saved ? "Saved!" : saveLoading ? "Saving…" : "Save Quote"}
+                      {saved ? <CheckCircle size={18} /> : isEditMode ? <Pencil size={18} /> : <Save size={18} />}
+                      {saved
+                        ? (isEditMode ? "Updated!" : "Saved!")
+                        : saveLoading
+                        ? (isEditMode ? "Updating…" : "Saving…")
+                        : (isEditMode ? "Save Changes" : "Save Quote")}
                     </button>
                   </div>
                 </div>

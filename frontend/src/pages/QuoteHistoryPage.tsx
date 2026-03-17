@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { FileText, Calendar, Package, RefreshCw, Calculator, Trash2 } from "lucide-react";
+import { FileText, Calendar, Package, RefreshCw, Calculator, Trash2, Pencil } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
+import QuotationPage, { SavedQuote } from "./QuotationPage";
 
 type HTMLTag = 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'span' | 'div';
 
@@ -47,20 +48,6 @@ function Heading3D({ children, className = '', tag: Tag = 'h2' }: Heading3DProps
   );
 }
 
-interface SavedQuote {
-  _id: string;
-  quoteNumber: string;
-  materialType: string;
-  containerSize: string;
-  quantity: number;
-  unitPrice: number;
-  subtotal: number;
-  taxAmount: number;
-  total: number;
-  addons: { name: string; price: number }[];
-  createdAt: string;
-}
-
 const formatINR = (n: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
 
@@ -74,18 +61,21 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingQuote, setEditingQuote] = useState<SavedQuote | null>(null);
 
-  useEffect(() => {
+  const fetchQuotes = () => {
+    setLoading(true);
     apiFetch("/quotations/my-quotes", {}, token)
       .then(setQuotes)
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [token]);
+  };
+
+  useEffect(() => { fetchQuotes(); }, [token]);
 
   const handleDelete = async (e: React.MouseEvent, quoteId: string) => {
-    e.stopPropagation(); // prevent card expand/collapse
+    e.stopPropagation();
     if (!confirm("Are you sure you want to delete this quote?")) return;
-
     setDeletingId(quoteId);
     try {
       await apiFetch(`/quotations/${quoteId}`, { method: "DELETE" }, token);
@@ -98,6 +88,28 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
       setDeletingId(null);
     }
   };
+
+  const handleEditSaved = () => {
+    setEditingQuote(null);  // go back to history
+    fetchQuotes();          // refresh the list with updated data
+  };
+
+  // If editing, render QuotationPage in edit mode
+  if (editingQuote) {
+    return (
+      <div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
+          <button
+            onClick={() => setEditingQuote(null)}
+            className="flex items-center gap-2 text-gray-500 hover:text-orange-600 transition text-sm font-semibold mb-2"
+          >
+            ← Back to Quotation History
+          </button>
+        </div>
+        <QuotationPage editQuote={editingQuote} onEditSaved={handleEditSaved} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -150,7 +162,6 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
               <div key={quote._id} className="bg-white rounded-2xl shadow-lg overflow-hidden">
 
                 <div className="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors">
-                  {/* Clickable area for expand/collapse */}
                   <button
                     onClick={() => setExpanded(expanded === quote._id ? null : quote._id)}
                     className="flex items-center gap-4 flex-1 text-left"
@@ -164,8 +175,7 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
                     </div>
                   </button>
 
-                  {/* Right side: price + date + delete */}
-                  <div className="flex items-center gap-4 ml-4">
+                  <div className="flex items-center gap-3 ml-4">
                     <button
                       onClick={() => setExpanded(expanded === quote._id ? null : quote._id)}
                       className="text-right"
@@ -175,6 +185,15 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
                         <Calendar size={10} />
                         {new Date(quote.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                       </p>
+                    </button>
+
+                    {/* Edit button */}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setEditingQuote(quote); }}
+                      className="p-2 rounded-lg border border-gray-200 text-gray-400 hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600 transition-colors"
+                      title="Edit quote"
+                    >
+                      <Pencil size={16} />
                     </button>
 
                     {/* Delete button */}
