@@ -10,6 +10,9 @@ const negotiationSchema = new mongoose.Schema(
     message:       { type: String, required: true },
     status:        { type: String, default: "pending", enum: ["pending", "accepted", "rejected"] },
     adminResponse: { type: String, default: "" },
+    userName:      { type: String, default: "" },
+    userEmail:     { type: String, default: "" },
+    userContact:   { type: String, default: "" },
   },
   { timestamps: true }
 );

@@ -7,6 +7,7 @@ const cors      = require("cors")
 const authRoutes         = require("./routes/auth")
 const quotationRoutes    = require("./routes/quotations")
 const negotiationRoutes  = require("./routes/negotiations")
+const adminRoutes        = require("./routes/admin")
 
 const app = express()
 
@@ -35,6 +36,7 @@ mongoose
 app.use("/api/auth",         authRoutes)
 app.use("/api/quotations",   quotationRoutes)
 app.use("/api/negotiations", negotiationRoutes)
+app.use("/api/admin",        adminRoutes)
 
 app.get("/", (req, res) => res.send("Megapods Backend ✅"))
 

@@ -11,20 +11,56 @@ import Contact from "./pages/Contact";
 import QuotationPage from "./pages/QuotationPage";
 import AccountPage from "./pages/AccountPage";
 import QuoteHistoryPage from "./pages/QuoteHistoryPage.tsx";
+import AdminLoginPage from "./pages/AdminLoginPage";
+import AdminDashboard from "./pages/AdminDashboard";
 import Footer from "./components/Footer";
 import WhatsAppButton from "./components/WhatsAppButton";
 
 // ✅ Only these pages require login
 const PROTECTED_PAGES = ["quotation", "account", "quote-history"];
 
+// ── Admin portal — completely separate from main app ──────────────────────────
+function AdminPortal() {
+  const [adminToken, setAdminToken] = useState<string | null>(
+    sessionStorage.getItem("adminToken")
+  );
+  const [adminUser, setAdminUser] = useState<{ email: string; name: string } | null>(
+    () => {
+      const stored = sessionStorage.getItem("adminUser");
+      return stored ? JSON.parse(stored) : null;
+    }
+  );
+
+  const handleLogin = (token: string, admin: { email: string; name: string }) => {
+    sessionStorage.setItem("adminToken", token);
+    sessionStorage.setItem("adminUser", JSON.stringify(admin));
+    setAdminToken(token);
+    setAdminUser(admin);
+  };
+
+  const handleLogout = () => {
+    sessionStorage.removeItem("adminToken");
+    sessionStorage.removeItem("adminUser");
+    setAdminToken(null);
+    setAdminUser(null);
+  };
+
+  if (adminToken && adminUser) {
+    return <AdminDashboard token={adminToken} admin={adminUser} onLogout={handleLogout} />;
+  }
+
+  return <AdminLoginPage onLogin={handleLogin} />;
+}
+
+// ── Main app ──────────────────────────────────────────────────────────────────
 function AppInner() {
   const [currentPage, setCurrentPage] = useState("home");
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<"login" | "register">("login"); // ✅ FIXED: was "register"
+  const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [startOnForgot, setStartOnForgot] = useState(false);
 
-  const openSignup = () => { setAuthMode("login"); setStartOnForgot(false); setAuthModalOpen(true); }; // ✅ FIXED: was "register"
-  const openLogin  = () => { setAuthMode("login");    setStartOnForgot(false); setAuthModalOpen(true); };
+  const openSignup  = () => { setAuthMode("login");  setStartOnForgot(false); setAuthModalOpen(true); };
+  const openLogin   = () => { setAuthMode("login");  setStartOnForgot(false); setAuthModalOpen(true); };
   const openForgotPassword = () => { setStartOnForgot(true); setAuthModalOpen(true); };
 
   const renderPage = () => {
@@ -75,6 +111,13 @@ function AppInner() {
 }
 
 export default function App() {
+  // If URL path is /admin, show the admin portal (no header/footer)
+  const isAdmin = window.location.pathname === "/admin";
+
+  if (isAdmin) {
+    return <AdminPortal />;
+  }
+
   return (
     <AuthProvider>
       <AppInner />
