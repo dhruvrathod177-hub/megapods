@@ -3,7 +3,6 @@ const router       = express.Router();
 const auth         = require("../middleware/auth");
 const Negotiation  = require("../models/Negotiation");
 const Quotation    = require("../models/Quotation");
-const User         = require("../models/User");
 const { sendNegotiationEmail } = require("../utils/mailer");
 
 /* ── SUBMIT NEGOTIATION ── */
@@ -14,11 +13,17 @@ router.post("/", auth, async (req, res) => {
     if (!quotationId || !offeredPrice || !message)
       return res.status(400).json({ message: "quotationId, offeredPrice and message are required" });
 
+    // JWT already contains id, fullName, email, contact — no DB lookup needed
+    const userId      = req.user.id;
+    const userName    = req.user.fullName || "Unknown";
+    const userEmail   = req.user.email    || "";
+    const userContact = req.user.contact  || "";
+
     // Verify the quote belongs to this user
     const quotation = await Quotation.findById(quotationId);
     if (!quotation)
       return res.status(404).json({ message: "Quote not found" });
-    if (quotation.userId.toString() !== req.user.id.toString())
+    if (quotation.userId.toString() !== userId.toString())
       return res.status(403).json({ message: "Not authorised" });
 
     // Only one active negotiation per quote
@@ -26,11 +31,9 @@ router.post("/", auth, async (req, res) => {
     if (existing)
       return res.status(409).json({ message: "A negotiation is already pending for this quote" });
 
-    const user = await User.findById(req.user.id);
-
     const negotiation = new Negotiation({
       quotationId,
-      userId:        req.user.id,
+      userId,
       quoteNumber:   quotation.quoteNumber,
       originalTotal: quotation.total,
       offeredPrice:  parseFloat(offeredPrice),
@@ -39,15 +42,15 @@ router.post("/", auth, async (req, res) => {
 
     await negotiation.save();
 
-    // Send email to admin (non-blocking — don't fail the request if email fails)
+    // Send email to admin (non-blocking)
     sendNegotiationEmail({
       quoteNumber:   quotation.quoteNumber,
       originalTotal: quotation.total,
       offeredPrice:  parseFloat(offeredPrice),
       message,
-      userName:    user?.fullName    || "Unknown",
-      userEmail:   user?.email       || "",
-      userContact: user?.contact     || "",
+      userName,
+      userEmail,
+      userContact,
     }).catch((err) => console.error("Negotiation email failed:", err));
 
     res.status(201).json({ message: "Negotiation submitted", negotiation });
