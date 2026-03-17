@@ -41,15 +41,11 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     fullName: "", contact: "", email: "", password: "", confirmPassword: "",
   });
 
-  // useEffect(() => {
-  //   if (startOnForgot) { setCurrentMode("forgot"); }
-  //   else if (mode) { setCurrentMode(mode); }
-  // }, [mode, startOnForgot]);
   useEffect(() => {
     if (startOnForgot) { setCurrentMode("forgot"); }
     else if (mode) { setCurrentMode(mode); }
     else { setCurrentMode("login"); }
-  }, [mode, startOnForgot]);
+  }, [mode, startOnForgot, isOpen]);
 
   useEffect(() => { setError(""); setSuccess(""); }, [currentMode]);
 
@@ -57,7 +53,6 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
@@ -97,7 +92,6 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     finally { setLoading(false); }
   };
 
-  
   const handleForgotPassword = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
@@ -178,25 +172,14 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
-
-        .auth-modal-overlay {
-          animation: fadeIn 0.2s ease;
-        }
-        .auth-modal-card {
-          animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
+        .auth-modal-overlay { animation: fadeIn 0.2s ease; }
+        .auth-modal-card { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp {
           from { opacity: 0; transform: translateY(24px) scale(0.97); }
           to { opacity: 1; transform: translateY(0) scale(1); }
         }
-        .auth-btn-primary {
-          position: relative;
-          overflow: hidden;
-        }
+        .auth-btn-primary { position: relative; overflow: hidden; }
         .auth-btn-primary::before {
           content: '';
           position: absolute;
@@ -205,40 +188,21 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
           opacity: 0;
           transition: opacity 0.3s ease;
         }
-        .auth-btn-primary:hover::before {
-          opacity: 1;
-        }
-        .auth-btn-primary span {
-          position: relative;
-          z-index: 1;
-        }
-        .otp-input {
-          letter-spacing: 0.8rem;
-          font-family: 'Syne', sans-serif;
-        }
+        .auth-btn-primary:hover::before { opacity: 1; }
+        .auth-btn-primary span { position: relative; z-index: 1; }
+        .otp-input { letter-spacing: 0.8rem; font-family: 'Syne', sans-serif; }
         .orb-1 {
-          position: absolute;
-          width: 220px;
-          height: 220px;
-          border-radius: 50%;
+          position: absolute; width: 220px; height: 220px; border-radius: 50%;
           background: radial-gradient(circle, rgba(249,115,22,0.12) 0%, transparent 70%);
-          top: -60px;
-          right: -60px;
-          pointer-events: none;
+          top: -60px; right: -60px; pointer-events: none;
         }
         .orb-2 {
-          position: absolute;
-          width: 160px;
-          height: 160px;
-          border-radius: 50%;
+          position: absolute; width: 160px; height: 160px; border-radius: 50%;
           background: radial-gradient(circle, rgba(249,115,22,0.07) 0%, transparent 70%);
-          bottom: -40px;
-          left: -40px;
-          pointer-events: none;
+          bottom: -40px; left: -40px; pointer-events: none;
         }
         .divider-line {
-          flex: 1;
-          height: 1px;
+          flex: 1; height: 1px;
           background: linear-gradient(to right, transparent, #2e2e2e, transparent);
         }
       `}</style>
@@ -246,14 +210,12 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
       <div className="auth-modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
         style={{ fontFamily: "'DM Sans', sans-serif" }}>
 
-        {/* Backdrop */}
         <div
           className="absolute inset-0"
           style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(12px)" }}
           onClick={onClose}
         />
 
-        {/* Card */}
         <div
           className="auth-modal-card relative w-full max-w-[420px] rounded-2xl overflow-hidden"
           style={{
@@ -262,16 +224,13 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
             boxShadow: "0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03)",
           }}
         >
-          {/* Decorative orbs */}
           <div className="orb-1" />
           <div className="orb-2" />
 
-          {/* Top accent line */}
           <div style={{ height: "2px", background: "linear-gradient(90deg, transparent, #f97316, transparent)" }} />
 
           <div className="relative p-8">
 
-            {/* Header */}
             <div className="flex justify-between items-start mb-7">
               <div className="flex items-center gap-3">
                 {backMode[currentMode] && (
@@ -284,34 +243,13 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                   </button>
                 )}
                 <div>
-                  
-                  {/* Logo + Company Name */}
-<div className="flex items-center gap-2 mb-2">
-  <img
-    src="/favicon.ico"   // 👈 or use /logo.png if you upload better logo
-    alt="MegapodsIndia Logo"
-    className="w-7 h-7 object-contain"
-  />
-  <span
-    style={{
-      fontSize: "11px",
-      letterSpacing: "0.18em",
-      color: "#f97316",
-      fontWeight: 700,
-      textTransform: "uppercase"
-    }}
-  >
-    MEGAPODSINDIA
-  </span>
-</div>
-                  <h2 style={{
-                    fontFamily: "'Syne', sans-serif",
-                    fontSize: "22px",
-                    fontWeight: 700,
-                    color: "#ffffff",
-                    lineHeight: 1.2,
-                    letterSpacing: "-0.02em"
-                  }}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <img src="/favicon.ico" alt="MegapodsIndia Logo" className="w-7 h-7 object-contain" />
+                    <span style={{ fontSize: "11px", letterSpacing: "0.18em", color: "#f97316", fontWeight: 700, textTransform: "uppercase" }}>
+                      MEGAPODSINDIA
+                    </span>
+                  </div>
+                  <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: "22px", fontWeight: 700, color: "#ffffff", lineHeight: 1.2, letterSpacing: "-0.02em" }}>
                     {titles[currentMode]}
                   </h2>
                   <p style={{ fontSize: "13px", color: "#666", marginTop: "3px" }}>
@@ -328,7 +266,6 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
               </button>
             </div>
 
-            {/* Alerts */}
             {error && (
               <div className="mb-5 flex items-start gap-3 px-4 py-3 rounded-xl text-sm"
                 style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171" }}>
@@ -352,9 +289,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                     Email
                   </label>
                   <input type="email" name="email" placeholder="you@example.com" required
-                    value={formData.email} onChange={handleChange}
-                    className={inputClass}
-                  />
+                    value={formData.email} onChange={handleChange} className={inputClass} />
                 </div>
                 <div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
@@ -370,14 +305,12 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                   <div className="relative">
                     <input type={showPassword ? "text" : "password"} name="password" placeholder="••••••••" required
                       value={formData.password} onChange={handleChange}
-                      className={inputClass} style={{ paddingRight: "44px" }}
-                    />
+                      className={inputClass} style={{ paddingRight: "44px" }} />
                     <span onClick={() => setShowPassword(!showPassword)} className={eyeButtonClass}>
                       {showPassword ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
                     </span>
                   </div>
                 </div>
-
                 <div style={{ paddingTop: "4px" }}>
                   <button type="submit" disabled={loading}
                     className="auth-btn-primary w-full py-3.5 rounded-xl font-semibold text-sm text-white transition-all duration-300 disabled:opacity-50"
@@ -385,13 +318,11 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                     <span>{loading ? "Signing in…" : "Sign In"}</span>
                   </button>
                 </div>
-
                 <div className="flex items-center gap-3 py-1">
                   <div className="divider-line" />
                   <span style={{ fontSize: "11px", color: "#444", whiteSpace: "nowrap" }}>New here?</span>
                   <div className="divider-line" />
                 </div>
-
                 <button type="button"
                   onClick={() => setCurrentMode("register")}
                   className="w-full py-3.5 rounded-xl font-medium text-sm transition-all duration-200"
@@ -416,12 +347,9 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                       {field.label}
                     </label>
                     <input type={field.type} name={field.name} placeholder={field.placeholder} required
-                      value={formData[field.name as keyof FormData]} onChange={handleChange}
-                      className={inputClass}
-                    />
+                      value={formData[field.name as keyof FormData]} onChange={handleChange} className={inputClass} />
                   </div>
                 ))}
-
                 {[
                   { label: "Password", value: formData.password, name: "password", show: showPassword, toggle: () => setShowPassword(!showPassword) },
                   { label: "Confirm Password", value: formData.confirmPassword, name: "confirmPassword", show: showConfirmPassword, toggle: () => setShowConfirmPassword(!showConfirmPassword) },
@@ -433,15 +361,13 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                     <div className="relative">
                       <input type={field.show ? "text" : "password"} name={field.name} placeholder="••••••••" required
                         value={field.value} onChange={handleChange}
-                        className={inputClass} style={{ paddingRight: "44px" }}
-                      />
+                        className={inputClass} style={{ paddingRight: "44px" }} />
                       <span onClick={field.toggle} className={eyeButtonClass}>
                         {field.show ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
                       </span>
                     </div>
                   </div>
                 ))}
-
                 <div style={{ paddingTop: "4px" }}>
                   <button type="submit" disabled={loading}
                     className="auth-btn-primary w-full py-3.5 rounded-xl font-semibold text-sm text-white transition-all duration-300 disabled:opacity-50"
@@ -451,8 +377,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                 </div>
                 <p style={{ textAlign: "center", fontSize: "13px", color: "#555" }}>
                   Already a member?{" "}
-                  <span onClick={() => setCurrentMode("login")}
-                    style={{ color: "#f97316", cursor: "pointer", fontWeight: 500 }}>
+                  <span onClick={() => setCurrentMode("login")} style={{ color: "#f97316", cursor: "pointer", fontWeight: 500 }}>
                     Sign In
                   </span>
                 </p>
@@ -467,9 +392,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                     Email Address
                   </label>
                   <input type="email" placeholder="you@example.com" required
-                    value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)}
-                    className={inputClass}
-                  />
+                    value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} className={inputClass} />
                 </div>
                 <div style={{ paddingTop: "4px" }}>
                   <button type="submit" disabled={loading}
@@ -480,8 +403,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                 </div>
                 <p style={{ textAlign: "center", fontSize: "13px", color: "#555" }}>
                   Remembered it?{" "}
-                  <span onClick={() => setCurrentMode("login")}
-                    style={{ color: "#f97316", cursor: "pointer", fontWeight: 500 }}>
+                  <span onClick={() => setCurrentMode("login")} style={{ color: "#f97316", cursor: "pointer", fontWeight: 500 }}>
                     Back to Sign In
                   </span>
                 </p>
@@ -502,8 +424,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                   <input type="text" placeholder="000000" required maxLength={6}
                     value={otpValue} onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, ""))}
                     className={`${inputClass} otp-input`}
-                    style={{ textAlign: "center", fontSize: "22px", fontWeight: 700, paddingRight: "16px" }}
-                  />
+                    style={{ textAlign: "center", fontSize: "22px", fontWeight: 700, paddingRight: "16px" }} />
                 </div>
                 <div style={{ paddingTop: "4px" }}>
                   <button type="submit"
@@ -514,8 +435,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                 </div>
                 <p style={{ textAlign: "center", fontSize: "13px", color: "#555" }}>
                   Didn't receive it?{" "}
-                  <span onClick={() => setCurrentMode("forgot")}
-                    style={{ color: "#f97316", cursor: "pointer", fontWeight: 500 }}>
+                  <span onClick={() => setCurrentMode("forgot")} style={{ color: "#f97316", cursor: "pointer", fontWeight: 500 }}>
                     Resend
                   </span>
                 </p>
@@ -536,8 +456,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                     <div className="relative">
                       <input type={field.show ? "text" : "password"} placeholder="••••••••" required
                         value={field.value} onChange={(e) => field.setter(e.target.value)}
-                        className={inputClass} style={{ paddingRight: "44px" }}
-                      />
+                        className={inputClass} style={{ paddingRight: "44px" }} />
                       <span onClick={field.toggle} className={eyeButtonClass}>
                         {field.show ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
                       </span>
