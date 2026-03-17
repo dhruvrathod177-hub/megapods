@@ -68,7 +68,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
       login(data.token, data.user);
       onClose();
     } catch (err: any) { setError(err.message); }
-    finally { setLoading(true); }
+    finally { setLoading(false); }
   };
 
   const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
@@ -76,7 +76,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     setError("");
     if (formData.password !== formData.confirmPassword) { setError("Passwords do not match"); return; }
     if (formData.password.length < 6) { setError("Password must be at least 6 characters"); return; }
-    setLoading(true);
+    setLoading(false);
     try {
       const res = await fetch(`${API}/auth/register`, {
         method: "POST",
