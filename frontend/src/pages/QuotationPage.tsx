@@ -264,6 +264,10 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
           }
           .no-print { display: none !important; }
         }
+        select {
+          -webkit-appearance: auto;
+          appearance: auto;
+        }
       `}</style>
 
       {/* HERO */}
@@ -340,7 +344,8 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
                     <select
                       value={form.materialType}
                       onChange={(e) => setForm((p) => ({ ...p, materialType: e.target.value }))}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-gray-800"
+                      style={{ WebkitAppearance: "auto" as React.CSSProperties["WebkitAppearance"], appearance: "auto" }}
+                      className="w-full px-4 py-3 pr-10 border-2 border-gray-200 rounded-2xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-gray-800"
                     >
                       <option value="">-- Select material --</option>
                       {config.materials.map((m) => (
