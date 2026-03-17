@@ -149,8 +149,70 @@ export default function QuotationPage() {
     }
   };
 
-  const handlePrint = () => window.print();
-  const handleDownloadPDF = () => window.print();
+  const handleDownloadPDF = async () => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "https://megapods.onrender.com/api"}/quotations/generate-pdf`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+        body: JSON.stringify({
+          form,
+          quote,
+          user,
+        }),
+      });
+  
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+  
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank"; // ✅ MOBILE FIX
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+  
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Download failed", err);
+    }
+  };
+  
+  const handlePrint = async () => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "https://megapods.onrender.com/api"}/quotations/generate-pdf`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+        body: JSON.stringify({
+          form,
+          quote,
+          user,
+        }),
+      });
+  
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+  
+      const newWindow = window.open(url, "_blank");
+  
+      if (!newWindow) {
+        alert("Allow popup to print");
+        return;
+      }
+  
+      setTimeout(() => {
+        newWindow.print();
+      }, 500);
+  
+    } catch (err) {
+      console.error("Print failed", err);
+    }
+  };
 
   const handleReset = () => {
     setForm({ materialType: "", containerSize: "", quantity: 1, selectedAddons: [] });
