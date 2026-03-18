@@ -115,7 +115,7 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
   const [quoteDate] = useState(new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }));
 
   const [form, setForm] = useState({
-    materialType:      editQuote?.materialType      ?? "",
+    materialType:      editQuote?.materialType      ?? "Standard Steel",
     containerSize:     editQuote?.containerSize     ?? "",
     quantity:          editQuote?.quantity          ?? 1,
     selectedAddons:    editQuote?.addons?.map((a) => a.name) ?? [] as string[],
@@ -131,7 +131,7 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
   }, [token]);
 
   useEffect(() => {
-    if (isEditMode && config && form.materialType && form.containerSize) {
+    if (isEditMode && config && form.containerSize) {
       handleCalculate();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -147,8 +147,8 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
   };
 
   const handleCalculate = async () => {
-    if (!form.materialType || !form.containerSize) {
-      setError("Please select material type and container size");
+    if (!form.containerSize) {
+      setError("Please select a container size");
       return;
     }
     setError("");
@@ -193,7 +193,6 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
     }
   };
 
-  // ── Convert logo to base64 ─────────────────────────────────────────────────
   const getLogoBase64 = async (): Promise<string> => {
     try {
       const response = await fetch("/img/logo1.JPG");
@@ -208,7 +207,6 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
     }
   };
 
-  // ── Build HTML bill ────────────────────────────────────────────────────────
   const buildBillHTML = async (): Promise<string> => {
     if (!quote) return "";
 
@@ -345,7 +343,6 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
 </html>`;
   };
 
-  // ── Download ───────────────────────────────────────────────────────────────
   const handleDownloadPDF = async () => {
     const html = await buildBillHTML();
     if (!html) return;
@@ -357,7 +354,6 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
     document.body.removeChild(a); URL.revokeObjectURL(url);
   };
 
-  // ── Print ──────────────────────────────────────────────────────────────────
   const handlePrint = async () => {
     const html = await buildBillHTML();
     if (!html) return;
@@ -375,7 +371,7 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
   };
 
   const handleReset = () => {
-    setForm({ materialType: "", containerSize: "", quantity: 1, selectedAddons: [], containerSizeNote: "", materialTypeNote: "", addonsNote: "" });
+    setForm({ materialType: "Standard Steel", containerSize: "", quantity: 1, selectedAddons: [], containerSizeNote: "", materialTypeNote: "", addonsNote: "" });
     setQuote(null); setSaved(false); setError("");
   };
 
@@ -452,34 +448,14 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
                     />
                   </div>
 
-                  {/* ── Material Type — button grid (no dropdown) ── */}
+                  {/* Material Type — text box only */}
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-3">Material Type *</label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {config.materials.map((m) => (
-                        <button
-                          key={m}
-                          onClick={() => setForm((p) => ({ ...p, materialType: m }))}
-                          className={`p-4 rounded-2xl border-2 font-semibold transition-all text-left ${
-                            form.materialType === m
-                              ? "border-orange-600 bg-orange-50 text-orange-700"
-                              : "border-gray-200 hover:border-orange-300 text-gray-700"
-                          }`}
-                        >
-                          <div className="text-sm sm:text-base">{m}</div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            {config.materialSurcharges[m] > 0
-                              ? `+${formatINR(config.materialSurcharges[m])}`
-                              : "Included"}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
+                    <label className="block text-sm font-bold text-gray-700 mb-3">Material Type</label>
                     <textarea
                       value={form.materialTypeNote}
                       onChange={(e) => setForm((p) => ({ ...p, materialTypeNote: e.target.value }))}
-                      placeholder="Any material preference or special treatment? e.g. Anti-rust coating, thicker gauge, specific finish…"
-                      rows={2}
+                      placeholder="Describe your material preference… e.g. Standard Steel, Corten Steel, Anti-rust coating, thicker gauge, specific finish…"
+                      rows={3}
                       className={noteStyle}
                     />
                   </div>
