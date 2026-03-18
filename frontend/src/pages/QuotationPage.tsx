@@ -193,9 +193,30 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
     }
   };
 
+  // ── Convert logo to base64 so it works in iframe/download ─────────────────
+  const getLogoBase64 = async (): Promise<string> => {
+    try {
+      const response = await fetch("/img/logo1.JPG");
+      const blob = await response.blob();
+      return await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+    } catch {
+      return "";
+    }
+  };
+
   // ── Build fully self-contained styled HTML bill ────────────────────────────
-  const buildBillHTML = () => {
+  const buildBillHTML = async (): Promise<string> => {
     if (!quote) return "";
+
+    const logoBase64 = await getLogoBase64();
+
+    const logoHTML = logoBase64
+      ? `<img src="${logoBase64}" alt="Logo" style="height:52px;width:52px;border-radius:50%;object-fit:contain;background:#fff;padding:4px;margin-right:14px;flex-shrink:0;"/>`
+      : "";
 
     const addonRows = quote.addonBreakdown.map((a) => `
       <tr>
@@ -225,9 +246,10 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
   /* Header */
   .header { background: linear-gradient(135deg, #ea580c, #c2410c); color: #fff; padding: 36px 40px 28px; }
   .header-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .brand { display: flex; align-items: center; }
   .brand-name { font-size: 22px; font-weight: 700; }
   .brand-loc { font-size: 12px; color: #fed7aa; margin-top: 2px; }
-  .quote-label { text-align: right; }
+  .quote-label { text-align: right; flex-shrink: 0; }
   .quote-label .title { font-size: 28px; font-weight: 800; letter-spacing: 2px; }
   .quote-label .num { font-size: 13px; color: #fed7aa; margin-top: 4px; }
   .quote-label .date { font-size: 13px; color: #fed7aa; }
@@ -286,9 +308,12 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
 
   <div class="header">
     <div class="header-top">
-      <div>
-        <div class="brand-name">Megapodsindia</div>
-        <div class="brand-loc">Surat, Gujarat, India</div>
+      <div class="brand">
+        ${logoHTML}
+        <div>
+          <div class="brand-name">Megapodsindia</div>
+          <div class="brand-loc">Surat, Gujarat, India</div>
+        </div>
       </div>
       <div class="quote-label">
         <div class="title">QUOTATION</div>
@@ -345,8 +370,8 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
   };
 
   // ── Direct download as .html file ─────────────────────────────────────────
-  const handleDownloadPDF = () => {
-    const html = buildBillHTML();
+  const handleDownloadPDF = async () => {
+    const html = await buildBillHTML();
     if (!html) return;
     const blob = new Blob([html], { type: "text/html" });
     const url  = URL.createObjectURL(blob);
@@ -359,9 +384,9 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
     URL.revokeObjectURL(url);
   };
 
-  // ── Print with properly styled bill ───────────────────────────────────────
-  const handlePrint = () => {
-    const html = buildBillHTML();
+  // ── Print via hidden iframe — no new tab ───────────────────────────────────
+  const handlePrint = async () => {
+    const html = await buildBillHTML();
     if (!html) return;
     const printFrame = document.createElement("iframe");
     printFrame.style.position = "fixed";
@@ -591,9 +616,8 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
             ) : (
               <div ref={printRef} id="print-area" className="bg-white rounded-3xl shadow-xl overflow-hidden">
 
-                {/* ── Quote Header — fixed mobile overlap ── */}
+                {/* Quote Header */}
                 <div className="bg-gradient-to-br from-orange-600 to-orange-700 text-white p-6 sm:p-8">
-                  {/* Row 1: logo+name LEFT, QUOTATION label RIGHT */}
                   <div className="flex justify-between items-start gap-4">
                     <div className="flex items-center gap-3 min-w-0">
                       <img
@@ -612,7 +636,6 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
                       <div className="text-orange-200 text-xs sm:text-sm">{quoteDate}</div>
                     </div>
                   </div>
-                  {/* Row 2: prepared for */}
                   <div className="mt-4 pt-4 border-t border-orange-500">
                     <p className="text-orange-200 text-xs sm:text-sm">Prepared for:</p>
                     <p className="font-semibold text-sm sm:text-base">{user?.fullName}</p>
@@ -702,7 +725,7 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
                     * This is an indicative quotation. Final pricing may vary based on site conditions, customizations, and delivery location. Valid for 30 days from the date of issue.
                   </p>
 
-                  {/* ── Actions — stacked on mobile ── */}
+                  {/* Actions */}
                   <div className="no-print flex flex-wrap gap-2 sm:gap-3 mt-6">
                     <button
                       onClick={handleDownloadPDF}
