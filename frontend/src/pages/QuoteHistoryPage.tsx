@@ -1,13 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import {
   FileText, Calendar, Package, RefreshCw, Calculator,
-  Trash2, Pencil, HandshakeIcon, X, Download,
+  Trash2, Pencil, HandshakeIcon, X, Download, Printer,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
 import QuotationPage, { SavedQuote } from "./QuotationPage";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 
 type HTMLTag = 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'span' | 'div';
 interface Heading3DProps { children: React.ReactNode; className?: string; tag?: HTMLTag; }
@@ -84,7 +82,6 @@ function NegotiateModal({ quote, onClose, onSubmitted }: NegotiateModalProps) {
     if (!price || price <= 0)  { setError("Please enter a valid offered price"); return; }
     if (price >= quote.total)  { setError("Offered price must be lower than the original total"); return; }
     if (!message.trim())       { setError("Please add a message explaining your offer"); return; }
-
     setLoading(true);
     setError("");
     try {
@@ -103,90 +100,54 @@ function NegotiateModal({ quote, onClose, onSubmitted }: NegotiateModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
-
         <div className="bg-gradient-to-br from-orange-600 to-orange-700 p-6 text-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="bg-white/20 p-2 rounded-xl">
-                <HandshakeIcon size={22} />
-              </div>
+              <div className="bg-white/20 p-2 rounded-xl"><HandshakeIcon size={22} /></div>
               <div>
                 <h2 className="font-bold text-lg leading-tight">Make an Offer</h2>
                 <p className="text-orange-200 text-xs">{quote.quoteNumber}</p>
               </div>
             </div>
-            <button onClick={onClose} className="text-white/70 hover:text-white transition">
-              <X size={20} />
-            </button>
+            <button onClick={onClose} className="text-white/70 hover:text-white transition"><X size={20} /></button>
           </div>
-
           <div className="mt-4 bg-white/10 rounded-2xl p-4 flex justify-between items-center">
             <span className="text-orange-200 text-sm">Original Total</span>
             <span className="font-bold text-xl">{formatINR(quote.total)}</span>
           </div>
         </div>
-
         <div className="p-6 space-y-5">
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">{error}</div>
-          )}
-
+          {error && <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">{error}</div>}
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">Your Offered Price (₹)</label>
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">₹</span>
-              <input
-                type="number"
-                value={offeredPrice}
-                onChange={(e) => setOfferedPrice(e.target.value)}
+              <input type="number" value={offeredPrice} onChange={(e) => setOfferedPrice(e.target.value)}
                 placeholder={String(Math.round(quote.total * 0.9))}
-                className="w-full pl-8 pr-4 py-3 border-2 border-gray-200 rounded-2xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none text-gray-800 text-lg font-semibold"
-              />
+                className="w-full pl-8 pr-4 py-3 border-2 border-gray-200 rounded-2xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none text-gray-800 text-lg font-semibold" />
             </div>
-
             {discount && parseFloat(offeredPrice) < quote.total && (
               <div className="mt-2 flex items-center justify-between text-sm">
                 <span className="text-gray-500">Discount requested</span>
-                <span className="font-bold text-orange-600">
-                  {discount}% off — saving {formatINR(quote.total - parseFloat(offeredPrice))}
-                </span>
+                <span className="font-bold text-orange-600">{discount}% off — saving {formatINR(quote.total - parseFloat(offeredPrice))}</span>
               </div>
             )}
           </div>
-
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">Message to Megapodsindia</label>
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
+            <textarea value={message} onChange={(e) => setMessage(e.target.value)}
               placeholder="Explain why you're requesting this price — bulk order, long-term relationship, budget constraints…"
-              rows={4}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none text-sm text-gray-700 placeholder-gray-400 resize-none"
-            />
+              rows={4} className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none text-sm text-gray-700 placeholder-gray-400 resize-none" />
           </div>
-
-          <p className="text-xs text-gray-400 text-center">
-            Our team will review your offer and reach out to you directly.
-          </p>
-
+          <p className="text-xs text-gray-400 text-center">Our team will review your offer and reach out to you directly.</p>
           <div className="flex gap-3">
-            <button
-              onClick={onClose}
-              className="flex-1 py-3 rounded-2xl border-2 border-gray-200 text-gray-500 font-semibold hover:border-gray-300 transition"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={loading}
-              className="flex-1 py-3 rounded-2xl bg-orange-600 hover:bg-orange-700 disabled:opacity-60 text-white font-bold transition flex items-center justify-center gap-2"
-            >
+            <button onClick={onClose} className="flex-1 py-3 rounded-2xl border-2 border-gray-200 text-gray-500 font-semibold hover:border-gray-300 transition">Cancel</button>
+            <button onClick={handleSubmit} disabled={loading}
+              className="flex-1 py-3 rounded-2xl bg-orange-600 hover:bg-orange-700 disabled:opacity-60 text-white font-bold transition flex items-center justify-center gap-2">
               {loading ? <RefreshCw size={16} className="animate-spin" /> : <HandshakeIcon size={16} />}
               {loading ? "Submitting…" : "Submit Offer"}
             </button>
           </div>
-
         </div>
       </div>
     </div>
@@ -205,6 +166,7 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
   const [editingQuote,     setEditingQuote]     = useState<SavedQuote | null>(null);
   const [negotiatingQuote, setNegotiatingQuote] = useState<SavedQuote | null>(null);
   const [downloadingId,    setDownloadingId]    = useState<string | null>(null);
+  const [printingId,       setPrintingId]       = useState<string | null>(null);
 
   const fetchAll = async () => {
     setLoading(true);
@@ -256,16 +218,9 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
     fetchAll();
   };
 
-  // ── Real PDF download: inject HTML as a div in the main document ──
-  const handleDownload = async (e: React.MouseEvent, quote: SavedQuote) => {
-    e.stopPropagation();
-    setDownloadingId(quote._id);
-
-    const neg = negotiations[quote._id];
+  // ── Shared HTML builder ──
+  const buildQuoteHTML = (quote: SavedQuote, neg: Negotiation | undefined, quoteDate: string): string => {
     const displayTotal = neg?.status === "accepted" ? neg.offeredPrice : quote.total;
-    const quoteDate = new Date(quote.createdAt).toLocaleDateString("en-IN", {
-      day: "numeric", month: "long", year: "numeric",
-    });
 
     const addonRows = quote.addons?.map(a => `
       <tr>
@@ -279,11 +234,15 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
       ? `<div style="display:flex;justify-content:space-between;font-size:14px;color:#16a34a;font-weight:600;padding:4px 0"><span>Negotiated Price</span><span>${formatINR(neg.offeredPrice)}</span></div>`
       : "";
 
-    const html = `
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>${quote.quoteNumber}</title>
 <style>
-  .bill-wrap * { box-sizing:border-box; margin:0; padding:0; }
-  .bill-wrap { font-family:'Segoe UI',Arial,sans-serif; background:#f3f4f6; padding:40px 16px; display:flex; justify-content:center; }
-  .page { background:#fff; width:720px; border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.13); }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Segoe UI',Arial,sans-serif; background:#f3f4f6; display:flex; justify-content:center; padding:40px 16px; }
+  .page { background:#fff; width:100%; max-width:720px; border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.13); }
   .header { background:linear-gradient(135deg,#ea580c,#c2410c); color:#fff; padding:36px 40px 28px; }
   .header-top { display:flex; justify-content:space-between; align-items:flex-start; }
   .brand-name { font-size:22px; font-weight:700; }
@@ -307,8 +266,14 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
   .total-final .amount { color:#ea580c; }
   .strip { background:#fff7ed; border-top:1px solid #fed7aa; padding:14px 40px; display:flex; justify-content:space-between; font-size:12px; color:#9ca3af; }
   .strip strong { color:#ea580c; }
+  @media print {
+    @page { margin:0; size:A4; }
+    body { background:white; padding:0; margin:0; display:block; }
+    .page { box-shadow:none; border-radius:0; max-width:100%; width:100%; }
+  }
 </style>
-<div class="bill-wrap">
+</head>
+<body>
 <div class="page">
   <div class="header">
     <div class="header-top">
@@ -365,52 +330,56 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
     <span>${quoteDate}</span>
   </div>
 </div>
-</div>`;
+</body>
+</html>`;
+  };
 
-    // Inject into a DOM div so html2canvas can access styles (avoids cross-origin iframe issue)
-    const container = document.createElement("div");
-    container.style.cssText =
-      "position:fixed;top:-99999px;left:-99999px;width:794px;background:#f3f4f6;z-index:-1;";
-    container.innerHTML = html;
-    document.body.appendChild(container);
+  // ── Shared: open HTML in a hidden iframe and trigger print dialog ──
+  const openPrintDialog = (html: string, onDone?: () => void) => {
+    const printFrame = document.createElement("iframe");
+    printFrame.style.cssText =
+      "position:fixed;top:-10000px;left:-10000px;width:0;height:0;border:none;";
+    document.body.appendChild(printFrame);
 
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    const doc = printFrame.contentDocument || printFrame.contentWindow?.document;
+    if (!doc) { onDone?.(); return; }
 
-    try {
-      const canvas = await html2canvas(container, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#f3f4f6",
-        width: 794,
-        windowWidth: 794,
-      });
+    doc.open();
+    doc.write(html);
+    doc.close();
 
-      const imgData = canvas.toDataURL("image/png");
+    setTimeout(() => {
+      printFrame.contentWindow?.focus();
+      printFrame.contentWindow?.print();
+      setTimeout(() => {
+        document.body.removeChild(printFrame);
+        onDone?.();
+      }, 2000);
+    }, 800);
+  };
 
-      const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: "a4" });
-      const pdfWidth  = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+  // ── Download PDF (print dialog → Save as PDF) ──
+  const handleDownload = (e: React.MouseEvent, quote: SavedQuote) => {
+    e.stopPropagation();
+    setDownloadingId(quote._id);
+    const neg = negotiations[quote._id];
+    const quoteDate = new Date(quote.createdAt).toLocaleDateString("en-IN", {
+      day: "numeric", month: "long", year: "numeric",
+    });
+    const html = buildQuoteHTML(quote, neg, quoteDate);
+    openPrintDialog(html, () => setDownloadingId(null));
+  };
 
-      let heightLeft = imgHeight;
-      let position   = 0;
-
-      pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
-      heightLeft -= pdfHeight;
-
-      while (heightLeft > 0) {
-        position -= pdfHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
-        heightLeft -= pdfHeight;
-      }
-
-      pdf.save(`${quote.quoteNumber}.pdf`);
-    } finally {
-      document.body.removeChild(container);
-      setDownloadingId(null);
-    }
+  // ── Print ──
+  const handlePrint = (e: React.MouseEvent, quote: SavedQuote) => {
+    e.stopPropagation();
+    setPrintingId(quote._id);
+    const neg = negotiations[quote._id];
+    const quoteDate = new Date(quote.createdAt).toLocaleDateString("en-IN", {
+      day: "numeric", month: "long", year: "numeric",
+    });
+    const html = buildQuoteHTML(quote, neg, quoteDate);
+    openPrintDialog(html, () => setPrintingId(null));
   };
 
   if (editingQuote) {
@@ -440,7 +409,6 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6">
 
-        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <Heading3D tag="h1" className="text-3xl font-bold text-gray-900">Quotation History</Heading3D>
@@ -481,10 +449,8 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
               return (
                 <div key={quote._id} className="bg-white rounded-2xl shadow-lg overflow-hidden">
 
-                  {/* Card row */}
                   <div className="w-full flex items-center justify-between p-4 sm:p-6 hover:bg-gray-50 transition-colors">
 
-                    {/* Left — info */}
                     <button
                       onClick={() => setExpanded(expanded === quote._id ? null : quote._id)}
                       className="flex items-center gap-3 flex-1 text-left min-w-0"
@@ -501,10 +467,8 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
                       </div>
                     </button>
 
-                    {/* Right — price + actions */}
                     <div className="flex flex-col items-end gap-1.5 ml-2 flex-shrink-0">
 
-                      {/* Price + date */}
                       <button
                         onClick={() => setExpanded(expanded === quote._id ? null : quote._id)}
                         className="text-right"
@@ -521,7 +485,6 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
                         </p>
                       </button>
 
-                      {/* Action buttons row */}
                       <div className="flex items-center gap-1">
 
                         {/* Download PDF */}
@@ -536,7 +499,19 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
                             : <Download size={14} className="sm:w-4 sm:h-4" />}
                         </button>
 
-                        {/* Negotiate — hidden if negotiation exists */}
+                        {/* Print */}
+                        <button
+                          onClick={(e) => handlePrint(e, quote)}
+                          disabled={printingId === quote._id}
+                          className="p-1.5 sm:p-2 rounded-lg border border-gray-200 text-gray-400 hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600 transition-colors disabled:opacity-50"
+                          title="Print quote"
+                        >
+                          {printingId === quote._id
+                            ? <RefreshCw size={14} className="animate-spin sm:w-4 sm:h-4" />
+                            : <Printer size={14} className="sm:w-4 sm:h-4" />}
+                        </button>
+
+                        {/* Negotiate */}
                         {!neg && (
                           <button
                             onClick={(e) => { e.stopPropagation(); setNegotiatingQuote(quote); }}
@@ -572,7 +547,6 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
                     </div>
                   </div>
 
-                  {/* Expanded detail */}
                   {expanded === quote._id && (
                     <div className="border-t border-gray-100 px-4 sm:px-6 pb-6 pt-4 bg-gray-50 space-y-4">
 

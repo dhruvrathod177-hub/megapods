@@ -2,8 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { Calculator, Download, Printer, Save, CheckCircle, RefreshCw, Pencil } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 
 
 type HTMLTag = 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'span' | 'div';
@@ -210,7 +208,6 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
     }
   };
 
-  // Builds HTML as a string (styles + content only, no <html>/<body> tags)
   const buildBillHTML = async (): Promise<string> => {
     if (!quote) return "";
 
@@ -235,11 +232,15 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
 
     const displayMaterial = form.materialTypeNote || quote.materialType;
 
-    return `
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>${quoteNumber}</title>
 <style>
-  .bill-wrap * { box-sizing: border-box; margin: 0; padding: 0; }
-  .bill-wrap { font-family: 'Segoe UI', Arial, sans-serif; background: #f3f4f6; padding: 40px 16px; display:flex; justify-content:center; }
-  .page { background: #fff; width: 720px; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,0.13); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f3f4f6; display: flex; justify-content: center; padding: 40px 16px; }
+  .page { background: #fff; width: 100%; max-width: 720px; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,0.13); }
   .header { background: linear-gradient(135deg, #ea580c, #c2410c); color: #fff; padding: 36px 40px 28px; }
   .header-top { display: flex; justify-content: space-between; align-items: flex-start; }
   .brand { display: flex; align-items: center; }
@@ -279,8 +280,14 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
   .footer { font-size: 11px; color: #9ca3af; font-style: italic; margin-top: 28px; line-height: 1.6; }
   .strip { background: #fff7ed; border-top: 1px solid #fed7aa; padding: 14px 40px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #9ca3af; }
   .strip strong { color: #ea580c; }
+  @media print {
+    @page { margin: 0; size: A4; }
+    body { background: white; padding: 0; margin: 0; display: block; }
+    .page { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; }
+  }
 </style>
-<div class="bill-wrap">
+</head>
+<body>
 <div class="page">
   <div class="header">
     <div class="header-top">
@@ -335,68 +342,47 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
     <span>${quoteDate}</span>
   </div>
 </div>
-</div>`;
+</body>
+</html>`;
   };
 
-  // ── Real PDF: inject into DOM div (not iframe) so html2canvas can render it ──
+  // ── Download: open print dialog → user clicks "Save as PDF" ──
   const handleDownloadPDF = async () => {
     const html = await buildBillHTML();
     if (!html) return;
 
-    const container = document.createElement("div");
-    container.style.cssText =
-      "position:fixed;top:-99999px;left:-99999px;width:794px;background:#f3f4f6;z-index:-1;";
-    container.innerHTML = html;
-    document.body.appendChild(container);
+    const printFrame = document.createElement("iframe");
+    printFrame.style.cssText =
+      "position:fixed;top:-10000px;left:-10000px;width:0;height:0;border:none;";
+    document.body.appendChild(printFrame);
 
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    const doc = printFrame.contentDocument || printFrame.contentWindow?.document;
+    if (!doc) return;
 
-    try {
-      const canvas = await html2canvas(container, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#f3f4f6",
-        width: 794,
-        windowWidth: 794,
-      });
+    doc.open();
+    doc.write(html);
+    doc.close();
 
-      const imgData = canvas.toDataURL("image/png");
+    await new Promise((resolve) => setTimeout(resolve, 800));
 
-      const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: "a4" });
-      const pdfWidth  = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+    printFrame.contentWindow?.focus();
+    printFrame.contentWindow?.print();
 
-      let heightLeft = imgHeight;
-      let position   = 0;
-
-      pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
-      heightLeft -= pdfHeight;
-
-      while (heightLeft > 0) {
-        position -= pdfHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
-        heightLeft -= pdfHeight;
-      }
-
-      pdf.save(`${quoteNumber}.pdf`);
-    } finally {
-      document.body.removeChild(container);
-    }
+    setTimeout(() => document.body.removeChild(printFrame), 2000);
   };
 
+  // ── Print ──
   const handlePrint = async () => {
     const html = await buildBillHTML();
     if (!html) return;
+
     const printFrame = document.createElement("iframe");
     printFrame.style.cssText = "position:fixed;top:-10000px;left:-10000px;width:0;height:0;border:none;";
     document.body.appendChild(printFrame);
     const doc = printFrame.contentDocument || printFrame.contentWindow?.document;
     if (!doc) return;
     doc.open();
-    doc.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"/></head><body>${html}</body></html>`);
+    doc.write(html);
     doc.close();
     setTimeout(() => {
       printFrame.contentWindow?.focus();
