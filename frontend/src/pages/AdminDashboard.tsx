@@ -40,6 +40,9 @@ interface Quotation {
   addonsNote?: string;
   status: string;
   createdAt: string;
+  adminNote?: string;
+  adminPrice?: number;
+  adminRespondedAt?: string;
 }
 
 interface UserRecord {
@@ -138,7 +141,7 @@ function DonutChart({ pending, accepted, rejected, total }: Stats) {
   );
 }
 
-export default function AdminDashboard({ token, onLogout }: AdminDashboardProps) {
+export default function AdminDashboard({ token,  onLogout }: AdminDashboardProps) {
   const [negotiations,  setNegotiations]  = useState<Negotiation[]>([]);
   const [quotations,    setQuotations]    = useState<Quotation[]>([]);
   const [usersList,     setUsersList]     = useState<UserRecord[]>([]);
@@ -150,12 +153,14 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
   const [expanded,      setExpanded]      = useState<string | null>(null);
   const [responding,    setResponding]    = useState<string | null>(null);
   const [responseText,  setResponseText]  = useState<Record<string, string>>({});
+  const [adminPriceInput, setAdminPriceInput] = useState<Record<string, string>>({});
   const [filter,        setFilter]        = useState<"all"|"pending"|"accepted"|"rejected">("all");
   const [activeTab,     setActiveTab]     = useState<"negotiations"|"quotations"|"users">("negotiations");
   const [lastRefresh,   setLastRefresh]   = useState(new Date());
   const [countdown,     setCountdown]     = useState(30);
   const [toast,         setToast]         = useState<string | null>(null);
   const prevPending = useRef(0);
+  const adminToken = token;
 
   const hdrs = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
 
@@ -901,6 +906,84 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
                           <div className="breakdown-total"><span>TOTAL</span><span>{formatINR(q.total)}</span></div>
                         </div>
                       </div>
+
+                      {/* ── Admin Response Section ── */}
+                      {q.adminNote ? (
+                        <div>
+                          <div className="exp-label">✅ Response Already Sent</div>
+                          <div style={{background:'rgba(34,197,94,0.06)',border:'1px solid rgba(34,197,94,0.15)',borderRadius:9,padding:'12px 14px'}}>
+                            <div style={{fontSize:12,color:'rgba(255,255,255,0.6)',marginBottom:6}}>{q.adminNote}</div>
+                            {q.adminPrice && (
+                              <div style={{display:'flex',justifyContent:'space-between',fontSize:13,fontWeight:700}}>
+                                <span style={{color:'rgba(255,255,255,0.4)'}}>Final Price Set</span>
+                                <span style={{color:'#22c55e'}}>{formatINR(q.adminPrice)}</span>
+                              </div>
+                            )}
+                            <div style={{fontSize:10,color:'rgba(255,255,255,0.22)',marginTop:6}}>
+                              Sent {q.adminRespondedAt ? new Date(q.adminRespondedAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : ''}
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <div className="exp-label">✍️ Respond to Customer</div>
+                          <textarea
+                            value={responseText[q._id] || ''}
+                            onChange={e => setResponseText(p => ({...p, [q._id]: e.target.value}))}
+                            placeholder="Type your response to the customer… e.g. We reviewed your material request. Based on Corten Steel with anti-rust coating, the updated price is as below."
+                            rows={3}
+                            className="resp-textarea"
+                          />
+                          <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:9}}>
+                            <span style={{fontSize:11,color:'rgba(255,255,255,0.3)',flexShrink:0}}>₹ Final Price</span>
+                            <input
+                              type="number"
+                              value={adminPriceInput[q._id] || ''}
+                              onChange={e => setAdminPriceInput(p => ({...p, [q._id]: e.target.value}))}
+                              placeholder="Leave blank to keep original"
+                              style={{
+                                flex:1, padding:'9px 13px',
+                                background:'rgba(255,255,255,0.05)',
+                                border:'1px solid rgba(255,255,255,0.09)',
+                                borderRadius:9, color:'#fff', fontSize:13,
+                                fontFamily:'Outfit,sans-serif', outline:'none',
+                              }}
+                            />
+                          </div>
+                          <button
+                            className="resp-btn"
+                            style={{background:'linear-gradient(135deg,#ea580c,#c2410c)',color:'#fff',width:'100%'}}
+                            disabled={responding===q._id || !responseText[q._id]}
+                            onClick={async () => {
+                              setResponding(q._id);
+                              try {
+                                const res = await fetch(`${API}/admin/quotations/${q._id}/respond`, {
+                                  method: 'PUT',
+                                  headers: { 'Content-Type':'application/json', Authorization:`Bearer ${adminToken}` },
+                                  body: JSON.stringify({
+                                    adminNote:  responseText[q._id],
+                                    adminPrice: adminPriceInput[q._id] || null,
+                                  }),
+                                });
+                                if (!res.ok) throw new Error('Failed');
+                                setToast('✅ Response sent to customer!');
+                                setTimeout(() => setToast(''), 3000);
+                                fetchAll();
+                              } catch {
+                                setToast('❌ Failed to send response');
+                                setTimeout(() => setToast(''), 3000);
+                              } finally {
+                                setResponding(null);
+                              }
+                            }}
+                          >
+                            {responding===q._id
+                              ? <><RefreshCw size={13} style={{animation:'spin 1s linear infinite'}}/> Sending…</>
+                              : <><CheckCircle size={13}/> Send Response & Email Customer</>
+                            }
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

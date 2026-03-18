@@ -20,6 +20,11 @@ const quotationSchema = new mongoose.Schema(
     containerSizeNote: { type: String, default: "" },
     materialTypeNote:  { type: String, default: "" },
     addonsNote:        { type: String, default: "" },
+
+    // ── Admin response ──────────────────────────────────────────────
+    adminNote:         { type: String, default: "" },   // admin's response message
+    adminPrice:        { type: Number, default: null },  // admin's final price override
+    adminRespondedAt:  { type: Date,   default: null },  // when admin responded
   },
   { timestamps: true }
 );

@@ -89,11 +89,9 @@ async function sendNegotiationResponseEmail({
   if (!userEmail) return;
 
   const isAccepted = status === "accepted";
-  const discount = (((originalTotal - offeredPrice) / originalTotal) * 100).toFixed(1);
   const formatINR = (n) =>
     new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
 
-  const statusColor = isAccepted ? "#16a34a" : "#dc2626";
   const statusLabel = isAccepted ? "ACCEPTED" : "REJECTED";
 
   const content = `
@@ -112,7 +110,7 @@ async function sendNegotiationResponseEmail({
   console.log("📧 Negotiation email sent");
 }
 
-// ── 2. Quote Saved Email ─────────────────────────────
+// ── 2. Quote Saved Email ──────────────────────────────────────
 async function sendQuoteSavedEmail({
   quoteNumber,
   userName,
@@ -136,7 +134,7 @@ async function sendQuoteSavedEmail({
   console.log("📧 Quote email sent");
 }
 
-// ── 3. Welcome Email ─────────────────────────────
+// ── 3. Welcome Email ──────────────────────────────────────────
 async function sendWelcomeEmail({ userName, userEmail }) {
   if (!userEmail) return;
 
@@ -154,8 +152,74 @@ async function sendWelcomeEmail({ userName, userEmail }) {
   console.log("📧 Welcome email sent");
 }
 
+// ── 4. Admin Quote Response Email ─────────────────────────────
+async function sendAdminQuoteResponseEmail({
+  userName,
+  userEmail,
+  quoteNumber,
+  adminNote,
+  adminPrice,
+  originalTotal,
+}) {
+  if (!userEmail) return;
+
+  const formatINR = (n) =>
+    new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
+
+  const priceSection = adminPrice ? `
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;margin-top:20px;">
+      <tr>
+        <td style="padding:20px 24px;">
+          <p style="margin:0 0 12px;font-size:11px;font-weight:700;color:#ea580c;letter-spacing:2px;text-transform:uppercase;">Final Pricing</p>
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="font-size:13px;color:#6b7280;padding:4px 0;">Base Estimate</td>
+              <td style="font-size:13px;color:#6b7280;text-align:right;text-decoration:line-through;">${formatINR(originalTotal)}</td>
+            </tr>
+            <tr>
+              <td style="font-size:16px;font-weight:800;color:#111827;padding-top:8px;">Final Price</td>
+              <td style="font-size:20px;font-weight:800;color:#ea580c;text-align:right;padding-top:8px;">${formatINR(adminPrice)}</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>` : "";
+
+  const content = `
+    <p style="margin:0 0 8px;font-size:15px;color:#374151;">Hello <strong>${userName}</strong>,</p>
+    <p style="margin:0 0 20px;font-size:14px;color:#6b7280;line-height:1.6;">
+      Our team has reviewed your request for quotation
+      <strong style="color:#ea580c;">${quoteNumber}</strong>.
+    </p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;">
+      <tr>
+        <td style="padding:20px 24px;">
+          <p style="margin:0 0 8px;font-size:11px;font-weight:700;color:#9ca3af;letter-spacing:2px;text-transform:uppercase;">Message from our team</p>
+          <p style="margin:0;font-size:14px;color:#374151;line-height:1.7;">${adminNote}</p>
+        </td>
+      </tr>
+    </table>
+
+    ${priceSection}
+
+    <p style="margin:24px 0 0;font-size:13px;color:#9ca3af;line-height:1.6;">
+      If you have any questions, feel free to reach out or submit a negotiation offer from your quotation dashboard.
+    </p>
+  `;
+
+  await sendEmail({
+    to: userEmail,
+    subject: `📋 Update on your quotation ${quoteNumber} — Megapodsindia`,
+    html: emailWrapper(content),
+  });
+
+  console.log("📧 Admin quote response email sent to", userEmail);
+}
+
 module.exports = {
   sendNegotiationResponseEmail,
   sendQuoteSavedEmail,
   sendWelcomeEmail,
+  sendAdminQuoteResponseEmail,
 };

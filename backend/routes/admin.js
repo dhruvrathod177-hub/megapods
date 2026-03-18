@@ -164,4 +164,43 @@ router.get("/users/:id", adminAuth, async (req, res) => {
   }
 });
 
+/* ── ADMIN RESPOND TO QUOTATION ── */
+router.put("/quotations/:id/respond", adminAuth, async (req, res) => {
+  try {
+    const { adminNote, adminPrice } = req.body;
+
+    if (!adminNote) return res.status(400).json({ message: "Response note is required" });
+
+    const quotation = await Quotation.findById(req.params.id);
+    if (!quotation) return res.status(404).json({ message: "Quotation not found" });
+
+    // Update quotation with admin response
+    quotation.adminNote        = adminNote;
+    quotation.adminPrice       = adminPrice ? parseFloat(adminPrice) : null;
+    quotation.adminRespondedAt = new Date();
+    if (adminPrice) quotation.total = parseFloat(adminPrice);
+
+    await quotation.save();
+
+    // Find user email
+    const user = await User.findById(quotation.userId);
+    if (user?.email) {
+      const { sendAdminQuoteResponseEmail } = require("../utils/mailer");
+      sendAdminQuoteResponseEmail({
+        userName:    user.fullName || quotation.userName || "",
+        userEmail:   user.email,
+        quoteNumber: quotation.quoteNumber,
+        adminNote,
+        adminPrice:  adminPrice ? parseFloat(adminPrice) : null,
+        originalTotal: quotation.subtotal + quotation.taxAmount,
+      }).catch(err => console.error("Admin quote response email failed:", err));
+    }
+
+    res.json({ message: "Response sent", quotation });
+  } catch (err) {
+    console.error("ADMIN RESPOND ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;
