@@ -210,6 +210,7 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
     }
   };
 
+  // Builds HTML as a string (styles + content only, no <html>/<body> tags)
   const buildBillHTML = async (): Promise<string> => {
     if (!quote) return "";
 
@@ -234,16 +235,11 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
 
     const displayMaterial = form.materialTypeNote || quote.materialType;
 
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>${quoteNumber}</title>
+    return `
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f3f4f6; display: flex; justify-content: center; padding: 40px 16px; }
-  .page { background: #fff; width: 100%; max-width: 720px; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,0.13); }
+  .bill-wrap * { box-sizing: border-box; margin: 0; padding: 0; }
+  .bill-wrap { font-family: 'Segoe UI', Arial, sans-serif; background: #f3f4f6; padding: 40px 16px; display:flex; justify-content:center; }
+  .page { background: #fff; width: 720px; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,0.13); }
   .header { background: linear-gradient(135deg, #ea580c, #c2410c); color: #fff; padding: 36px 40px 28px; }
   .header-top { display: flex; justify-content: space-between; align-items: flex-start; }
   .brand { display: flex; align-items: center; }
@@ -283,13 +279,8 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
   .footer { font-size: 11px; color: #9ca3af; font-style: italic; margin-top: 28px; line-height: 1.6; }
   .strip { background: #fff7ed; border-top: 1px solid #fed7aa; padding: 14px 40px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #9ca3af; }
   .strip strong { color: #ea580c; }
-  @media print {
-    body { background: white; padding: 0; }
-    .page { box-shadow: none; border-radius: 0; max-width: 100%; }
-  }
 </style>
-</head>
-<body>
+<div class="bill-wrap">
 <div class="page">
   <div class="header">
     <div class="header-top">
@@ -344,37 +335,25 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
     <span>${quoteDate}</span>
   </div>
 </div>
-</body>
-</html>`;
+</div>`;
   };
 
-  // ── UPDATED: Real PDF download using html2canvas + jsPDF ──
+  // ── Real PDF: inject into DOM div (not iframe) so html2canvas can render it ──
   const handleDownloadPDF = async () => {
     const html = await buildBillHTML();
     if (!html) return;
 
-    // Create a hidden iframe to render the HTML
-    const iframe = document.createElement("iframe");
-    iframe.style.cssText =
-      "position:fixed;top:-10000px;left:-10000px;width:794px;height:1123px;border:none;visibility:hidden;";
-    document.body.appendChild(iframe);
+    const container = document.createElement("div");
+    container.style.cssText =
+      "position:fixed;top:-99999px;left:-99999px;width:794px;background:#f3f4f6;z-index:-1;";
+    container.innerHTML = html;
+    document.body.appendChild(container);
 
-    const doc = iframe.contentDocument || iframe.contentWindow?.document;
-    if (!doc) {
-      document.body.removeChild(iframe);
-      return;
-    }
-
-    doc.open();
-    doc.write(html);
-    doc.close();
-
-    // Wait for fonts, images and gradients to fully render
-    await new Promise((resolve) => setTimeout(resolve, 900));
+    await new Promise((resolve) => setTimeout(resolve, 600));
 
     try {
-      const canvas = await html2canvas(doc.body, {
-        scale: 2,              // 2x resolution for sharp text
+      const canvas = await html2canvas(container, {
+        scale: 2,
         useCORS: true,
         allowTaint: true,
         backgroundColor: "#f3f4f6",
@@ -384,18 +363,11 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
 
       const imgData = canvas.toDataURL("image/png");
 
-      // A4 dimensions in px at 96dpi
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "px",
-        format: "a4",
-      });
-
+      const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: "a4" });
       const pdfWidth  = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       const imgHeight = (canvas.height * pdfWidth) / canvas.width;
 
-      // If content is taller than one page, split across multiple pages
       let heightLeft = imgHeight;
       let position   = 0;
 
@@ -411,7 +383,7 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
 
       pdf.save(`${quoteNumber}.pdf`);
     } finally {
-      document.body.removeChild(iframe);
+      document.body.removeChild(container);
     }
   };
 
@@ -423,7 +395,9 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
     document.body.appendChild(printFrame);
     const doc = printFrame.contentDocument || printFrame.contentWindow?.document;
     if (!doc) return;
-    doc.open(); doc.write(html); doc.close();
+    doc.open();
+    doc.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"/></head><body>${html}</body></html>`);
+    doc.close();
     setTimeout(() => {
       printFrame.contentWindow?.focus();
       printFrame.contentWindow?.print();
@@ -509,7 +483,7 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
                     />
                   </div>
 
-                  {/* Material Type — text box only */}
+                  {/* Material Type */}
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-3">Material Type</label>
                     <textarea

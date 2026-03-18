@@ -256,7 +256,7 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
     fetchAll();
   };
 
-  // ── UPDATED: Real PDF download using html2canvas + jsPDF ──
+  // ── Real PDF download: inject HTML as a div in the main document ──
   const handleDownload = async (e: React.MouseEvent, quote: SavedQuote) => {
     e.stopPropagation();
     setDownloadingId(quote._id);
@@ -279,15 +279,11 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
       ? `<div style="display:flex;justify-content:space-between;font-size:14px;color:#16a34a;font-weight:600;padding:4px 0"><span>Negotiated Price</span><span>${formatINR(neg.offeredPrice)}</span></div>`
       : "";
 
-    const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"/>
-<title>${quote.quoteNumber}</title>
+    const html = `
 <style>
-  * { box-sizing:border-box; margin:0; padding:0; }
-  body { font-family:'Segoe UI',Arial,sans-serif; background:#f3f4f6; display:flex; justify-content:center; padding:40px 16px; }
-  .page { background:#fff; width:100%; max-width:720px; border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.13); }
+  .bill-wrap * { box-sizing:border-box; margin:0; padding:0; }
+  .bill-wrap { font-family:'Segoe UI',Arial,sans-serif; background:#f3f4f6; padding:40px 16px; display:flex; justify-content:center; }
+  .page { background:#fff; width:720px; border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.13); }
   .header { background:linear-gradient(135deg,#ea580c,#c2410c); color:#fff; padding:36px 40px 28px; }
   .header-top { display:flex; justify-content:space-between; align-items:flex-start; }
   .brand-name { font-size:22px; font-weight:700; }
@@ -312,8 +308,7 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
   .strip { background:#fff7ed; border-top:1px solid #fed7aa; padding:14px 40px; display:flex; justify-content:space-between; font-size:12px; color:#9ca3af; }
   .strip strong { color:#ea580c; }
 </style>
-</head>
-<body>
+<div class="bill-wrap">
 <div class="page">
   <div class="header">
     <div class="header-top">
@@ -370,31 +365,19 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
     <span>${quoteDate}</span>
   </div>
 </div>
-</body>
-</html>`;
+</div>`;
 
-    // Render HTML in hidden iframe → capture with html2canvas → save as PDF
-    const iframe = document.createElement("iframe");
-    iframe.style.cssText =
-      "position:fixed;top:-10000px;left:-10000px;width:794px;height:1123px;border:none;visibility:hidden;";
-    document.body.appendChild(iframe);
+    // Inject into a DOM div so html2canvas can access styles (avoids cross-origin iframe issue)
+    const container = document.createElement("div");
+    container.style.cssText =
+      "position:fixed;top:-99999px;left:-99999px;width:794px;background:#f3f4f6;z-index:-1;";
+    container.innerHTML = html;
+    document.body.appendChild(container);
 
-    const doc = iframe.contentDocument || iframe.contentWindow?.document;
-    if (!doc) {
-      document.body.removeChild(iframe);
-      setDownloadingId(null);
-      return;
-    }
-
-    doc.open();
-    doc.write(html);
-    doc.close();
-
-    // Wait for fonts, images and gradients to fully render
-    await new Promise((resolve) => setTimeout(resolve, 900));
+    await new Promise((resolve) => setTimeout(resolve, 600));
 
     try {
-      const canvas = await html2canvas(doc.body, {
+      const canvas = await html2canvas(container, {
         scale: 2,
         useCORS: true,
         allowTaint: true,
@@ -405,17 +388,11 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
 
       const imgData = canvas.toDataURL("image/png");
 
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "px",
-        format: "a4",
-      });
-
+      const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: "a4" });
       const pdfWidth  = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       const imgHeight = (canvas.height * pdfWidth) / canvas.width;
 
-      // Handle multi-page content
       let heightLeft = imgHeight;
       let position   = 0;
 
@@ -431,7 +408,7 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
 
       pdf.save(`${quote.quoteNumber}.pdf`);
     } finally {
-      document.body.removeChild(iframe);
+      document.body.removeChild(container);
       setDownloadingId(null);
     }
   };
