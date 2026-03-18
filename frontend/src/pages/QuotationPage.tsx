@@ -363,14 +363,17 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
   const handlePrint = () => {
     const html = buildBillHTML();
     if (!html) return;
-    const w = window.open("", "_blank", "width=800,height=700");
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const w = window.open(url, "_blank");
     if (!w) { alert("Please allow popups to print."); return; }
-    w.document.write(html);
-    w.document.close();
-    setTimeout(() => {
-      w.focus();
-      w.print();
-    }, 600);
+    w.onload = () => {
+      setTimeout(() => {
+        w.focus();
+        w.print();
+        URL.revokeObjectURL(url);
+      }, 400);
+    };
   };
 
   const handleReset = () => {
