@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+
   server: {
     proxy: {
       '/api': {
@@ -11,5 +12,30 @@ export default defineConfig({
         secure: false,
       }
     }
-  }
+  },
+
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react':  ['react', 'react-dom'],
+          'vendor-lucide': ['lucide-react'],
+        },
+      },
+    },
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console:  true,
+        drop_debugger: true,
+      },
+    },
+    chunkSizeWarningLimit: 1000,
+    assetsInlineLimit: 4096,
+    sourcemap: false,
+  },
+
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'lucide-react'],
+  },
 })

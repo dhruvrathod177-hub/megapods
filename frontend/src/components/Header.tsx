@@ -1,4 +1,4 @@
-import { Menu, X, Phone, LogOut, User, ChevronDown,  Key, History } from "lucide-react";
+import { Menu, X, Phone, LogOut, User, ChevronDown, Key, History } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 
@@ -25,17 +25,9 @@ export default function Header({ currentPage, onNavigate, openSignup, openForgot
   ];
 
   const handleNavigate = (page: string) => {
-    // ✅ If user clicks "Get Quote" and is NOT logged in, open login modal instead
-    if (page === "quotation" && !isAuthenticated) {
-      openSignup();
-      setMobileMenuOpen(false);
-      setDropdownOpen(false);
-      return;
-    }
     onNavigate(page);
     setMobileMenuOpen(false);
     setDropdownOpen(false);
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleLogout = () => {

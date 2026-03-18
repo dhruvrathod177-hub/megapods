@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AuthProvider } from "./context/AuthContext";
 import Header from "./components/Header";
 import AuthModal from "./components/AuthModal";
@@ -16,10 +16,39 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Footer from "./components/Footer";
 import WhatsAppButton from "./components/WhatsAppButton";
 
-// ✅ Only these pages require login
+// ── Pages that require login ──────────────────────────────────────────────────
 const PROTECTED_PAGES = ["quotation", "account", "quote-history"];
 
-// ── Admin portal — completely separate from main app ──────────────────────────
+// ── Map URL path → page key ───────────────────────────────────────────────────
+const PATH_TO_PAGE: Record<string, string> = {
+  "/":              "home",
+  "/home":          "home",
+  "/about":         "about",
+  "/solutions":     "solutions",
+  "/gallery":       "gallery",
+  "/contact":       "contact",
+  "/quotation":     "quotation",
+  "/account":       "account",
+  "/quote-history": "quote-history",
+};
+
+const PAGE_TO_PATH: Record<string, string> = {
+  "home":          "/",
+  "about":         "/about",
+  "solutions":     "/solutions",
+  "gallery":       "/gallery",
+  "contact":       "/contact",
+  "quotation":     "/quotation",
+  "account":       "/account",
+  "quote-history": "/quote-history",
+};
+
+function getPageFromPath(): string {
+  const path = window.location.pathname;
+  return PATH_TO_PAGE[path] ?? "home";
+}
+
+// ── Admin portal ──────────────────────────────────────────────────────────────
 function AdminPortal() {
   const [adminToken, setAdminToken] = useState<string | null>(
     sessionStorage.getItem("adminToken")
@@ -54,27 +83,66 @@ function AdminPortal() {
 
 // ── Main app ──────────────────────────────────────────────────────────────────
 function AppInner() {
-  const [currentPage, setCurrentPage] = useState("home");
+  const [currentPage, setCurrentPage] = useState<string>(getPageFromPath);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [startOnForgot, setStartOnForgot] = useState(false);
 
-  const openSignup  = () => { setAuthMode("login");  setStartOnForgot(false); setAuthModalOpen(true); };
-  const openLogin   = () => { setAuthMode("login");  setStartOnForgot(false); setAuthModalOpen(true); };
+  // ── Push page to browser history with clean URL ───────────────────────────
+  const navigateTo = (page: string) => {
+    if (page === currentPage) return;
+    const path = PAGE_TO_PATH[page] ?? "/";
+    window.history.pushState({ page }, "", path);
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // ── Listen for browser back/forward ──────────────────────────────────────
+  useEffect(() => {
+    // Set initial history entry
+    const initPage = getPageFromPath();
+    const initPath = PAGE_TO_PATH[initPage] ?? "/";
+    window.history.replaceState({ page: initPage }, "", initPath);
+    setCurrentPage(initPage);
+
+    const handlePopState = (e: PopStateEvent) => {
+      const page = e.state?.page ?? getPageFromPath();
+      setCurrentPage(page in PAGE_TO_PATH ? page : "home");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  const openSignup         = () => { setAuthMode("login");  setStartOnForgot(false); setAuthModalOpen(true); };
+  const openLogin          = () => { setAuthMode("login");  setStartOnForgot(false); setAuthModalOpen(true); };
   const openForgotPassword = () => { setStartOnForgot(true); setAuthModalOpen(true); };
+
+  const handleNavigate = (page: string) => {
+    // If not logged in and trying to access protected page, show login
+    if (PROTECTED_PAGES.includes(page)) {
+      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+      if (!token) {
+        openSignup();
+        return;
+      }
+    }
+    navigateTo(page);
+  };
 
   const renderPage = () => {
     const pageContent = () => {
       switch (currentPage) {
-        case "home":          return <Home          onNavigate={setCurrentPage} />;
-        case "about":         return <About         onNavigate={setCurrentPage} />;
-        case "solutions":     return <Solutions     onNavigate={setCurrentPage} />;
-        case "gallery":       return <Gallery       onNavigate={setCurrentPage} />;
+        case "home":          return <Home          onNavigate={handleNavigate} />;
+        case "about":         return <About         onNavigate={handleNavigate} />;
+        case "solutions":     return <Solutions     onNavigate={handleNavigate} />;
+        case "gallery":       return <Gallery       onNavigate={handleNavigate} />;
         case "contact":       return <Contact />;
         case "quotation":     return <QuotationPage />;
         case "account":       return <AccountPage   onOpenForgotPassword={openForgotPassword} />;
-        case "quote-history": return <QuoteHistoryPage onNavigate={setCurrentPage} />;
-        default:              return <Home          onNavigate={setCurrentPage} />;
+        case "quote-history": return <QuoteHistoryPage onNavigate={handleNavigate} />;
+        default:              return <Home          onNavigate={handleNavigate} />;
       }
     };
 
@@ -93,12 +161,12 @@ function AppInner() {
     <div className="min-h-screen flex flex-col">
       <Header
         currentPage={currentPage}
-        onNavigate={setCurrentPage}
+        onNavigate={handleNavigate}
         openSignup={openSignup}
         openForgotPassword={openForgotPassword}
       />
       <main className="flex-1">{renderPage()}</main>
-      <Footer onNavigate={setCurrentPage} />
+      <Footer onNavigate={handleNavigate} />
       <WhatsAppButton />
       <AuthModal
         isOpen={authModalOpen}
@@ -111,7 +179,6 @@ function AppInner() {
 }
 
 export default function App() {
-  // If URL path is /admin, show the admin portal (no header/footer)
   const isAdmin = window.location.pathname === "/admin";
 
   if (isAdmin) {
