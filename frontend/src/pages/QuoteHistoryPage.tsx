@@ -54,12 +54,17 @@ function NegotiationBadge({ status }: { status: Negotiation["status"] }) {
     accepted: { label: "Negotiation Accepted", classes: "bg-green-50  text-green-700  border-green-200"  },
     rejected: { label: "Negotiation Rejected", classes: "bg-red-50    text-red-600    border-red-200"    },
   };
+
   const { label, classes } = map[status];
+
   return (
-    <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${classes}`}>{label}</span>
+    <span
+      className={`inline-flex items-center whitespace-nowrap text-xs font-semibold px-3 py-1 rounded-full border ${classes}`}
+    >
+      {label}
+    </span>
   );
 }
-
 interface NegotiateModalProps {
   quote: SavedQuote;
   onClose: () => void;
