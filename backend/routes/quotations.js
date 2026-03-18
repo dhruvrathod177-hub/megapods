@@ -3,6 +3,7 @@ const router    = express.Router();
 const auth      = require("../middleware/auth");
 const Quotation = require("../models/Quotation");
 const User      = require("../models/User");
+const { sendQuoteSavedEmail } = require("../utils/mailer"); // ← ADDED
 
 const MATERIAL_PRICES = {
   "Standard Steel":    0,
@@ -100,6 +101,18 @@ router.post("/save", auth, async (req, res) => {
     });
 
     await quotation.save();
+
+    // ── Send quote saved email (non-blocking) ── ADDED
+    sendQuoteSavedEmail({
+      quoteNumber:   quotation.quoteNumber,
+      userName:      user?.fullName  || "",
+      userEmail:     user?.email     || "",
+      containerSize: quotation.containerSize,
+      materialType:  quotation.materialType,
+      quantity:      quotation.quantity,
+      total:         quotation.total,
+    }).catch(err => console.error("Quote saved email failed:", err));
+
     res.status(201).json({ message: "Quotation saved", quotation });
   } catch (err) {
     console.error("SAVE QUOTE ERROR:", err);

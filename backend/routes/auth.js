@@ -8,6 +8,7 @@ const jwt = require("jsonwebtoken")
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
 const User = require("../models/User")
+const { sendWelcomeEmail } = require("../utils/mailer") // ← ADDED
 
 const otpStore = {}
 
@@ -100,6 +101,10 @@ router.post("/register", async (req, res) => {
     })
 
     await user.save()
+
+    // ── Send welcome email (non-blocking) ── ADDED
+    sendWelcomeEmail({ userName: user.fullName, userEmail: user.email })
+      .catch(err => console.error("Welcome email failed:", err))
 
     res.status(201).json({ message: "Account created successfully" })
 
