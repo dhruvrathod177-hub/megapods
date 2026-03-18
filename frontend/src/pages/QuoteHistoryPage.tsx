@@ -48,7 +48,6 @@ interface Negotiation {
 const formatINR = (n: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
 
-// ── Negotiation status badge ──────────────────────────────────────────────────
 function NegotiationBadge({ status }: { status: Negotiation["status"] }) {
   const map = {
     pending:  { label: "Negotiation Pending",  classes: "bg-yellow-50 text-yellow-700 border-yellow-200" },
@@ -61,7 +60,6 @@ function NegotiationBadge({ status }: { status: Negotiation["status"] }) {
   );
 }
 
-// ── Negotiate modal ───────────────────────────────────────────────────────────
 interface NegotiateModalProps {
   quote: SavedQuote;
   onClose: () => void;
@@ -101,11 +99,9 @@ function NegotiateModal({ quote, onClose, onSubmitted }: NegotiateModalProps) {
   };
 
   return (
-    /* Backdrop */
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
 
-        {/* Modal header */}
         <div className="bg-gradient-to-br from-orange-600 to-orange-700 p-6 text-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -122,21 +118,18 @@ function NegotiateModal({ quote, onClose, onSubmitted }: NegotiateModalProps) {
             </button>
           </div>
 
-          {/* Original price */}
           <div className="mt-4 bg-white/10 rounded-2xl p-4 flex justify-between items-center">
             <span className="text-orange-200 text-sm">Original Total</span>
             <span className="font-bold text-xl">{formatINR(quote.total)}</span>
           </div>
         </div>
 
-        {/* Modal body */}
         <div className="p-6 space-y-5">
 
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">{error}</div>
           )}
 
-          {/* Offered price input */}
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">Your Offered Price (₹)</label>
             <div className="relative">
@@ -150,7 +143,6 @@ function NegotiateModal({ quote, onClose, onSubmitted }: NegotiateModalProps) {
               />
             </div>
 
-            {/* Live discount indicator */}
             {discount && parseFloat(offeredPrice) < quote.total && (
               <div className="mt-2 flex items-center justify-between text-sm">
                 <span className="text-gray-500">Discount requested</span>
@@ -161,7 +153,6 @@ function NegotiateModal({ quote, onClose, onSubmitted }: NegotiateModalProps) {
             )}
           </div>
 
-          {/* Message */}
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">Message to Megapodsindia</label>
             <textarea
@@ -177,7 +168,6 @@ function NegotiateModal({ quote, onClose, onSubmitted }: NegotiateModalProps) {
             Our team will review your offer and reach out to you directly.
           </p>
 
-          {/* Actions */}
           <div className="flex gap-3">
             <button
               onClick={onClose}
@@ -201,17 +191,16 @@ function NegotiateModal({ quote, onClose, onSubmitted }: NegotiateModalProps) {
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
 interface QuoteHistoryPageProps { onNavigate: (page: string) => void; }
 
 export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) {
   const { token } = useAuth();
-  const [quotes,       setQuotes]       = useState<SavedQuote[]>([]);
-  const [negotiations, setNegotiations] = useState<Record<string, Negotiation>>({});
-  const [loading,      setLoading]      = useState(true);
-  const [expanded,     setExpanded]     = useState<string | null>(null);
-  const [deletingId,   setDeletingId]   = useState<string | null>(null);
-  const [editingQuote, setEditingQuote] = useState<SavedQuote | null>(null);
+  const [quotes,           setQuotes]           = useState<SavedQuote[]>([]);
+  const [negotiations,     setNegotiations]     = useState<Record<string, Negotiation>>({});
+  const [loading,          setLoading]          = useState(true);
+  const [expanded,         setExpanded]         = useState<string | null>(null);
+  const [deletingId,       setDeletingId]       = useState<string | null>(null);
+  const [editingQuote,     setEditingQuote]     = useState<SavedQuote | null>(null);
   const [negotiatingQuote, setNegotiatingQuote] = useState<SavedQuote | null>(null);
 
   const fetchAll = async () => {
@@ -222,7 +211,6 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
         apiFetch("/negotiations/my",      {}, token),
       ]);
       setQuotes(qs);
-      // Index negotiations by quotationId for O(1) lookup
       const negMap: Record<string, Negotiation> = {};
       negs.forEach((n) => { negMap[n.quotationId] = n; });
       setNegotiations(negMap);
@@ -277,7 +265,6 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
 
-      {/* Negotiation modal */}
       {negotiatingQuote && (
         <NegotiateModal
           quote={negotiatingQuote}
@@ -295,8 +282,8 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
             <p className="text-gray-500 mt-1">{quotes.length} saved quote{quotes.length !== 1 ? "s" : ""}</p>
           </div>
           <button onClick={() => onNavigate("quotation")}
-            className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-5 py-3 rounded-xl font-semibold transition">
-            <Calculator size={18} /> New Quote
+            className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl font-semibold transition text-sm sm:text-base">
+            <Calculator size={16} className="sm:w-[18px] sm:h-[18px]" /> New Quote
           </button>
         </div>
 
@@ -327,78 +314,86 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
               return (
                 <div key={quote._id} className="bg-white rounded-2xl shadow-lg overflow-hidden">
 
-                  <div className="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors">
+                  {/* ── Card row ── */}
+                  <div className="w-full flex items-center justify-between p-4 sm:p-6 hover:bg-gray-50 transition-colors">
 
-                    {/* Left — expand toggle */}
+                    {/* Left — info */}
                     <button
                       onClick={() => setExpanded(expanded === quote._id ? null : quote._id)}
-                      className="flex items-center gap-4 flex-1 text-left"
+                      className="flex items-center gap-3 flex-1 text-left min-w-0"
                     >
-                      <div className="bg-orange-100 p-3 rounded-xl">
-                        <Package size={20} className="text-orange-600" />
+                      <div className="bg-orange-100 p-2.5 sm:p-3 rounded-xl flex-shrink-0">
+                        <Package size={18} className="text-orange-600 sm:w-5 sm:h-5" />
                       </div>
-                      <div>
-                        <p className="font-bold text-gray-900">{quote.quoteNumber}</p>
-                        <p className="text-sm text-gray-500">
+                      <div className="min-w-0">
+                        <p className="font-bold text-gray-900 text-sm sm:text-base truncate">{quote.quoteNumber}</p>
+                        <p className="text-xs sm:text-sm text-gray-500 truncate">
                           {quote.containerSize} · {quote.materialType} · Qty {quote.quantity}
                         </p>
-                        {/* Negotiation badge inline under meta */}
                         {neg && <div className="mt-1"><NegotiationBadge status={neg.status} /></div>}
                       </div>
                     </button>
 
                     {/* Right — price + actions */}
-                    <div className="flex items-center gap-2 ml-4 flex-shrink-0">
+                    <div className="flex flex-col items-end gap-1.5 ml-2 flex-shrink-0">
+
+                      {/* Price + date */}
                       <button
                         onClick={() => setExpanded(expanded === quote._id ? null : quote._id)}
-                        className="text-right mr-1"
+                        className="text-right"
                       >
-                        <p className="font-bold text-orange-600 text-lg">{formatINR(quote.total)}</p>
-                        <p className="text-xs text-gray-400 flex items-center gap-1 justify-end">
-                          <Calendar size={10} />
+                        <p className="font-bold text-orange-600 text-sm sm:text-lg leading-tight">
+                          {formatINR(quote.total)}
+                        </p>
+                        <p className="text-xs text-gray-400 flex items-center gap-0.5 justify-end">
+                          <Calendar size={9} />
                           {new Date(quote.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                         </p>
                       </button>
 
-                      {/* Negotiate button — hidden if negotiation already exists */}
-                      {!neg && (
+                      {/* Action buttons row */}
+                      <div className="flex items-center gap-1">
+
+                        {/* Negotiate — hidden if negotiation exists */}
+                        {!neg && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setNegotiatingQuote(quote); }}
+                            className="p-1.5 sm:p-2 rounded-lg border border-gray-200 text-gray-400 hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600 transition-colors"
+                            title="Negotiate price"
+                          >
+                            <HandshakeIcon size={14} className="sm:w-4 sm:h-4" />
+                          </button>
+                        )}
+
+                        {/* Edit */}
                         <button
-                          onClick={(e) => { e.stopPropagation(); setNegotiatingQuote(quote); }}
-                          className="p-2 rounded-lg border border-gray-200 text-gray-400 hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600 transition-colors"
-                          title="Negotiate price"
+                          onClick={(e) => { e.stopPropagation(); setEditingQuote(quote); }}
+                          className="p-1.5 sm:p-2 rounded-lg border border-gray-200 text-gray-400 hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600 transition-colors"
+                          title="Edit quote"
                         >
-                          <HandshakeIcon size={16} />
+                          <Pencil size={14} className="sm:w-4 sm:h-4" />
                         </button>
-                      )}
 
-                      {/* Edit */}
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setEditingQuote(quote); }}
-                        className="p-2 rounded-lg border border-gray-200 text-gray-400 hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600 transition-colors"
-                        title="Edit quote"
-                      >
-                        <Pencil size={16} />
-                      </button>
+                        {/* Delete */}
+                        <button
+                          onClick={(e) => handleDelete(e, quote._id)}
+                          disabled={deletingId === quote._id}
+                          className="p-1.5 sm:p-2 rounded-lg border border-gray-200 text-gray-400 hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-colors disabled:opacity-50"
+                          title="Delete quote"
+                        >
+                          {deletingId === quote._id
+                            ? <RefreshCw size={14} className="animate-spin sm:w-4 sm:h-4" />
+                            : <Trash2 size={14} className="sm:w-4 sm:h-4" />}
+                        </button>
 
-                      {/* Delete */}
-                      <button
-                        onClick={(e) => handleDelete(e, quote._id)}
-                        disabled={deletingId === quote._id}
-                        className="p-2 rounded-lg border border-gray-200 text-gray-400 hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-colors disabled:opacity-50"
-                        title="Delete quote"
-                      >
-                        {deletingId === quote._id
-                          ? <RefreshCw size={16} className="animate-spin" />
-                          : <Trash2 size={16} />}
-                      </button>
+                      </div>
                     </div>
                   </div>
 
                   {/* Expanded detail */}
                   {expanded === quote._id && (
-                    <div className="border-t border-gray-100 px-6 pb-6 pt-4 bg-gray-50 space-y-4">
+                    <div className="border-t border-gray-100 px-4 sm:px-6 pb-6 pt-4 bg-gray-50 space-y-4">
 
-                      {/* Line items table */}
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b border-gray-200">
@@ -435,7 +430,6 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
                         </div>
                       </div>
 
-                      {/* Negotiation detail inside expanded */}
                       {neg && (
                         <div className={`rounded-2xl p-4 border ${
                           neg.status === "pending"  ? "bg-yellow-50 border-yellow-200" :

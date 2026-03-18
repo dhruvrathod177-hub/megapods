@@ -130,7 +130,6 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
       .catch(() => setError("Failed to load pricing config. Check if backend is running."));
   }, [token]);
 
-  // Auto-calculate when opening in edit mode and config is ready
   useEffect(() => {
     if (isEditMode && config && form.materialType && form.containerSize) {
       handleCalculate();
@@ -194,49 +193,48 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
     }
   };
 
-  const handleDownloadPDF = async () => {
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "https://megapods.onrender.com/api"}/quotations/generate-pdf`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
-        },
-        body: JSON.stringify({ form, quote, user }),
-      });
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.target = "_blank";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("Download failed", err);
+  // ── FIX: client-side print/download — no backend route needed ──
+  const handlePrintOrDownload = (download = false) => {
+    const printArea = document.getElementById("print-area");
+    if (!printArea) return;
+
+    const printWindow = window.open("", "_blank", "width=900,height=700");
+    if (!printWindow) {
+      alert("Please allow popups to use this feature.");
+      return;
     }
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>${quoteNumber}</title>
+          <style>
+            * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+            body { background: white; }
+          </style>
+        </head>
+        <body>
+          ${printArea.innerHTML}
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+
+    printWindow.onload = () => {
+      if (download) {
+        // "Download PDF" = save as PDF via print dialog
+        printWindow.print();
+      } else {
+        printWindow.print();
+      }
+    };
   };
 
-  const handlePrint = async () => {
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "https://megapods.onrender.com/api"}/quotations/generate-pdf`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
-        },
-        body: JSON.stringify({ form, quote, user }),
-      });
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const newWindow = window.open(url, "_blank");
-      if (!newWindow) { alert("Allow popup to print"); return; }
-      setTimeout(() => { newWindow.print(); }, 500);
-    } catch (err) {
-      console.error("Print failed", err);
-    }
-  };
+  const handleDownloadPDF = () => handlePrintOrDownload(true);
+  const handlePrint = () => handlePrintOrDownload(false);
+  // ── end fix ──
 
   const handleReset = () => {
     setForm({
@@ -248,7 +246,6 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
     setError("");
   };
 
-  // Shared textarea style
   const noteStyle = "mt-3 w-full px-4 py-3 border-2 border-dashed border-gray-200 rounded-2xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none text-sm text-gray-700 placeholder-gray-400 resize-none bg-orange-50/30";
 
   return (
@@ -351,7 +348,6 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
                           </option>
                         ))}
                       </select>
-                      {/* Custom dropdown arrow */}
                       <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center">
                         <svg className="w-4 h-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -530,7 +526,7 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
                     </div>
                   </div>
 
-                  {/* Customer Notes — only shown if at least one note is filled */}
+                  {/* Customer Notes */}
                   {(form.containerSizeNote || form.materialTypeNote || form.addonsNote) && (
                     <div className="mt-6 bg-orange-50 border border-orange-100 rounded-2xl p-5">
                       <p className="text-xs font-bold text-orange-500 uppercase tracking-widest mb-4">
