@@ -5,6 +5,7 @@ const jwt         = require("jsonwebtoken");
 const adminAuth   = require("../middleware/adminAuth");
 const Admin       = require("../models/Admin");
 const Negotiation = require("../models/Negotiation");
+const Quotation   = require("../models/Quotation");                          // ← ADDED
 const { sendNegotiationResponseEmail } = require("../utils/mailer");
 
 /* ── ADMIN LOGIN ── */
@@ -97,5 +98,18 @@ router.get("/stats", adminAuth, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+/* ── GET ALL QUOTATIONS ── */                                                // ← ADDED
+router.get("/quotations", adminAuth, async (req, res) => {                   // ← ADDED
+  try {                                                                       // ← ADDED
+    const quotes = await Quotation.find()                                     // ← ADDED
+      .sort({ createdAt: -1 })                                                // ← ADDED
+      .limit(200);                                                            // ← ADDED
+    res.json(quotes);                                                         // ← ADDED
+  } catch (err) {                                                             // ← ADDED
+    console.error("ADMIN QUOTATIONS ERROR:", err);                            // ← ADDED
+    res.status(500).json({ message: "Server error" });                        // ← ADDED
+  }                                                                           // ← ADDED
+});                                                                           // ← ADDED
 
 module.exports = router;
