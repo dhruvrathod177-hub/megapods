@@ -13,19 +13,19 @@ const MATERIAL_PRICES = {
 };
 
 const CONTAINER_BASE_PRICES = {
-  "10ft":    150000,
-  "20ft":    220000,
-  "40ft":    380000,
-  "40ft HC": 420000,
+  "10ft * 10ft":    120000,
+  "15ft * 10ft":    180000,
+  "20ft * 10ft":    240000,
+  "40ft * 10ft":    480000,
 };
 
 const ADDON_PRICES = {
-  "Air Conditioning":          15000,
-  "Solar Panels":              40000,
-  "Premium Insulation":        12000,
-  "Security System":           18000,
-  "Custom Branding Wrap":      20000,
-  "Modular Furniture Package": 30000,
+  "Air Conditioning":          30000,
+  "Modular furniture  (Cabinet & chair ) cost upto":              20000,
+  "Additional toilet kit 25000":        25000,
+  "kitchen Pantry Area ":           30000,
+  "Office partition per unit":      15000,
+  "Extra window ": 8000,
 };
 
 const TAX_RATE = 0.18;

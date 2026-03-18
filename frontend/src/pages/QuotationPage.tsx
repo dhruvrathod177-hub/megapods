@@ -193,7 +193,7 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
     }
   };
 
-  // ── Convert logo to base64 so it works in iframe/download ─────────────────
+  // ── Convert logo to base64 ─────────────────────────────────────────────────
   const getLogoBase64 = async (): Promise<string> => {
     try {
       const response = await fetch("/img/logo1.JPG");
@@ -208,12 +208,11 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
     }
   };
 
-  // ── Build fully self-contained styled HTML bill ────────────────────────────
+  // ── Build HTML bill ────────────────────────────────────────────────────────
   const buildBillHTML = async (): Promise<string> => {
     if (!quote) return "";
 
     const logoBase64 = await getLogoBase64();
-
     const logoHTML = logoBase64
       ? `<img src="${logoBase64}" alt="Logo" style="height:52px;width:52px;border-radius:50%;object-fit:contain;background:#fff;padding:4px;margin-right:14px;flex-shrink:0;"/>`
       : "";
@@ -242,8 +241,6 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', Arial, sans-serif; background: #f3f4f6; display: flex; justify-content: center; padding: 40px 16px; }
   .page { background: #fff; width: 100%; max-width: 720px; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,0.13); }
-
-  /* Header */
   .header { background: linear-gradient(135deg, #ea580c, #c2410c); color: #fff; padding: 36px 40px 28px; }
   .header-top { display: flex; justify-content: space-between; align-items: flex-start; }
   .brand { display: flex; align-items: center; }
@@ -257,11 +254,7 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
   .prepared { font-size: 12px; color: #fed7aa; margin-bottom: 4px; }
   .client-name { font-size: 16px; font-weight: 700; }
   .client-email { font-size: 13px; color: #fed7aa; }
-
-  /* Body */
   .body { padding: 36px 40px; }
-
-  /* Table */
   table { width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 8px; }
   thead tr { border-bottom: 2px solid #e5e7eb; }
   thead th { padding: 10px 8px; color: #6b7280; font-weight: 600; text-align: left; }
@@ -274,29 +267,19 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
   td.center { text-align: center; color: #374151; }
   td.right { text-align: right; color: #374151; }
   td.right.bold { font-weight: 700; }
-
-  /* Totals */
   .totals { border-top: 1px solid #e5e7eb; padding-top: 16px; margin-top: 8px; }
   .total-row { display: flex; justify-content: space-between; font-size: 14px; color: #4b5563; padding: 4px 0; }
   .total-final { display: flex; justify-content: space-between; font-size: 20px; font-weight: 800; color: #111827; border-top: 2px solid #111827; margin-top: 10px; padding-top: 12px; }
   .total-final .amount { color: #ea580c; }
-
-  /* Notes */
   .notes-box { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 12px; padding: 20px 24px; margin-top: 28px; }
   .notes-title { font-size: 11px; font-weight: 700; color: #ea580c; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 14px; }
   .note-block { margin-bottom: 12px; }
   .note-block:last-child { margin-bottom: 0; }
   .note-label { font-size: 11px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
   .note-text { font-size: 13px; color: #374151; line-height: 1.5; }
-
-  /* Footer */
   .footer { font-size: 11px; color: #9ca3af; font-style: italic; margin-top: 28px; line-height: 1.6; }
-
-  /* Strip */
   .strip { background: #fff7ed; border-top: 1px solid #fed7aa; padding: 14px 40px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #9ca3af; }
   .strip strong { color: #ea580c; }
-
-  /* Print overrides */
   @media print {
     body { background: white; padding: 0; }
     .page { box-shadow: none; border-radius: 0; max-width: 100%; }
@@ -305,7 +288,6 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
 </head>
 <body>
 <div class="page">
-
   <div class="header">
     <div class="header-top">
       <div class="brand">
@@ -326,7 +308,6 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
     <div class="client-name">${user?.fullName ?? ""}</div>
     <div class="client-email">${user?.email ?? ""}</div>
   </div>
-
   <div class="body">
     <table>
       <thead>
@@ -347,77 +328,55 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
         ${addonRows}
       </tbody>
     </table>
-
     <div class="totals">
       <div class="total-row"><span>Subtotal</span><span>${formatINR(quote.subtotal)}</span></div>
       <div class="total-row"><span>GST (${(quote.taxRate * 100).toFixed(0)}%)</span><span>${formatINR(quote.taxAmount)}</span></div>
       <div class="total-final"><span>TOTAL</span><span class="amount">${formatINR(quote.total)}</span></div>
     </div>
-
     ${noteRows ? `<div class="notes-box"><div class="notes-title">Customer Requirements &amp; Notes</div>${noteRows}</div>` : ""}
-
     <p class="footer">* This is an indicative quotation. Final pricing may vary based on site conditions, customizations, and delivery location. Valid for 30 days from the date of issue.</p>
   </div>
-
   <div class="strip">
     <span>Generated by <strong>Megapodsindia</strong> Quotation System</span>
     <span>${quoteDate}</span>
   </div>
-
 </div>
 </body>
 </html>`;
   };
 
-  // ── Direct download as .html file ─────────────────────────────────────────
+  // ── Download ───────────────────────────────────────────────────────────────
   const handleDownloadPDF = async () => {
     const html = await buildBillHTML();
     if (!html) return;
     const blob = new Blob([html], { type: "text/html" });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement("a");
-    a.href     = url;
-    a.download = `${quoteNumber}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    a.href = url; a.download = `${quoteNumber}.html`;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
   };
 
-  // ── Print via hidden iframe — no new tab ───────────────────────────────────
+  // ── Print ──────────────────────────────────────────────────────────────────
   const handlePrint = async () => {
     const html = await buildBillHTML();
     if (!html) return;
     const printFrame = document.createElement("iframe");
-    printFrame.style.position = "fixed";
-    printFrame.style.top = "-10000px";
-    printFrame.style.left = "-10000px";
-    printFrame.style.width = "0";
-    printFrame.style.height = "0";
-    printFrame.style.border = "none";
+    printFrame.style.cssText = "position:fixed;top:-10000px;left:-10000px;width:0;height:0;border:none;";
     document.body.appendChild(printFrame);
     const doc = printFrame.contentDocument || printFrame.contentWindow?.document;
     if (!doc) return;
-    doc.open();
-    doc.write(html);
-    doc.close();
+    doc.open(); doc.write(html); doc.close();
     setTimeout(() => {
       printFrame.contentWindow?.focus();
       printFrame.contentWindow?.print();
-      setTimeout(() => {
-        document.body.removeChild(printFrame);
-      }, 1000);
+      setTimeout(() => document.body.removeChild(printFrame), 1000);
     }, 600);
   };
 
   const handleReset = () => {
-    setForm({
-      materialType: "", containerSize: "", quantity: 1, selectedAddons: [],
-      containerSizeNote: "", materialTypeNote: "", addonsNote: "",
-    });
-    setQuote(null);
-    setSaved(false);
-    setError("");
+    setForm({ materialType: "", containerSize: "", quantity: 1, selectedAddons: [], containerSizeNote: "", materialTypeNote: "", addonsNote: "" });
+    setQuote(null); setSaved(false); setError("");
   };
 
   const noteStyle = "mt-3 w-full px-4 py-3 border-2 border-dashed border-gray-200 rounded-2xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none text-sm text-gray-700 placeholder-gray-400 resize-none bg-orange-50/30";
@@ -493,28 +452,28 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
                     />
                   </div>
 
-                  {/* Material Type */}
+                  {/* ── Material Type — button grid (no dropdown) ── */}
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-3">Material Type *</label>
-                    <div className="relative">
-                      <select
-                        value={form.materialType}
-                        onChange={(e) => setForm((p) => ({ ...p, materialType: e.target.value }))}
-                        style={{ appearance: "none", WebkitAppearance: "none" } as React.CSSProperties}
-                        className="w-full px-4 py-3 pr-10 border-2 border-gray-200 rounded-2xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-gray-800 bg-white"
-                      >
-                        <option value="">-- Select material --</option>
-                        {config.materials.map((m) => (
-                          <option key={m} value={m}>
-                            {m}{config.materialSurcharges[m] > 0 ? ` (+${formatINR(config.materialSurcharges[m])})` : " (Included)"}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center">
-                        <svg className="w-4 h-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                        </svg>
-                      </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {config.materials.map((m) => (
+                        <button
+                          key={m}
+                          onClick={() => setForm((p) => ({ ...p, materialType: m }))}
+                          className={`p-4 rounded-2xl border-2 font-semibold transition-all text-left ${
+                            form.materialType === m
+                              ? "border-orange-600 bg-orange-50 text-orange-700"
+                              : "border-gray-200 hover:border-orange-300 text-gray-700"
+                          }`}
+                        >
+                          <div className="text-sm sm:text-base">{m}</div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {config.materialSurcharges[m] > 0
+                              ? `+${formatINR(config.materialSurcharges[m])}`
+                              : "Included"}
+                          </div>
+                        </button>
+                      ))}
                     </div>
                     <textarea
                       value={form.materialTypeNote}
