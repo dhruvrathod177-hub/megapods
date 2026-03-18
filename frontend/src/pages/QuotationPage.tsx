@@ -2,6 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { Calculator, Download, Printer, Save, CheckCircle, RefreshCw, Pencil } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+
 
 type HTMLTag = 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'span' | 'div';
 
@@ -229,7 +232,6 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
       form.addonsNote        && `<div class="note-block"><p class="note-label">Additional Options</p><p class="note-text">${form.addonsNote}</p></div>`,
     ].filter(Boolean).join("");
 
-    // ── CHANGED: show customer's typed material instead of default ──
     const displayMaterial = form.materialTypeNote || quote.materialType;
 
     return `<!DOCTYPE html>
@@ -346,15 +348,71 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
 </html>`;
   };
 
+  // ── UPDATED: Real PDF download using html2canvas + jsPDF ──
   const handleDownloadPDF = async () => {
     const html = await buildBillHTML();
     if (!html) return;
-    const blob = new Blob([html], { type: "text/html" });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement("a");
-    a.href = url; a.download = `${quoteNumber}.html`;
-    document.body.appendChild(a); a.click();
-    document.body.removeChild(a); URL.revokeObjectURL(url);
+
+    // Create a hidden iframe to render the HTML
+    const iframe = document.createElement("iframe");
+    iframe.style.cssText =
+      "position:fixed;top:-10000px;left:-10000px;width:794px;height:1123px;border:none;visibility:hidden;";
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!doc) {
+      document.body.removeChild(iframe);
+      return;
+    }
+
+    doc.open();
+    doc.write(html);
+    doc.close();
+
+    // Wait for fonts, images and gradients to fully render
+    await new Promise((resolve) => setTimeout(resolve, 900));
+
+    try {
+      const canvas = await html2canvas(doc.body, {
+        scale: 2,              // 2x resolution for sharp text
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#f3f4f6",
+        width: 794,
+        windowWidth: 794,
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+
+      // A4 dimensions in px at 96dpi
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "px",
+        format: "a4",
+      });
+
+      const pdfWidth  = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      // If content is taller than one page, split across multiple pages
+      let heightLeft = imgHeight;
+      let position   = 0;
+
+      pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
+      heightLeft -= pdfHeight;
+
+      while (heightLeft > 0) {
+        position -= pdfHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
+        heightLeft -= pdfHeight;
+      }
+
+      pdf.save(`${quoteNumber}.pdf`);
+    } finally {
+      document.body.removeChild(iframe);
+    }
   };
 
   const handlePrint = async () => {
@@ -603,7 +661,6 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
                       <tr>
                         <td className="py-4">
                           <div className="font-semibold text-gray-900">{quote.containerSize} Container</div>
-                          {/* ── CHANGED: show customer's typed material ── */}
                           <div className="text-gray-500 text-xs">Material: {form.materialTypeNote || quote.materialType}</div>
                         </td>
                         <td className="py-4 text-right">{quote.quantity}</td>
@@ -690,7 +747,7 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
                       onClick={handleDownloadPDF}
                       className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl font-semibold transition text-sm sm:text-base"
                     >
-                      <Download size={16} className="sm:w-[18px] sm:h-[18px]" /> Download
+                      <Download size={16} className="sm:w-[18px] sm:h-[18px]" /> Download PDF
                     </button>
                     <button
                       onClick={handlePrint}

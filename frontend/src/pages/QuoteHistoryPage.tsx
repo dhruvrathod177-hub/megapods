@@ -6,6 +6,8 @@ import {
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
 import QuotationPage, { SavedQuote } from "./QuotationPage";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 type HTMLTag = 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'span' | 'div';
 interface Heading3DProps { children: React.ReactNode; className?: string; tag?: HTMLTag; }
@@ -202,6 +204,7 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
   const [deletingId,       setDeletingId]       = useState<string | null>(null);
   const [editingQuote,     setEditingQuote]     = useState<SavedQuote | null>(null);
   const [negotiatingQuote, setNegotiatingQuote] = useState<SavedQuote | null>(null);
+  const [downloadingId,    setDownloadingId]    = useState<string | null>(null);
 
   const fetchAll = async () => {
     setLoading(true);
@@ -221,7 +224,6 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
     }
   };
 
-  // ── Poll every 10s so status updates without needing manual reload ──
   useEffect(() => {
     fetchAll();
     const interval = setInterval(() => fetchAll(), 10000);
@@ -246,7 +248,6 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
   const handleNegotiationSubmitted = (neg: Negotiation) => {
     setNegotiations((prev) => ({ ...prev, [neg.quotationId]: neg }));
     setNegotiatingQuote(null);
-    // Immediately re-fetch so status is fresh
     setTimeout(() => fetchAll(), 500);
   };
 
@@ -255,19 +256,28 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
     fetchAll();
   };
 
-  // ── Download quote as HTML ──
-  const handleDownload = async (quote: SavedQuote) => {
-    const quoteDate = new Date(quote.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+  // ── UPDATED: Real PDF download using html2canvas + jsPDF ──
+  const handleDownload = async (e: React.MouseEvent, quote: SavedQuote) => {
+    e.stopPropagation();
+    setDownloadingId(quote._id);
+
     const neg = negotiations[quote._id];
     const displayTotal = neg?.status === "accepted" ? neg.offeredPrice : quote.total;
+    const quoteDate = new Date(quote.createdAt).toLocaleDateString("en-IN", {
+      day: "numeric", month: "long", year: "numeric",
+    });
 
     const addonRows = quote.addons?.map(a => `
       <tr>
         <td style="padding:10px 8px;border-bottom:1px solid #f3f4f6;font-size:13px;color:#374151">${a.name}<br/><span style="font-size:11px;color:#9ca3af">Add-on</span></td>
-        <td style="padding:10px 8px;border-bottom:1px solid #f3f4f6;text-align:center">1</td>
-        <td style="padding:10px 8px;border-bottom:1px solid #f3f4f6;text-align:right">${formatINR(a.price)}</td>
-        <td style="padding:10px 8px;border-bottom:1px solid #f3f4f6;text-align:right">${formatINR(a.price)}</td>
+        <td style="padding:10px 8px;border-bottom:1px solid #f3f4f6;text-align:center;font-size:13px;color:#374151">1</td>
+        <td style="padding:10px 8px;border-bottom:1px solid #f3f4f6;text-align:right;font-size:13px;color:#374151">${formatINR(a.price)}</td>
+        <td style="padding:10px 8px;border-bottom:1px solid #f3f4f6;text-align:right;font-size:13px;color:#374151">${formatINR(a.price)}</td>
       </tr>`).join("") ?? "";
+
+    const negotiatedRow = neg?.status === "accepted"
+      ? `<div style="display:flex;justify-content:space-between;font-size:14px;color:#16a34a;font-weight:600;padding:4px 0"><span>Negotiated Price</span><span>${formatINR(neg.offeredPrice)}</span></div>`
+      : "";
 
     const html = `<!DOCTYPE html>
 <html lang="en">
@@ -301,7 +311,6 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
   .total-final .amount { color:#ea580c; }
   .strip { background:#fff7ed; border-top:1px solid #fed7aa; padding:14px 40px; display:flex; justify-content:space-between; font-size:12px; color:#9ca3af; }
   .strip strong { color:#ea580c; }
-  @media print { body{background:white;padding:0} .page{box-shadow:none;border-radius:0;max-width:100%} }
 </style>
 </head>
 <body>
@@ -337,7 +346,7 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
         <tr>
           <td style="padding:12px 8px">
             <div style="font-weight:600;color:#111827">${quote.containerSize} Container</div>
-            <div style="font-size:12px;color:#9ca3af">Material: ${quote.materialTypeNote || quote.materialType}</div>
+            <div style="font-size:12px;color:#9ca3af">Material: ${(quote as any).materialTypeNote || quote.materialType}</div>
           </td>
           <td style="padding:12px 8px;text-align:center">${quote.quantity}</td>
           <td style="padding:12px 8px;text-align:right">${formatINR(quote.unitPrice)}</td>
@@ -349,7 +358,7 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
     <div class="totals">
       <div class="total-row"><span>Subtotal</span><span>${formatINR(quote.subtotal)}</span></div>
       <div class="total-row"><span>GST (18%)</span><span>${formatINR(quote.taxAmount)}</span></div>
-      ${neg?.status === "accepted" ? `<div class="total-row" style="color:#16a34a"><span>Negotiated Price</span><span>${formatINR(neg.offeredPrice)}</span></div>` : ""}
+      ${negotiatedRow}
       <div class="total-final"><span>TOTAL</span><span class="amount">${formatINR(displayTotal)}</span></div>
     </div>
     <p style="font-size:11px;color:#9ca3af;font-style:italic;margin-top:28px;line-height:1.6">
@@ -364,15 +373,67 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
 </body>
 </html>`;
 
-    const blob = new Blob([html], { type: "text/html" });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement("a");
-    a.href = url;
-    a.download = `${quote.quoteNumber}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // Render HTML in hidden iframe → capture with html2canvas → save as PDF
+    const iframe = document.createElement("iframe");
+    iframe.style.cssText =
+      "position:fixed;top:-10000px;left:-10000px;width:794px;height:1123px;border:none;visibility:hidden;";
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!doc) {
+      document.body.removeChild(iframe);
+      setDownloadingId(null);
+      return;
+    }
+
+    doc.open();
+    doc.write(html);
+    doc.close();
+
+    // Wait for fonts, images and gradients to fully render
+    await new Promise((resolve) => setTimeout(resolve, 900));
+
+    try {
+      const canvas = await html2canvas(doc.body, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#f3f4f6",
+        width: 794,
+        windowWidth: 794,
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "px",
+        format: "a4",
+      });
+
+      const pdfWidth  = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      // Handle multi-page content
+      let heightLeft = imgHeight;
+      let position   = 0;
+
+      pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
+      heightLeft -= pdfHeight;
+
+      while (heightLeft > 0) {
+        position -= pdfHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
+        heightLeft -= pdfHeight;
+      }
+
+      pdf.save(`${quote.quoteNumber}.pdf`);
+    } finally {
+      document.body.removeChild(iframe);
+      setDownloadingId(null);
+    }
   };
 
   if (editingQuote) {
@@ -438,13 +499,12 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
           <div className="space-y-4">
             {quotes.map((quote) => {
               const neg = negotiations[quote._id];
-              // ── FIX: show negotiated price if accepted ──
               const displayTotal = neg?.status === "accepted" ? neg.offeredPrice : quote.total;
 
               return (
                 <div key={quote._id} className="bg-white rounded-2xl shadow-lg overflow-hidden">
 
-                  {/* ── Card row ── */}
+                  {/* Card row */}
                   <div className="w-full flex items-center justify-between p-4 sm:p-6 hover:bg-gray-50 transition-colors">
 
                     {/* Left — info */}
@@ -458,7 +518,7 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
                       <div className="min-w-0">
                         <p className="font-bold text-gray-900 text-sm sm:text-base truncate">{quote.quoteNumber}</p>
                         <p className="text-xs sm:text-sm text-gray-500 truncate">
-                          {quote.containerSize} · {quote.materialTypeNote || quote.materialType} · Qty {quote.quantity}
+                          {quote.containerSize} · {(quote as any).materialTypeNote || quote.materialType} · Qty {quote.quantity}
                         </p>
                         {neg && <div className="mt-1"><NegotiationBadge status={neg.status} /></div>}
                       </div>
@@ -487,13 +547,16 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
                       {/* Action buttons row */}
                       <div className="flex items-center gap-1">
 
-                        {/* Download */}
+                        {/* Download PDF */}
                         <button
-                          onClick={(e) => { e.stopPropagation(); handleDownload(quote); }}
-                          className="p-1.5 sm:p-2 rounded-lg border border-gray-200 text-gray-400 hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600 transition-colors"
-                          title="Download quote"
+                          onClick={(e) => handleDownload(e, quote)}
+                          disabled={downloadingId === quote._id}
+                          className="p-1.5 sm:p-2 rounded-lg border border-gray-200 text-gray-400 hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600 transition-colors disabled:opacity-50"
+                          title="Download PDF"
                         >
-                          <Download size={14} className="sm:w-4 sm:h-4" />
+                          {downloadingId === quote._id
+                            ? <RefreshCw size={14} className="animate-spin sm:w-4 sm:h-4" />
+                            : <Download size={14} className="sm:w-4 sm:h-4" />}
                         </button>
 
                         {/* Negotiate — hidden if negotiation exists */}
@@ -547,7 +610,7 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
                           <tr>
                             <td className="py-3">
                               <p className="font-semibold text-gray-900">{quote.containerSize} Container × {quote.quantity}</p>
-                              <p className="text-xs text-gray-400">{quote.materialTypeNote || quote.materialType}</p>
+                              <p className="text-xs text-gray-400">{(quote as any).materialTypeNote || quote.materialType}</p>
                             </td>
                             <td className="py-3 text-right font-semibold">{formatINR(quote.unitPrice * quote.quantity)}</td>
                           </tr>
@@ -567,7 +630,6 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
                         <div className="flex justify-between text-sm text-gray-600">
                           <span>GST (18%)</span><span>{formatINR(quote.taxAmount)}</span>
                         </div>
-                        {/* ── FIX: show negotiated price line if accepted ── */}
                         {neg?.status === "accepted" && (
                           <div className="flex justify-between text-sm font-semibold text-green-600">
                             <span>Negotiated Price</span><span>{formatINR(neg.offeredPrice)}</span>
