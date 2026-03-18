@@ -193,48 +193,185 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
     }
   };
 
-  // ── FIX: client-side print/download — no backend route needed ──
-  const handlePrintOrDownload = (download = false) => {
-    const printArea = document.getElementById("print-area");
-    if (!printArea) return;
+  // ── Build fully self-contained styled HTML bill ────────────────────────────
+  const buildBillHTML = () => {
+    if (!quote) return "";
 
-    const printWindow = window.open("", "_blank", "width=900,height=700");
-    if (!printWindow) {
-      alert("Please allow popups to use this feature.");
-      return;
-    }
+    const addonRows = quote.addonBreakdown.map((a) => `
+      <tr>
+        <td class="desc">${a.name}<br/><span class="sub">Add-on</span></td>
+        <td class="center">1</td>
+        <td class="right">${formatINR(a.price)}</td>
+        <td class="right">${formatINR(a.price)}</td>
+      </tr>`).join("");
 
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>${quoteNumber}</title>
-          <style>
-            * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-            body { background: white; }
-          </style>
-        </head>
-        <body>
-          ${printArea.innerHTML}
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+    const noteRows = [
+      form.containerSizeNote && `<div class="note-block"><p class="note-label">Container Size</p><p class="note-text">${form.containerSizeNote}</p></div>`,
+      form.materialTypeNote  && `<div class="note-block"><p class="note-label">Material Type</p><p class="note-text">${form.materialTypeNote}</p></div>`,
+      form.addonsNote        && `<div class="note-block"><p class="note-label">Additional Options</p><p class="note-text">${form.addonsNote}</p></div>`,
+    ].filter(Boolean).join("");
 
-    printWindow.onload = () => {
-      if (download) {
-        // "Download PDF" = save as PDF via print dialog
-        printWindow.print();
-      } else {
-        printWindow.print();
-      }
-    };
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>${quoteNumber}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f3f4f6; display: flex; justify-content: center; padding: 40px 16px; }
+  .page { background: #fff; width: 100%; max-width: 720px; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,0.13); }
+
+  /* Header */
+  .header { background: linear-gradient(135deg, #ea580c, #c2410c); color: #fff; padding: 36px 40px 28px; }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .brand-name { font-size: 22px; font-weight: 700; }
+  .brand-loc { font-size: 12px; color: #fed7aa; margin-top: 2px; }
+  .quote-label { text-align: right; }
+  .quote-label .title { font-size: 28px; font-weight: 800; letter-spacing: 2px; }
+  .quote-label .num { font-size: 13px; color: #fed7aa; margin-top: 4px; }
+  .quote-label .date { font-size: 13px; color: #fed7aa; }
+  .divider { border: none; border-top: 1px solid rgba(255,255,255,0.25); margin: 20px 0 16px; }
+  .prepared { font-size: 12px; color: #fed7aa; margin-bottom: 4px; }
+  .client-name { font-size: 16px; font-weight: 700; }
+  .client-email { font-size: 13px; color: #fed7aa; }
+
+  /* Body */
+  .body { padding: 36px 40px; }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 8px; }
+  thead tr { border-bottom: 2px solid #e5e7eb; }
+  thead th { padding: 10px 8px; color: #6b7280; font-weight: 600; text-align: left; }
+  thead th.right { text-align: right; }
+  thead th.center { text-align: center; }
+  tbody tr { border-bottom: 1px solid #f3f4f6; }
+  tbody td { padding: 12px 8px; color: #111827; vertical-align: top; }
+  td.desc { font-weight: 600; }
+  .sub { font-size: 12px; color: #9ca3af; font-weight: 400; }
+  td.center { text-align: center; color: #374151; }
+  td.right { text-align: right; color: #374151; }
+  td.right.bold { font-weight: 700; }
+
+  /* Totals */
+  .totals { border-top: 1px solid #e5e7eb; padding-top: 16px; margin-top: 8px; }
+  .total-row { display: flex; justify-content: space-between; font-size: 14px; color: #4b5563; padding: 4px 0; }
+  .total-final { display: flex; justify-content: space-between; font-size: 20px; font-weight: 800; color: #111827; border-top: 2px solid #111827; margin-top: 10px; padding-top: 12px; }
+  .total-final .amount { color: #ea580c; }
+
+  /* Notes */
+  .notes-box { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 12px; padding: 20px 24px; margin-top: 28px; }
+  .notes-title { font-size: 11px; font-weight: 700; color: #ea580c; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 14px; }
+  .note-block { margin-bottom: 12px; }
+  .note-block:last-child { margin-bottom: 0; }
+  .note-label { font-size: 11px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
+  .note-text { font-size: 13px; color: #374151; line-height: 1.5; }
+
+  /* Footer */
+  .footer { font-size: 11px; color: #9ca3af; font-style: italic; margin-top: 28px; line-height: 1.6; }
+
+  /* Strip */
+  .strip { background: #fff7ed; border-top: 1px solid #fed7aa; padding: 14px 40px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #9ca3af; }
+  .strip strong { color: #ea580c; }
+
+  /* Print overrides */
+  @media print {
+    body { background: white; padding: 0; }
+    .page { box-shadow: none; border-radius: 0; max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="brand-name">Megapodsindia</div>
+        <div class="brand-loc">Surat, Gujarat, India</div>
+      </div>
+      <div class="quote-label">
+        <div class="title">QUOTATION</div>
+        <div class="num">#${quoteNumber}</div>
+        <div class="date">${quoteDate}</div>
+      </div>
+    </div>
+    <hr class="divider"/>
+    <div class="prepared">Prepared for:</div>
+    <div class="client-name">${user?.fullName ?? ""}</div>
+    <div class="client-email">${user?.email ?? ""}</div>
+  </div>
+
+  <div class="body">
+    <table>
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th class="center">Qty</th>
+          <th class="right">Unit Price</th>
+          <th class="right">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="desc">${quote.containerSize} Container<br/><span class="sub">Material: ${quote.materialType}</span></td>
+          <td class="center">${quote.quantity}</td>
+          <td class="right">${formatINR(quote.unitPrice)}</td>
+          <td class="right bold">${formatINR(quote.unitPrice * quote.quantity)}</td>
+        </tr>
+        ${addonRows}
+      </tbody>
+    </table>
+
+    <div class="totals">
+      <div class="total-row"><span>Subtotal</span><span>${formatINR(quote.subtotal)}</span></div>
+      <div class="total-row"><span>GST (${(quote.taxRate * 100).toFixed(0)}%)</span><span>${formatINR(quote.taxAmount)}</span></div>
+      <div class="total-final"><span>TOTAL</span><span class="amount">${formatINR(quote.total)}</span></div>
+    </div>
+
+    ${noteRows ? `<div class="notes-box"><div class="notes-title">Customer Requirements &amp; Notes</div>${noteRows}</div>` : ""}
+
+    <p class="footer">* This is an indicative quotation. Final pricing may vary based on site conditions, customizations, and delivery location. Valid for 30 days from the date of issue.</p>
+  </div>
+
+  <div class="strip">
+    <span>Generated by <strong>Megapodsindia</strong> Quotation System</span>
+    <span>${quoteDate}</span>
+  </div>
+
+</div>
+</body>
+</html>`;
   };
 
-  const handleDownloadPDF = () => handlePrintOrDownload(true);
-  const handlePrint = () => handlePrintOrDownload(false);
-  // ── end fix ──
+  // ── Direct download as .html file ─────────────────────────────────────────
+  const handleDownloadPDF = () => {
+    const html = buildBillHTML();
+    if (!html) return;
+    const blob = new Blob([html], { type: "text/html" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
+    a.download = `${quoteNumber}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // ── Print with properly styled bill ───────────────────────────────────────
+  const handlePrint = () => {
+    const html = buildBillHTML();
+    if (!html) return;
+    const w = window.open("", "_blank", "width=800,height=700");
+    if (!w) { alert("Please allow popups to print."); return; }
+    w.document.write(html);
+    w.document.close();
+    setTimeout(() => {
+      w.focus();
+      w.print();
+    }, 600);
+  };
 
   const handleReset = () => {
     setForm({
@@ -250,18 +387,6 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
 
   return (
     <div className="min-h-screen bg-gray-50">
-
-      <style>{`
-        @media print {
-          body * { visibility: hidden; }
-          #print-area, #print-area * { visibility: visible; }
-          #print-area {
-            position: absolute; left: 0; top: 0; width: 100%;
-            box-shadow: none !important; border-radius: 0 !important;
-          }
-          .no-print { display: none !important; }
-        }
-      `}</style>
 
       {/* HERO */}
       <section className="no-print bg-gradient-to-br from-orange-600 to-orange-700 text-white py-12 lg:py-16">
@@ -454,30 +579,36 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
             ) : (
               <div ref={printRef} id="print-area" className="bg-white rounded-3xl shadow-xl overflow-hidden">
 
-                {/* Quote Header */}
-                <div className="bg-gradient-to-br from-orange-600 to-orange-700 text-white p-8">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-3 mb-2">
-                      <img src="/img/logo1.JPG" alt="Logo" className="h-12 w-12 rounded-full object-contain bg-white p-1" />
-                      <div>
-                        <h3 className="text-xl font-bold">Megapodsindia</h3>
+                {/* ── Quote Header — fixed mobile overlap ── */}
+                <div className="bg-gradient-to-br from-orange-600 to-orange-700 text-white p-6 sm:p-8">
+                  {/* Row 1: logo+name LEFT, QUOTATION label RIGHT */}
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <img
+                        src="/img/logo1.JPG"
+                        alt="Logo"
+                        className="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-contain bg-white p-1 flex-shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <h3 className="text-base sm:text-xl font-bold leading-tight">Megapodsindia</h3>
                         <p className="text-orange-200 text-xs">Surat, Gujarat, India</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold">QUOTATION</div>
-                      <div className="text-orange-200 text-sm mt-1">#{quoteNumber}</div>
-                      <div className="text-orange-200 text-sm">{quoteDate}</div>
+                    <div className="text-right flex-shrink-0">
+                      <div className="text-lg sm:text-2xl font-bold tracking-wide">QUOTATION</div>
+                      <div className="text-orange-200 text-xs sm:text-sm mt-1">#{quoteNumber}</div>
+                      <div className="text-orange-200 text-xs sm:text-sm">{quoteDate}</div>
                     </div>
                   </div>
+                  {/* Row 2: prepared for */}
                   <div className="mt-4 pt-4 border-t border-orange-500">
-                    <p className="text-orange-200 text-sm">Prepared for:</p>
-                    <p className="font-semibold">{user?.fullName}</p>
-                    <p className="text-orange-200 text-sm">{user?.email}</p>
+                    <p className="text-orange-200 text-xs sm:text-sm">Prepared for:</p>
+                    <p className="font-semibold text-sm sm:text-base">{user?.fullName}</p>
+                    <p className="text-orange-200 text-xs sm:text-sm">{user?.email}</p>
                   </div>
                 </div>
 
-                <div className="p-8">
+                <div className="p-5 sm:p-8">
 
                   {/* Line items */}
                   <table className="w-full text-sm">
@@ -515,13 +646,13 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
 
                   {/* Totals */}
                   <div className="mt-6 border-t border-gray-200 pt-4 space-y-2">
-                    <div className="flex justify-between text-gray-600">
+                    <div className="flex justify-between text-gray-600 text-sm">
                       <span>Subtotal</span><span>{formatINR(quote.subtotal)}</span>
                     </div>
-                    <div className="flex justify-between text-gray-600">
+                    <div className="flex justify-between text-gray-600 text-sm">
                       <span>GST ({(quote.taxRate * 100).toFixed(0)}%)</span><span>{formatINR(quote.taxAmount)}</span>
                     </div>
-                    <div className="flex justify-between text-xl font-bold text-gray-900 border-t-2 border-gray-900 pt-3 mt-3">
+                    <div className="flex justify-between text-lg sm:text-xl font-bold text-gray-900 border-t-2 border-gray-900 pt-3 mt-3">
                       <span>TOTAL</span><span className="text-orange-600">{formatINR(quote.total)}</span>
                     </div>
                   </div>
@@ -559,30 +690,30 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
                     * This is an indicative quotation. Final pricing may vary based on site conditions, customizations, and delivery location. Valid for 30 days from the date of issue.
                   </p>
 
-                  {/* Actions */}
-                  <div className="no-print flex flex-wrap gap-3 mt-6">
+                  {/* ── Actions — stacked on mobile ── */}
+                  <div className="no-print flex flex-wrap gap-2 sm:gap-3 mt-6">
                     <button
                       onClick={handleDownloadPDF}
-                      className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-5 py-3 rounded-xl font-semibold transition"
+                      className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl font-semibold transition text-sm sm:text-base"
                     >
-                      <Download size={18} /> Download PDF
+                      <Download size={16} className="sm:w-[18px] sm:h-[18px]" /> Download
                     </button>
                     <button
                       onClick={handlePrint}
-                      className="flex items-center gap-2 border-2 border-gray-300 hover:border-gray-400 text-gray-700 px-5 py-3 rounded-xl font-semibold transition"
+                      className="flex items-center gap-2 border-2 border-gray-300 hover:border-gray-400 text-gray-700 px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl font-semibold transition text-sm sm:text-base"
                     >
-                      <Printer size={18} /> Print
+                      <Printer size={16} className="sm:w-[18px] sm:h-[18px]" /> Print
                     </button>
                     <button
                       onClick={handleSave}
                       disabled={saveLoading || saved}
-                      className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition ${
+                      className={`flex items-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl font-semibold transition text-sm sm:text-base ${
                         saved
                           ? "bg-green-50 border-2 border-green-500 text-green-600"
                           : "border-2 border-orange-300 hover:border-orange-500 text-orange-600"
                       }`}
                     >
-                      {saved ? <CheckCircle size={18} /> : isEditMode ? <Pencil size={18} /> : <Save size={18} />}
+                      {saved ? <CheckCircle size={16} /> : isEditMode ? <Pencil size={16} /> : <Save size={16} />}
                       {saved
                         ? (isEditMode ? "Updated!" : "Saved!")
                         : saveLoading
