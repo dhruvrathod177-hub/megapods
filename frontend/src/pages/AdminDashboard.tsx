@@ -301,7 +301,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
           border-radius:14px; padding:14px 14px 12px;
           transition:all 0.2s; animation:fadeIn 0.5s ease both;
         }
-        .stat-card:hover { background:rgba(255,255,255,0.05); border-color:rgba(255,255,255,0.11); transform:translateY(-2px); box-shadow:0 10px 32px rgba(0,0,0,0.28); }
+        .stat-card:hover { background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.15); transform:translateY(-3px); box-shadow:0 12px 36px rgba(0,0,0,0.32); }
         .sc-icon { width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; margin-bottom:10px; }
         .sc-val  { font-size:24px; font-weight:800; line-height:1; margin-bottom:3px; }
         .sc-lbl  { font-size:11px; color:rgba(255,255,255,0.33); font-weight:500; }
@@ -456,14 +456,26 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
           {stats && (
             <div className="stat-grid">
               {[
-                {label:'Negotiations', val:stats.total,        color:'#fff',    bg:'rgba(255,255,255,0.08)', icon:<HandshakeIcon size={15}/>, delay:0},
-                {label:'Pending',      val:stats.pending,      color:'#f59e0b', bg:'rgba(245,158,11,0.12)',  icon:<Clock size={15}/>,         delay:0.05},
-                {label:'Accepted',     val:stats.accepted,     color:'#22c55e', bg:'rgba(34,197,94,0.12)',   icon:<CheckCircle size={15}/>,   delay:0.1},
-                {label:'Rejected',     val:stats.rejected,     color:'#ef4444', bg:'rgba(239,68,68,0.12)',   icon:<XCircle size={15}/>,       delay:0.15},
-                {label:'Quotations',   val:quotations.length,  color:'#818cf8', bg:'rgba(129,140,248,0.12)', icon:<FileText size={15}/>,      delay:0.2},
-                {label:'Users',        val:usersList.length,   color:'#34d399', bg:'rgba(52,211,153,0.12)',  icon:<Users size={15}/>,         delay:0.25},
+                {label:'Negotiations', val:stats.total,        color:'#fff',    bg:'rgba(255,255,255,0.08)', icon:<HandshakeIcon size={15}/>, delay:0,    tab:'negotiations' as const, filterVal: 'all'      },
+                {label:'Pending',      val:stats.pending,      color:'#f59e0b', bg:'rgba(245,158,11,0.12)',  icon:<Clock size={15}/>,         delay:0.05, tab:'negotiations' as const, filterVal: 'pending'  },
+                {label:'Accepted',     val:stats.accepted,     color:'#22c55e', bg:'rgba(34,197,94,0.12)',   icon:<CheckCircle size={15}/>,   delay:0.1,  tab:'negotiations' as const, filterVal: 'accepted' },
+                {label:'Rejected',     val:stats.rejected,     color:'#ef4444', bg:'rgba(239,68,68,0.12)',   icon:<XCircle size={15}/>,       delay:0.15, tab:'negotiations' as const, filterVal: 'rejected' },
+                {label:'Quotations',   val:quotations.length,  color:'#818cf8', bg:'rgba(129,140,248,0.12)', icon:<FileText size={15}/>,      delay:0.2,  tab:'quotations'   as const, filterVal: 'all'      },
+                {label:'Users',        val:usersList.length,   color:'#34d399', bg:'rgba(52,211,153,0.12)',  icon:<Users size={15}/>,         delay:0.25, tab:'users'        as const, filterVal: 'all'      },
               ].map((s,i) => (
-                <div key={i} className="stat-card" style={{animationDelay:`${s.delay}s`}}>
+                <div
+                  key={i}
+                  className="stat-card"
+                  style={{animationDelay:`${s.delay}s`, cursor:'pointer'}}
+                  onClick={() => {
+                    setActiveTab(s.tab);
+                    if (s.tab === 'negotiations') setFilter(s.filterVal as any);
+                    // scroll to tab bar
+                    setTimeout(() => {
+                      document.querySelector('.tab-bar')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 50);
+                  }}
+                >
                   <div className="sc-icon" style={{background:s.bg,color:s.color}}>{s.icon}</div>
                   <div className="sc-val"  style={{color:s.color}}>{s.val}</div>
                   <div className="sc-lbl">{s.label}</div>
@@ -472,52 +484,168 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
             </div>
           )}
 
-          {/* Charts */}
+          {/* Charts — dynamic based on active tab */}
           {stats && (
             <div className="charts-row">
+
+              {/* LEFT chart */}
               <div className="chart-card">
-                <div className="chart-title"><BarChart2 size={12}/> Negotiations — Last 7 Days</div>
-                <BarChart data={last7} labels={last7Labels}
-                  colors={['#ea580c','#fb923c','#ea580c','#fb923c','#ea580c','#fb923c','#ea580c']}
-                />
-                <div style={{display:'flex',justifyContent:'space-between',marginTop:8,fontSize:11,color:'rgba(255,255,255,0.22)'}}>
-                  <span>Total: {negotiations.length}</span>
-                  <span>Peak: {Math.max(...last7)}</span>
-                </div>
+                {activeTab === 'negotiations' && (
+                  <>
+                    <div className="chart-title"><BarChart2 size={12}/> Negotiations — Last 7 Days</div>
+                    <BarChart data={last7} labels={last7Labels}
+                      colors={['#ea580c','#fb923c','#ea580c','#fb923c','#ea580c','#fb923c','#ea580c']}
+                    />
+                    <div style={{display:'flex',justifyContent:'space-between',marginTop:8,fontSize:11,color:'rgba(255,255,255,0.22)'}}>
+                      <span>Total: {negotiations.length}</span>
+                      <span>Peak: {Math.max(...last7)}</span>
+                    </div>
+                  </>
+                )}
+                {activeTab === 'quotations' && (
+                  <>
+                    <div className="chart-title"><BarChart2 size={12}/> Quotations — Last 7 Days</div>
+                    <BarChart
+                      data={Array.from({length:7},(_,i)=>{
+                        const d=new Date(); d.setDate(d.getDate()-(6-i));
+                        return quotations.filter(q=>q.createdAt.slice(0,10)===d.toISOString().slice(0,10)).length;
+                      })}
+                      labels={last7Labels}
+                      colors={['#818cf8','#a78bfa','#818cf8','#a78bfa','#818cf8','#a78bfa','#818cf8']}
+                    />
+                    <div style={{display:'flex',justifyContent:'space-between',marginTop:8,fontSize:11,color:'rgba(255,255,255,0.22)'}}>
+                      <span>Total: {quotations.length}</span>
+                      <span>Value: {formatINR(totalQuoteValue)}</span>
+                    </div>
+                  </>
+                )}
+                {activeTab === 'users' && (
+                  <>
+                    <div className="chart-title"><BarChart2 size={12}/> User Registrations — Last 7 Days</div>
+                    <BarChart
+                      data={Array.from({length:7},(_,i)=>{
+                        const d=new Date(); d.setDate(d.getDate()-(6-i));
+                        return usersList.filter(u=>u.createdAt.slice(0,10)===d.toISOString().slice(0,10)).length;
+                      })}
+                      labels={last7Labels}
+                      colors={['#34d399','#6ee7b7','#34d399','#6ee7b7','#34d399','#6ee7b7','#34d399']}
+                    />
+                    <div style={{display:'flex',justifyContent:'space-between',marginTop:8,fontSize:11,color:'rgba(255,255,255,0.22)'}}>
+                      <span>Total Users: {usersList.length}</span>
+                      <span>Active: {usersList.filter(u=>u.negCount>0).length}</span>
+                    </div>
+                  </>
+                )}
               </div>
 
+              {/* RIGHT chart */}
               <div className="chart-card">
-                <div className="chart-title"><HandshakeIcon size={12}/> Status Breakdown</div>
-                <div style={{display:'flex',alignItems:'center',gap:18,marginBottom:14}}>
-                  <DonutChart {...stats}/>
-                  <div style={{display:'flex',flexDirection:'column',gap:9,flex:1}}>
-                    {[
-                      {label:'Accepted',val:stats.accepted,color:'#22c55e'},
-                      {label:'Pending', val:stats.pending, color:'#f59e0b'},
-                      {label:'Rejected',val:stats.rejected,color:'#ef4444'},
-                    ].map(s => (
-                      <div key={s.label} style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-                        <div style={{display:'flex',alignItems:'center',gap:7}}>
-                          <div style={{width:7,height:7,borderRadius:'50%',background:s.color,boxShadow:`0 0 5px ${s.color}`}}/>
-                          <span style={{fontSize:11,color:'rgba(255,255,255,0.45)'}}>{s.label}</span>
-                        </div>
-                        <span style={{fontSize:13,fontWeight:700,color:s.color}}>{s.val}</span>
+                {activeTab === 'negotiations' && (
+                  <>
+                    <div className="chart-title"><HandshakeIcon size={12}/> Negotiation Status</div>
+                    <div style={{display:'flex',alignItems:'center',gap:18,marginBottom:14}}>
+                      <DonutChart {...stats}/>
+                      <div style={{display:'flex',flexDirection:'column',gap:9,flex:1}}>
+                        {[
+                          {label:'Accepted',val:stats.accepted,color:'#22c55e'},
+                          {label:'Pending', val:stats.pending, color:'#f59e0b'},
+                          {label:'Rejected',val:stats.rejected,color:'#ef4444'},
+                        ].map(s => (
+                          <div key={s.label} style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                            <div style={{display:'flex',alignItems:'center',gap:7}}>
+                              <div style={{width:7,height:7,borderRadius:'50%',background:s.color,boxShadow:`0 0 5px ${s.color}`}}/>
+                              <span style={{fontSize:11,color:'rgba(255,255,255,0.45)'}}>{s.label}</span>
+                            </div>
+                            <span style={{fontSize:13,fontWeight:700,color:s.color}}>{s.val}</span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
-                <div style={{display:'flex',flexDirection:'column',gap:5,borderTop:'1px solid rgba(255,255,255,0.06)',paddingTop:10}}>
-                  {[
-                    {label:'Total Quote Value', val:formatINR(totalQuoteValue), color:'#818cf8'},
-                    {label:'Discounts Given',   val:formatINR(totalDiscounts),  color:'#f59e0b'},
-                  ].map(r => (
-                    <div key={r.label} style={{display:'flex',justifyContent:'space-between',fontSize:11}}>
-                      <span style={{color:'rgba(255,255,255,0.35)'}}>{r.label}</span>
-                      <span style={{fontWeight:700,color:r.color}}>{r.val}</span>
                     </div>
-                  ))}
-                </div>
+                    <div style={{display:'flex',flexDirection:'column',gap:5,borderTop:'1px solid rgba(255,255,255,0.06)',paddingTop:10}}>
+                      {[
+                        {label:'Total Quote Value', val:formatINR(totalQuoteValue), color:'#818cf8'},
+                        {label:'Discounts Given',   val:formatINR(totalDiscounts),  color:'#f59e0b'},
+                      ].map(r => (
+                        <div key={r.label} style={{display:'flex',justifyContent:'space-between',fontSize:11}}>
+                          <span style={{color:'rgba(255,255,255,0.35)'}}>{r.label}</span>
+                          <span style={{fontWeight:700,color:r.color}}>{r.val}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+                {activeTab === 'quotations' && (
+                  <>
+                    <div className="chart-title"><FileText size={12}/> Quotation Summary</div>
+                    <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                      {/* Top container sizes */}
+                      {['10ft * 10ft','15ft * 10ft','20ft * 10ft','40ft * 10ft'].map(size => {
+                        const cnt = quotations.filter(q=>q.containerSize===size).length;
+                        const pct = quotations.length > 0 ? (cnt/quotations.length)*100 : 0;
+                        return (
+                          <div key={size}>
+                            <div style={{display:'flex',justifyContent:'space-between',fontSize:11,marginBottom:4}}>
+                              <span style={{color:'rgba(255,255,255,0.5)'}}>{size}</span>
+                              <span style={{color:'#818cf8',fontWeight:700}}>{cnt}</span>
+                            </div>
+                            <div style={{height:5,background:'rgba(255,255,255,0.06)',borderRadius:999,overflow:'hidden'}}>
+                              <div style={{height:'100%',width:`${pct}%`,background:'linear-gradient(90deg,#818cf8,#a78bfa)',borderRadius:999,transition:'width 0.8s ease'}}/>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div style={{display:'flex',flexDirection:'column',gap:5,borderTop:'1px solid rgba(255,255,255,0.06)',paddingTop:10,marginTop:14}}>
+                      {[
+                        {label:'Total Quote Value', val:formatINR(totalQuoteValue),                                             color:'#818cf8'},
+                        {label:'Avg Quote Value',   val:formatINR(quotations.length>0?Math.round(totalQuoteValue/quotations.length):0), color:'#a78bfa'},
+                      ].map(r => (
+                        <div key={r.label} style={{display:'flex',justifyContent:'space-between',fontSize:11}}>
+                          <span style={{color:'rgba(255,255,255,0.35)'}}>{r.label}</span>
+                          <span style={{fontWeight:700,color:r.color}}>{r.val}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+                {activeTab === 'users' && (
+                  <>
+                    <div className="chart-title"><Users size={12}/> User Activity</div>
+                    <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                      {[
+                        {label:'With Quotes',        val:usersList.filter(u=>u.quoteCount>0).length,  color:'#818cf8', total:usersList.length},
+                        {label:'With Negotiations',  val:usersList.filter(u=>u.negCount>0).length,    color:'#f59e0b', total:usersList.length},
+                        {label:'No Activity',        val:usersList.filter(u=>u.quoteCount===0).length,color:'rgba(255,255,255,0.3)', total:usersList.length},
+                      ].map(r => {
+                        const pct = usersList.length > 0 ? (r.val/usersList.length)*100 : 0;
+                        return (
+                          <div key={r.label}>
+                            <div style={{display:'flex',justifyContent:'space-between',fontSize:11,marginBottom:4}}>
+                              <span style={{color:'rgba(255,255,255,0.5)'}}>{r.label}</span>
+                              <span style={{color:r.color,fontWeight:700}}>{r.val}</span>
+                            </div>
+                            <div style={{height:5,background:'rgba(255,255,255,0.06)',borderRadius:999,overflow:'hidden'}}>
+                              <div style={{height:'100%',width:`${pct}%`,background:r.color,borderRadius:999,transition:'width 0.8s ease'}}/>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div style={{display:'flex',flexDirection:'column',gap:5,borderTop:'1px solid rgba(255,255,255,0.06)',paddingTop:10,marginTop:14}}>
+                      {[
+                        {label:'Total Revenue',    val:formatINR(usersList.reduce((s,u)=>s+u.totalSpend,0)), color:'#34d399'},
+                        {label:'Avg Spend / User', val:formatINR(usersList.length>0?Math.round(usersList.reduce((s,u)=>s+u.totalSpend,0)/usersList.length):0), color:'#6ee7b7'},
+                      ].map(r => (
+                        <div key={r.label} style={{display:'flex',justifyContent:'space-between',fontSize:11}}>
+                          <span style={{color:'rgba(255,255,255,0.35)'}}>{r.label}</span>
+                          <span style={{fontWeight:700,color:r.color}}>{r.val}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
+
             </div>
           )}
 

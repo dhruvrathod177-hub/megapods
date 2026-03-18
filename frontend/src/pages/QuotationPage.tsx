@@ -524,7 +524,13 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
                       className="flex-1 bg-orange-600 hover:bg-orange-700 disabled:opacity-60 text-white py-4 rounded-2xl font-bold shadow-lg transition flex items-center justify-center gap-2"
                     >
                       {loading ? <RefreshCw size={18} className="animate-spin" /> : <Calculator size={18} />}
-                      {loading ? "Calculating…" : isEditMode ? "Recalculate" : "Generate Quote"}
+                      {loading
+                        ? "Calculating…"
+                        : isEditMode
+                        ? "Recalculate"
+                        : form.materialTypeNote
+                        ? "Request Custom Quote"
+                        : "Generate Quote"}
                     </button>
                     <button onClick={handleReset} className="px-5 py-4 rounded-2xl border-2 border-gray-200 text-gray-500 hover:border-gray-300 transition">
                       <RefreshCw size={18} />
@@ -626,6 +632,20 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
                       <span>TOTAL</span><span className="text-orange-600">{formatINR(quote.total)}</span>
                     </div>
                   </div>
+
+                  {/* Custom material warning */}
+                  {form.materialTypeNote && (
+                    <div className="mt-4 bg-orange-50 border border-orange-200 rounded-2xl px-4 py-3 flex items-start gap-3">
+                      <span className="text-orange-500 text-lg flex-shrink-0">⚠️</span>
+                      <div>
+                        <p className="text-sm font-semibold text-orange-700">Custom material requested</p>
+                        <p className="text-xs text-orange-600 mt-0.5">
+                          This is a base price estimate. Our team will review your material requirement
+                          and contact you with the final price within 24 hours.
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Customer Notes */}
                   {(form.containerSizeNote || form.materialTypeNote || form.addonsNote) && (
