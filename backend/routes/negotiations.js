@@ -3,7 +3,6 @@ const router       = express.Router();
 const auth         = require("../middleware/auth");
 const Negotiation  = require("../models/Negotiation");
 const Quotation    = require("../models/Quotation");
-const { sendNegotiationEmail } = require("../utils/mailer");
 
 /* ── SUBMIT NEGOTIATION ── */
 router.post("/", auth, async (req, res) => {
@@ -41,16 +40,6 @@ router.post("/", auth, async (req, res) => {
     });
 
     await negotiation.save();
-
-    sendNegotiationEmail({
-      quoteNumber:   quotation.quoteNumber,
-      originalTotal: quotation.total,
-      offeredPrice:  parseFloat(offeredPrice),
-      message,
-      userName,
-      userEmail,
-      userContact,
-    }).catch((err) => console.error("Negotiation email failed:", err));
 
     res.status(201).json({ message: "Negotiation submitted", negotiation });
   } catch (err) {
