@@ -229,6 +229,9 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
       form.addonsNote        && `<div class="note-block"><p class="note-label">Additional Options</p><p class="note-text">${form.addonsNote}</p></div>`,
     ].filter(Boolean).join("");
 
+    // ── CHANGED: show customer's typed material instead of default ──
+    const displayMaterial = form.materialTypeNote || quote.materialType;
+
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -318,7 +321,7 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
       </thead>
       <tbody>
         <tr>
-          <td class="desc">${quote.containerSize} Container<br/><span class="sub">Material: ${quote.materialType}</span></td>
+          <td class="desc">${quote.containerSize} Container<br/><span class="sub">Material: ${displayMaterial}</span></td>
           <td class="center">${quote.quantity}</td>
           <td class="right">${formatINR(quote.unitPrice)}</td>
           <td class="right bold">${formatINR(quote.unitPrice * quote.quantity)}</td>
@@ -600,7 +603,8 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
                       <tr>
                         <td className="py-4">
                           <div className="font-semibold text-gray-900">{quote.containerSize} Container</div>
-                          <div className="text-gray-500 text-xs">Material: {quote.materialType}</div>
+                          {/* ── CHANGED: show customer's typed material ── */}
+                          <div className="text-gray-500 text-xs">Material: {form.materialTypeNote || quote.materialType}</div>
                         </td>
                         <td className="py-4 text-right">{quote.quantity}</td>
                         <td className="py-4 text-right">{formatINR(quote.unitPrice)}</td>

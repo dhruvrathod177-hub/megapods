@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import {
   FileText, Calendar, Package, RefreshCw, Calculator,
-  Trash2, Pencil, HandshakeIcon, X, 
+  Trash2, Pencil, HandshakeIcon, X, Download,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
@@ -194,7 +194,7 @@ function NegotiateModal({ quote, onClose, onSubmitted }: NegotiateModalProps) {
 interface QuoteHistoryPageProps { onNavigate: (page: string) => void; }
 
 export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [quotes,           setQuotes]           = useState<SavedQuote[]>([]);
   const [negotiations,     setNegotiations]     = useState<Record<string, Negotiation>>({});
   const [loading,          setLoading]          = useState(true);
@@ -221,7 +221,12 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
     }
   };
 
-  useEffect(() => { fetchAll(); }, [token]);
+  // ── Poll every 10s so status updates without needing manual reload ──
+  useEffect(() => {
+    fetchAll();
+    const interval = setInterval(() => fetchAll(), 10000);
+    return () => clearInterval(interval);
+  }, [token]);
 
   const handleDelete = async (e: React.MouseEvent, quoteId: string) => {
     e.stopPropagation();
@@ -241,11 +246,133 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
   const handleNegotiationSubmitted = (neg: Negotiation) => {
     setNegotiations((prev) => ({ ...prev, [neg.quotationId]: neg }));
     setNegotiatingQuote(null);
+    // Immediately re-fetch so status is fresh
+    setTimeout(() => fetchAll(), 500);
   };
 
   const handleEditSaved = () => {
     setEditingQuote(null);
     fetchAll();
+  };
+
+  // ── Download quote as HTML ──
+  const handleDownload = async (quote: SavedQuote) => {
+    const quoteDate = new Date(quote.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+    const neg = negotiations[quote._id];
+    const displayTotal = neg?.status === "accepted" ? neg.offeredPrice : quote.total;
+
+    const addonRows = quote.addons?.map(a => `
+      <tr>
+        <td style="padding:10px 8px;border-bottom:1px solid #f3f4f6;font-size:13px;color:#374151">${a.name}<br/><span style="font-size:11px;color:#9ca3af">Add-on</span></td>
+        <td style="padding:10px 8px;border-bottom:1px solid #f3f4f6;text-align:center">1</td>
+        <td style="padding:10px 8px;border-bottom:1px solid #f3f4f6;text-align:right">${formatINR(a.price)}</td>
+        <td style="padding:10px 8px;border-bottom:1px solid #f3f4f6;text-align:right">${formatINR(a.price)}</td>
+      </tr>`).join("") ?? "";
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>${quote.quoteNumber}</title>
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Segoe UI',Arial,sans-serif; background:#f3f4f6; display:flex; justify-content:center; padding:40px 16px; }
+  .page { background:#fff; width:100%; max-width:720px; border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.13); }
+  .header { background:linear-gradient(135deg,#ea580c,#c2410c); color:#fff; padding:36px 40px 28px; }
+  .header-top { display:flex; justify-content:space-between; align-items:flex-start; }
+  .brand-name { font-size:22px; font-weight:700; }
+  .brand-loc { font-size:12px; color:#fed7aa; margin-top:2px; }
+  .quote-label { text-align:right; }
+  .quote-label .title { font-size:28px; font-weight:800; letter-spacing:2px; }
+  .quote-label .num { font-size:13px; color:#fed7aa; margin-top:4px; }
+  .quote-label .date { font-size:13px; color:#fed7aa; }
+  .divider { border:none; border-top:1px solid rgba(255,255,255,0.25); margin:20px 0 16px; }
+  .client-name { font-size:16px; font-weight:700; }
+  .client-email { font-size:13px; color:#fed7aa; }
+  .body { padding:36px 40px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; margin-bottom:8px; }
+  thead th { padding:10px 8px; color:#6b7280; font-weight:600; text-align:left; border-bottom:2px solid #e5e7eb; }
+  thead th.right { text-align:right; }
+  thead th.center { text-align:center; }
+  tbody td { padding:12px 8px; color:#111827; vertical-align:top; }
+  .totals { border-top:1px solid #e5e7eb; padding-top:16px; margin-top:8px; }
+  .total-row { display:flex; justify-content:space-between; font-size:14px; color:#4b5563; padding:4px 0; }
+  .total-final { display:flex; justify-content:space-between; font-size:20px; font-weight:800; color:#111827; border-top:2px solid #111827; margin-top:10px; padding-top:12px; }
+  .total-final .amount { color:#ea580c; }
+  .strip { background:#fff7ed; border-top:1px solid #fed7aa; padding:14px 40px; display:flex; justify-content:space-between; font-size:12px; color:#9ca3af; }
+  .strip strong { color:#ea580c; }
+  @media print { body{background:white;padding:0} .page{box-shadow:none;border-radius:0;max-width:100%} }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="brand-name">Megapodsindia</div>
+        <div class="brand-loc">Surat, Gujarat, India</div>
+      </div>
+      <div class="quote-label">
+        <div class="title">QUOTATION</div>
+        <div class="num">#${quote.quoteNumber}</div>
+        <div class="date">${quoteDate}</div>
+      </div>
+    </div>
+    <hr class="divider"/>
+    <div style="font-size:12px;color:#fed7aa;margin-bottom:4px">Prepared for:</div>
+    <div class="client-name">${user?.fullName ?? ""}</div>
+    <div class="client-email">${user?.email ?? ""}</div>
+  </div>
+  <div class="body">
+    <table>
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th class="center">Qty</th>
+          <th class="right">Unit Price</th>
+          <th class="right">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding:12px 8px">
+            <div style="font-weight:600;color:#111827">${quote.containerSize} Container</div>
+            <div style="font-size:12px;color:#9ca3af">Material: ${quote.materialTypeNote || quote.materialType}</div>
+          </td>
+          <td style="padding:12px 8px;text-align:center">${quote.quantity}</td>
+          <td style="padding:12px 8px;text-align:right">${formatINR(quote.unitPrice)}</td>
+          <td style="padding:12px 8px;text-align:right;font-weight:700">${formatINR(quote.unitPrice * quote.quantity)}</td>
+        </tr>
+        ${addonRows}
+      </tbody>
+    </table>
+    <div class="totals">
+      <div class="total-row"><span>Subtotal</span><span>${formatINR(quote.subtotal)}</span></div>
+      <div class="total-row"><span>GST (18%)</span><span>${formatINR(quote.taxAmount)}</span></div>
+      ${neg?.status === "accepted" ? `<div class="total-row" style="color:#16a34a"><span>Negotiated Price</span><span>${formatINR(neg.offeredPrice)}</span></div>` : ""}
+      <div class="total-final"><span>TOTAL</span><span class="amount">${formatINR(displayTotal)}</span></div>
+    </div>
+    <p style="font-size:11px;color:#9ca3af;font-style:italic;margin-top:28px;line-height:1.6">
+      * This is an indicative quotation. Final pricing may vary based on site conditions, customizations, and delivery location. Valid for 30 days from the date of issue.
+    </p>
+  </div>
+  <div class="strip">
+    <span>Generated by <strong>Megapodsindia</strong> Quotation System</span>
+    <span>${quoteDate}</span>
+  </div>
+</div>
+</body>
+</html>`;
+
+    const blob = new Blob([html], { type: "text/html" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href = url;
+    a.download = `${quote.quoteNumber}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   if (editingQuote) {
@@ -311,6 +438,9 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
           <div className="space-y-4">
             {quotes.map((quote) => {
               const neg = negotiations[quote._id];
+              // ── FIX: show negotiated price if accepted ──
+              const displayTotal = neg?.status === "accepted" ? neg.offeredPrice : quote.total;
+
               return (
                 <div key={quote._id} className="bg-white rounded-2xl shadow-lg overflow-hidden">
 
@@ -328,7 +458,7 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
                       <div className="min-w-0">
                         <p className="font-bold text-gray-900 text-sm sm:text-base truncate">{quote.quoteNumber}</p>
                         <p className="text-xs sm:text-sm text-gray-500 truncate">
-                          {quote.containerSize} · {quote.materialType} · Qty {quote.quantity}
+                          {quote.containerSize} · {quote.materialTypeNote || quote.materialType} · Qty {quote.quantity}
                         </p>
                         {neg && <div className="mt-1"><NegotiationBadge status={neg.status} /></div>}
                       </div>
@@ -343,8 +473,11 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
                         className="text-right"
                       >
                         <p className="font-bold text-orange-600 text-sm sm:text-lg leading-tight">
-                          {formatINR(quote.total)}
+                          {formatINR(displayTotal)}
                         </p>
+                        {neg?.status === "accepted" && (
+                          <p className="text-xs text-green-600 font-semibold">Negotiated ✓</p>
+                        )}
                         <p className="text-xs text-gray-400 flex items-center gap-0.5 justify-end">
                           <Calendar size={9} />
                           {new Date(quote.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
@@ -353,6 +486,15 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
 
                       {/* Action buttons row */}
                       <div className="flex items-center gap-1">
+
+                        {/* Download */}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDownload(quote); }}
+                          className="p-1.5 sm:p-2 rounded-lg border border-gray-200 text-gray-400 hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600 transition-colors"
+                          title="Download quote"
+                        >
+                          <Download size={14} className="sm:w-4 sm:h-4" />
+                        </button>
 
                         {/* Negotiate — hidden if negotiation exists */}
                         {!neg && (
@@ -405,7 +547,7 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
                           <tr>
                             <td className="py-3">
                               <p className="font-semibold text-gray-900">{quote.containerSize} Container × {quote.quantity}</p>
-                              <p className="text-xs text-gray-400">{quote.materialType}</p>
+                              <p className="text-xs text-gray-400">{quote.materialTypeNote || quote.materialType}</p>
                             </td>
                             <td className="py-3 text-right font-semibold">{formatINR(quote.unitPrice * quote.quantity)}</td>
                           </tr>
@@ -425,8 +567,15 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
                         <div className="flex justify-between text-sm text-gray-600">
                           <span>GST (18%)</span><span>{formatINR(quote.taxAmount)}</span>
                         </div>
+                        {/* ── FIX: show negotiated price line if accepted ── */}
+                        {neg?.status === "accepted" && (
+                          <div className="flex justify-between text-sm font-semibold text-green-600">
+                            <span>Negotiated Price</span><span>{formatINR(neg.offeredPrice)}</span>
+                          </div>
+                        )}
                         <div className="flex justify-between font-bold text-gray-900 text-base pt-2 border-t border-gray-300">
-                          <span>Total</span><span className="text-orange-600">{formatINR(quote.total)}</span>
+                          <span>Total</span>
+                          <span className="text-orange-600">{formatINR(displayTotal)}</span>
                         </div>
                       </div>
 
