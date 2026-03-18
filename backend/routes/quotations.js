@@ -22,7 +22,7 @@ const CONTAINER_BASE_PRICES = {
 const ADDON_PRICES = {
   "Air Conditioning":          30000,
   "Modular furniture  (Cabinet & chair ) cost upto":              20000,
-  "Additional toilet kit 25000":        25000,
+  "Additional toilet kit":        25000,
   "kitchen Pantry Area ":           30000,
   "Office partition per unit":      15000,
   "Extra window ": 8000,
