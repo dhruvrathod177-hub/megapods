@@ -23,6 +23,15 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
 }))
 
+/* ── SECURITY HEADERS ── */
+app.use((req, res, next) => {
+  res.setHeader(
+    "Content-Security-Policy",
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline';"
+  )
+  next()
+})
+
 /* ── BODY PARSER ── */
 app.use(express.json())
 
