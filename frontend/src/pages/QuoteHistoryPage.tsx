@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import {
   FileText, Calendar, Package, RefreshCw, Calculator,
-  Trash2, Pencil, HandshakeIcon, X, Download, Printer,
+  Trash2, Pencil, HandshakeIcon, X, Download,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
@@ -171,7 +171,6 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
   const [editingQuote,     setEditingQuote]     = useState<SavedQuote | null>(null);
   const [negotiatingQuote, setNegotiatingQuote] = useState<SavedQuote | null>(null);
   const [downloadingId,    setDownloadingId]    = useState<string | null>(null);
-  const [printingId,       setPrintingId]       = useState<string | null>(null);
 
   const fetchAll = async () => {
     setLoading(true);
@@ -375,18 +374,6 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
     openPrintDialog(html, () => setDownloadingId(null));
   };
 
-  // ── Print ──
-  const handlePrint = (e: React.MouseEvent, quote: SavedQuote) => {
-    e.stopPropagation();
-    setPrintingId(quote._id);
-    const neg = negotiations[quote._id];
-    const quoteDate = new Date(quote.createdAt).toLocaleDateString("en-IN", {
-      day: "numeric", month: "long", year: "numeric",
-    });
-    const html = buildQuoteHTML(quote, neg, quoteDate);
-    openPrintDialog(html, () => setPrintingId(null));
-  };
-
   if (editingQuote) {
     return (
       <div>
@@ -502,18 +489,6 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
                           {downloadingId === quote._id
                             ? <RefreshCw size={14} className="animate-spin sm:w-4 sm:h-4" />
                             : <Download size={14} className="sm:w-4 sm:h-4" />}
-                        </button>
-
-                        {/* Print */}
-                        <button
-                          onClick={(e) => handlePrint(e, quote)}
-                          disabled={printingId === quote._id}
-                          className="p-1.5 sm:p-2 rounded-lg border border-gray-200 text-gray-400 hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600 transition-colors disabled:opacity-50"
-                          title="Print quote"
-                        >
-                          {printingId === quote._id
-                            ? <RefreshCw size={14} className="animate-spin sm:w-4 sm:h-4" />
-                            : <Printer size={14} className="sm:w-4 sm:h-4" />}
                         </button>
 
                         {/* Negotiate */}
