@@ -18,18 +18,13 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'vendor-react':  ['react', 'react-dom'],
-          'vendor-lucide': ['lucide-react'],
+          'vendor-react':    ['react', 'react-dom'],
+          'vendor-lucide':   ['lucide-react'],
+          'vendor-supabase': ['@supabase/supabase-js'],
         },
       },
     },
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console:  true,
-        drop_debugger: true,
-      },
-    },
+    minify: 'esbuild',  // changed from terser to esbuild
     chunkSizeWarningLimit: 1000,
     assetsInlineLimit: 4096,
     sourcemap: false,
