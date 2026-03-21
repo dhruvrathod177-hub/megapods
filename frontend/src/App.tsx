@@ -99,7 +99,6 @@ function AppInner() {
 
   // ── Listen for browser back/forward ──────────────────────────────────────
   useEffect(() => {
-    // Set initial history entry
     const initPage = getPageFromPath();
     const initPath = PAGE_TO_PATH[initPage] ?? "/";
     window.history.replaceState({ page: initPage }, "", initPath);
@@ -120,9 +119,9 @@ function AppInner() {
   const openForgotPassword = () => { setStartOnForgot(true); setAuthModalOpen(true); };
 
   const handleNavigate = (page: string) => {
-    // If not logged in and trying to access protected page, show login
+    // ✅ FIXED: use correct mp_token key
     if (PROTECTED_PAGES.includes(page)) {
-      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+      const token = localStorage.getItem("mp_token");
       if (!token) {
         openSignup();
         return;
