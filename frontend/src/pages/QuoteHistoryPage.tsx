@@ -222,6 +222,7 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
     fetchAll();
   };
 
+  // ── Shared HTML builder ──
   const buildQuoteHTML = (quote: SavedQuote, neg: Negotiation | undefined, quoteDate: string): string => {
     const displayTotal = neg?.status === "accepted" ? neg.offeredPrice : quote.total;
 
@@ -337,27 +338,31 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
 </html>`;
   };
 
+  // ── Shared: open HTML in a hidden iframe and trigger print dialog ──
   const openPrintDialog = (html: string, onDone?: () => void) => {
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) {
-      alert("Please allow popups for this site to enable PDF download/print.");
-      onDone?.();
-      return;
-    }
+    const printFrame = document.createElement("iframe");
+    printFrame.style.cssText =
+      "position:fixed;top:-10000px;left:-10000px;width:0;height:0;border:none;";
+    document.body.appendChild(printFrame);
 
-    printWindow.document.open();
-    printWindow.document.write(html);
-    printWindow.document.close();
+    const doc = printFrame.contentDocument || printFrame.contentWindow?.document;
+    if (!doc) { onDone?.(); return; }
 
-    printWindow.onload = () => {
+    doc.open();
+    doc.write(html);
+    doc.close();
+
+    setTimeout(() => {
+      printFrame.contentWindow?.focus();
+      printFrame.contentWindow?.print();
       setTimeout(() => {
-        printWindow.focus();
-        printWindow.print();
+        document.body.removeChild(printFrame);
         onDone?.();
-      }, 500);
-    };
+      }, 2000);
+    }, 800);
   };
 
+  // ── Download PDF (print dialog → Save as PDF) ──
   const handleDownload = (e: React.MouseEvent, quote: SavedQuote) => {
     e.stopPropagation();
     setDownloadingId(quote._id);
@@ -474,6 +479,7 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
 
                       <div className="flex items-center gap-1">
 
+                        {/* Download PDF */}
                         <button
                           onClick={(e) => handleDownload(e, quote)}
                           disabled={downloadingId === quote._id}
@@ -485,6 +491,7 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
                             : <Download size={14} className="sm:w-4 sm:h-4" />}
                         </button>
 
+                        {/* Negotiate */}
                         {!neg && (
                           <button
                             onClick={(e) => { e.stopPropagation(); setNegotiatingQuote(quote); }}
@@ -495,6 +502,7 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
                           </button>
                         )}
 
+                        {/* Edit */}
                         <button
                           onClick={(e) => { e.stopPropagation(); setEditingQuote(quote); }}
                           className="p-1.5 sm:p-2 rounded-lg border border-gray-200 text-gray-400 hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600 transition-colors"
@@ -503,6 +511,7 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
                           <Pencil size={14} className="sm:w-4 sm:h-4" />
                         </button>
 
+                        {/* Delete */}
                         <button
                           onClick={(e) => handleDelete(e, quote._id)}
                           disabled={deletingId === quote._id}

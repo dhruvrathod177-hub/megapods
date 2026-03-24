@@ -346,48 +346,49 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
 </html>`;
   };
 
+  // ── Download: open print dialog → user clicks "Save as PDF" ──
   const handleDownloadPDF = async () => {
     const html = await buildBillHTML();
     if (!html) return;
-  
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) {
-      alert("Please allow popups for this site to enable PDF download/print.");
-      return;
-    }
-  
-    printWindow.document.open();
-    printWindow.document.write(html);
-    printWindow.document.close();
-  
-    printWindow.onload = () => {
-      setTimeout(() => {
-        printWindow.focus();
-        printWindow.print();
-      }, 500);
-    };
+
+    const printFrame = document.createElement("iframe");
+    printFrame.style.cssText =
+      "position:fixed;top:-10000px;left:-10000px;width:0;height:0;border:none;";
+    document.body.appendChild(printFrame);
+
+    const doc = printFrame.contentDocument || printFrame.contentWindow?.document;
+    if (!doc) return;
+
+    doc.open();
+    doc.write(html);
+    doc.close();
+
+    await new Promise((resolve) => setTimeout(resolve, 800));
+
+    printFrame.contentWindow?.focus();
+    printFrame.contentWindow?.print();
+
+    setTimeout(() => document.body.removeChild(printFrame), 2000);
   };
-  
+
+  // ── Print ──
   const handlePrint = async () => {
     const html = await buildBillHTML();
     if (!html) return;
-  
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) {
-      alert("Please allow popups for this site to enable PDF download/print.");
-      return;
-    }
-  
-    printWindow.document.open();
-    printWindow.document.write(html);
-    printWindow.document.close();
-  
-    printWindow.onload = () => {
-      setTimeout(() => {
-        printWindow.focus();
-        printWindow.print();
-      }, 500);
-    };
+
+    const printFrame = document.createElement("iframe");
+    printFrame.style.cssText = "position:fixed;top:-10000px;left:-10000px;width:0;height:0;border:none;";
+    document.body.appendChild(printFrame);
+    const doc = printFrame.contentDocument || printFrame.contentWindow?.document;
+    if (!doc) return;
+    doc.open();
+    doc.write(html);
+    doc.close();
+    setTimeout(() => {
+      printFrame.contentWindow?.focus();
+      printFrame.contentWindow?.print();
+      setTimeout(() => document.body.removeChild(printFrame), 1000);
+    }, 600);
   };
 
   const handleReset = () => {
