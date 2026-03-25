@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Calculator, Download, Printer, Save, CheckCircle, RefreshCw, Pencil } from "lucide-react";
+import { Calculator, Download, Save, CheckCircle, RefreshCw, Pencil } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
 
@@ -373,23 +373,7 @@ const handleDownloadPDF = async () => {
   pdf.save(`${quoteNumber}.pdf`);
 };
 
-// ── Print ──
-const handlePrint = async () => {
-  const html = await buildBillHTML();
-  if (!html) return;
-
-  const printWindow = window.open("", "_blank", "width=800,height=900");
-  if (!printWindow) return;
-  printWindow.document.open();
-  printWindow.document.write(html);
-  printWindow.document.close();
-  setTimeout(() => {
-    printWindow.focus();
-    printWindow.print();
-  }, 600);
-};
-
-  const handleReset = () => {
+ const handleReset = () => {
     setForm({ materialType: "Standard Steel", containerSize: "", quantity: 1, selectedAddons: [], containerSizeNote: "", materialTypeNote: "", addonsNote: "" });
     setQuote(null); setSaved(false); setError("");
   };
@@ -707,12 +691,7 @@ const handlePrint = async () => {
                     >
                       <Download size={16} className="sm:w-[18px] sm:h-[18px]" /> Download PDF
                     </button>
-                    <button
-                      onClick={handlePrint}
-                      className="flex items-center gap-2 border-2 border-gray-300 hover:border-gray-400 text-gray-700 px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl font-semibold transition text-sm sm:text-base"
-                    >
-                      <Printer size={16} className="sm:w-[18px] sm:h-[18px]" /> Print
-                    </button>
+                   
                     <button
                       onClick={handleSave}
                       disabled={saveLoading || saved}
