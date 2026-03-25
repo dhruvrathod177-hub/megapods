@@ -334,63 +334,59 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
   const handleDownload = async (e: React.MouseEvent, quote: SavedQuote) => {
     e.stopPropagation();
     setDownloadingId(quote._id);
-
+  
     const neg = negotiations[quote._id];
     const quoteDate = new Date(quote.createdAt).toLocaleDateString("en-IN", {
       day: "numeric", month: "long", year: "numeric",
     });
+  
     const html = buildQuoteHTML(quote, neg, quoteDate);
-
-    // Use an iframe so the full HTML document (with <style> tags) renders correctly
+  
     const iframe = document.createElement("iframe");
     iframe.style.cssText =
-      "position:fixed;top:-99999px;left:-99999px;width:800px;height:1200px;border:none;visibility:hidden;";
+      "position:fixed;top:-99999px;left:-99999px;width:794px;height:1123px;border:none;background:white;";
     document.body.appendChild(iframe);
-
+  
     try {
       const doc = iframe.contentDocument || iframe.contentWindow?.document;
-      if (!doc) throw new Error("Could not access iframe document");
-
+      if (!doc) throw new Error("Iframe error");
+  
       doc.open();
       doc.write(html);
       doc.close();
-
-      // Wait for iframe content + fonts to fully render
-      await new Promise((r) => setTimeout(r, 600));
-
+  
+      await new Promise((r) => setTimeout(r, 700));
+  
       const { default: html2canvas } = await import("html2canvas");
-      const { jsPDF }                = await import("jspdf");
-
-      // Target the .page div inside the iframe for a clean capture
-      const pageEl = doc.querySelector(".page") as HTMLElement | null;
-      const target = pageEl ?? doc.body;
-
-      const canvas = await html2canvas(target, {
+      const { jsPDF } = await import("jspdf");
+  
+      const pageEl = doc.querySelector(".page") as HTMLElement;
+      
+      const canvas = await html2canvas(pageEl, {
         scale: 2,
         useCORS: true,
         backgroundColor: "#ffffff",
-        windowWidth: 800,
       });
-
-      const imgData  = canvas.toDataURL("image/png");
-      const pdfW     = canvas.width  / 2;
-      const pdfH     = canvas.height / 2;
-      const pdf      = new jsPDF({ orientation: "portrait", unit: "px", format: [pdfW, pdfH] });
-      pdf.addImage(imgData, "PNG", 0, 0, pdfW, pdfH);
+  
+      const imgData = canvas.toDataURL("image/png");
+  
+      // 🔥 FIX: Use A4 size (correct ratio)
+      const pdf = new jsPDF("p", "mm", "a4");
+  
+      const pdfWidth = 210; // A4 width in mm
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+  
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
       pdf.save(`${quote.quoteNumber}.pdf`);
-
+  
     } catch (err) {
-      console.error("PDF generation failed:", err);
-      alert("PDF download failed. Please try again.");
+      console.error(err);
+      alert("PDF download failed");
     } finally {
-      // Always clean up the iframe
-      if (document.body.contains(iframe)) {
-        document.body.removeChild(iframe);
-      }
+      document.body.removeChild(iframe);
       setDownloadingId(null);
     }
   };
-
   if (editingQuote) {
     return (
       <div>
