@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { Calculator, Download, Save, CheckCircle, RefreshCw, Pencil } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 
 type HTMLTag = 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'span' | 'div';
@@ -361,8 +363,7 @@ const handleDownloadPDF = async () => {
 
   await new Promise((r) => setTimeout(r, 300));
 
-  const { default: html2canvas } = await import("html2canvas");
-  const { jsPDF } = await import("jspdf");
+  
 
   const canvas = await html2canvas(target, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
   document.body.removeChild(container);

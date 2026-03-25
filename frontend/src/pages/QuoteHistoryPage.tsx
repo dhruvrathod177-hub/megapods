@@ -6,6 +6,8 @@ import {
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
 import QuotationPage, { SavedQuote } from "./QuotationPage";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 type HTMLTag = 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'span' | 'div';
 interface Heading3DProps { children: React.ReactNode; className?: string; tag?: HTMLTag; }
@@ -357,8 +359,7 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
   
       await new Promise((r) => setTimeout(r, 700));
   
-      const { default: html2canvas } = await import("html2canvas");
-      const { jsPDF } = await import("jspdf");
+     
   
       const pageEl = doc.querySelector(".page") as HTMLElement;
       
