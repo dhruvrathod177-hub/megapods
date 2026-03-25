@@ -345,51 +345,49 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
 </body>
 </html>`;
   };
+// ── Download PDF (mobile-safe: html2canvas + jsPDF) ──
+const handleDownloadPDF = async () => {
+  const html = await buildBillHTML();
+  if (!html) return;
 
-  // ── Download: open print dialog → user clicks "Save as PDF" ──
-  const handleDownloadPDF = async () => {
-    const html = await buildBillHTML();
-    if (!html) return;
+  const container = document.createElement("div");
+  container.style.cssText =
+    "position:fixed;top:-99999px;left:-99999px;width:720px;background:#f3f4f6;padding:40px 16px;";
+  container.innerHTML = html;
+  document.body.appendChild(container);
 
-    const printFrame = document.createElement("iframe");
-    printFrame.style.cssText =
-      "position:fixed;top:-10000px;left:-10000px;width:0;height:0;border:none;";
-    document.body.appendChild(printFrame);
+  const pageEl = container.querySelector(".page") as HTMLElement | null;
+  const target = pageEl ?? container;
 
-    const doc = printFrame.contentDocument || printFrame.contentWindow?.document;
-    if (!doc) return;
+  await new Promise((r) => setTimeout(r, 300));
 
-    doc.open();
-    doc.write(html);
-    doc.close();
+  const { default: html2canvas } = await import("html2canvas");
+  const { jsPDF } = await import("jspdf");
 
-    await new Promise((resolve) => setTimeout(resolve, 800));
+  const canvas = await html2canvas(target, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+  document.body.removeChild(container);
 
-    printFrame.contentWindow?.focus();
-    printFrame.contentWindow?.print();
+  const imgData = canvas.toDataURL("image/png");
+  const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: [canvas.width / 2, canvas.height / 2] });
+  pdf.addImage(imgData, "PNG", 0, 0, canvas.width / 2, canvas.height / 2);
+  pdf.save(`${quoteNumber}.pdf`);
+};
 
-    setTimeout(() => document.body.removeChild(printFrame), 2000);
-  };
+// ── Print ──
+const handlePrint = async () => {
+  const html = await buildBillHTML();
+  if (!html) return;
 
-  // ── Print ──
-  const handlePrint = async () => {
-    const html = await buildBillHTML();
-    if (!html) return;
-
-    const printFrame = document.createElement("iframe");
-    printFrame.style.cssText = "position:fixed;top:-10000px;left:-10000px;width:0;height:0;border:none;";
-    document.body.appendChild(printFrame);
-    const doc = printFrame.contentDocument || printFrame.contentWindow?.document;
-    if (!doc) return;
-    doc.open();
-    doc.write(html);
-    doc.close();
-    setTimeout(() => {
-      printFrame.contentWindow?.focus();
-      printFrame.contentWindow?.print();
-      setTimeout(() => document.body.removeChild(printFrame), 1000);
-    }, 600);
-  };
+  const printWindow = window.open("", "_blank", "width=800,height=900");
+  if (!printWindow) return;
+  printWindow.document.open();
+  printWindow.document.write(html);
+  printWindow.document.close();
+  setTimeout(() => {
+    printWindow.focus();
+    printWindow.print();
+  }, 600);
+};
 
   const handleReset = () => {
     setForm({ materialType: "Standard Steel", containerSize: "", quantity: 1, selectedAddons: [], containerSizeNote: "", materialTypeNote: "", addonsNote: "" });

@@ -54,17 +54,14 @@ function NegotiationBadge({ status }: { status: Negotiation["status"] }) {
     accepted: { label: "Negotiation Accepted", classes: "bg-green-50  text-green-700  border-green-200"  },
     rejected: { label: "Negotiation Rejected", classes: "bg-red-50    text-red-600    border-red-200"    },
   };
-
   const { label, classes } = map[status];
-
   return (
-    <span
-      className={`inline-flex items-center whitespace-nowrap text-xs font-semibold px-3 py-1 rounded-full border ${classes}`}
-    >
+    <span className={`inline-flex items-center whitespace-nowrap text-xs font-semibold px-3 py-1 rounded-full border ${classes}`}>
       {label}
     </span>
   );
 }
+
 interface NegotiateModalProps {
   quote: SavedQuote;
   onClose: () => void;
@@ -270,11 +267,6 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
   .total-final .amount { color:#ea580c; }
   .strip { background:#fff7ed; border-top:1px solid #fed7aa; padding:14px 40px; display:flex; justify-content:space-between; font-size:12px; color:#9ca3af; }
   .strip strong { color:#ea580c; }
-  @media print {
-    @page { margin:0; size:A4; }
-    body { background:white; padding:0; margin:0; display:block; }
-    .page { box-shadow:none; border-radius:0; max-width:100%; width:100%; }
-  }
 </style>
 </head>
 <body>
@@ -338,40 +330,65 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
 </html>`;
   };
 
-  // ── Shared: open HTML in a hidden iframe and trigger print dialog ──
-  const openPrintDialog = (html: string, onDone?: () => void) => {
-    const printFrame = document.createElement("iframe");
-    printFrame.style.cssText =
-      "position:fixed;top:-10000px;left:-10000px;width:0;height:0;border:none;";
-    document.body.appendChild(printFrame);
-
-    const doc = printFrame.contentDocument || printFrame.contentWindow?.document;
-    if (!doc) { onDone?.(); return; }
-
-    doc.open();
-    doc.write(html);
-    doc.close();
-
-    setTimeout(() => {
-      printFrame.contentWindow?.focus();
-      printFrame.contentWindow?.print();
-      setTimeout(() => {
-        document.body.removeChild(printFrame);
-        onDone?.();
-      }, 2000);
-    }, 800);
-  };
-
-  // ── Download PDF (print dialog → Save as PDF) ──
-  const handleDownload = (e: React.MouseEvent, quote: SavedQuote) => {
+  // ── Download PDF (mobile-safe: iframe render → html2canvas → jsPDF) ──
+  const handleDownload = async (e: React.MouseEvent, quote: SavedQuote) => {
     e.stopPropagation();
     setDownloadingId(quote._id);
+
     const neg = negotiations[quote._id];
     const quoteDate = new Date(quote.createdAt).toLocaleDateString("en-IN", {
       day: "numeric", month: "long", year: "numeric",
     });
     const html = buildQuoteHTML(quote, neg, quoteDate);
-    openPrintDialog(html, () => setDownloadingId(null));
+
+    // Use an iframe so the full HTML document (with <style> tags) renders correctly
+    const iframe = document.createElement("iframe");
+    iframe.style.cssText =
+      "position:fixed;top:-99999px;left:-99999px;width:800px;height:1200px;border:none;visibility:hidden;";
+    document.body.appendChild(iframe);
+
+    try {
+      const doc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (!doc) throw new Error("Could not access iframe document");
+
+      doc.open();
+      doc.write(html);
+      doc.close();
+
+      // Wait for iframe content + fonts to fully render
+      await new Promise((r) => setTimeout(r, 600));
+
+      const { default: html2canvas } = await import("html2canvas");
+      const { jsPDF }                = await import("jspdf");
+
+      // Target the .page div inside the iframe for a clean capture
+      const pageEl = doc.querySelector(".page") as HTMLElement | null;
+      const target = pageEl ?? doc.body;
+
+      const canvas = await html2canvas(target, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        windowWidth: 800,
+      });
+
+      const imgData  = canvas.toDataURL("image/png");
+      const pdfW     = canvas.width  / 2;
+      const pdfH     = canvas.height / 2;
+      const pdf      = new jsPDF({ orientation: "portrait", unit: "px", format: [pdfW, pdfH] });
+      pdf.addImage(imgData, "PNG", 0, 0, pdfW, pdfH);
+      pdf.save(`${quote.quoteNumber}.pdf`);
+
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+      alert("PDF download failed. Please try again.");
+    } finally {
+      // Always clean up the iframe
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe);
+      }
+      setDownloadingId(null);
+    }
   };
 
   if (editingQuote) {
