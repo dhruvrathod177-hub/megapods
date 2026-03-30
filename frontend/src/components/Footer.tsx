@@ -30,13 +30,29 @@ export default function Footer({ onNavigate }: FooterProps) {
           <div className="space-y-8">
             <div className="flex items-center gap-4 group cursor-pointer" onClick={() => handleNavigate('home')}>
               <div className="relative">
-                <div className="absolute inset-0 bg-orange-500 blur-2xl opacity-10 group-hover:opacity-30 transition-opacity duration-500"></div>
-                <img
-                  src="/img/logo1.JPG"
-                  alt="Megapodsindia"
-                  className="h-16 w-16 rounded-2xl object-contain relative z-10 transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-500"
-                />
-              </div>
+              <div className="relative h-16 w-16 group cursor-pointer">
+
+{/* 🔥 Glow */}
+<div className="absolute inset-0 rounded-full bg-orange-500 blur-lg opacity-50 group-hover:opacity-80 transition duration-500"></div>
+
+{/* 🔥 Logo wrapper */}
+<div className="relative h-full w-full rounded-full overflow-hidden border-2 border-white shadow-lg">
+
+  {/* Shine effect */}
+  <div className="absolute inset-0 overflow-hidden rounded-full">
+    <div className="absolute top-0 -left-[120%] h-full w-[120%] bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 group-hover:left-[120%] transition-all duration-700"></div>
+  </div>
+
+  {/* Image */}
+  <img
+    src="/img/logo1.JPG"
+    alt="Megapodsindia"
+    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+  />
+
+</div>
+</div>
+</div>
               <div>
                 <h3 className="text-2xl font-black tracking-tighter uppercase text-slate-900">Megapods<span className="text-orange-600">india</span></h3>
                 <p className="text-[10px] font-bold tracking-[0.4em] text-orange-600 uppercase opacity-80">Modular Excellence</p>

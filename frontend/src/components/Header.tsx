@@ -78,15 +78,36 @@ export default function Header({ currentPage, onNavigate, openSignup, openForgot
           ? "bg-white/40 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.05)] border-b border-white/20 py-2" 
           : "bg-transparent py-5"}`}
     >
-      <div className="w-full max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-16">
-        <div className="flex justify-between items-center h-20">
+     <div className="w-full max-w-[1400px] mx-auto px-6 sm:px-12 lg:px-10">
+      <div className="flex justify-between items-center h-20 gap-6 lg:gap-10">
 
           {/* LOGO */}
           <div className="flex items-center gap-3 cursor-pointer flex-shrink-0 group" onClick={() => handleNavigate("home")}>
             <div className="relative">
               <div className="absolute inset-0 bg-orange-500 blur-3xl opacity-0 group-hover:opacity-10 transition-opacity duration-700"></div>
-              <img src="/img/logo1.JPG" alt="Megapods India" className="h-12 w-12 md:h-14 md:w-14 object-contain transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-700 relative z-10" />
-            </div>
+              <div className="relative h-12 w-12 md:h-14 md:w-14 group">
+
+  {/* 🔥 Glow */}
+  <div className="absolute inset-0 rounded-full bg-orange-500 blur-md opacity-50 group-hover:opacity-80 transition duration-500"></div>
+
+  {/* 🔥 Logo wrapper */}
+  <div className="relative h-full w-full rounded-full overflow-hidden border-2 border-white shadow-md">
+
+    {/* Shine effect */}
+    <div className="absolute inset-0 overflow-hidden rounded-full">
+      <div className="absolute top-0 -left-[120%] h-full w-[120%] bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 group-hover:left-[120%] transition-all duration-700"></div>
+    </div>
+
+    {/* Logo image */}
+    <img
+      src="/img/logo1.JPG"
+      alt="Megapods India"
+      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+    />
+
+  </div>
+</div>
+</div>
             <div className="flex flex-col -space-y-1">
               <span className="text-xl md:text-2xl font-black tracking-tight text-slate-900 group-hover:text-orange-600 transition-all duration-500">
                 MEGAPODS
@@ -98,7 +119,7 @@ export default function Header({ currentPage, onNavigate, openSignup, openForgot
           </div>
 
           {/* DESKTOP NAV */}
-          <div className="hidden lg:flex items-center gap-6 xl:gap-8">
+          <div className="hidden lg:flex items-center gap-6 xl:gap-8 ml-6 xl:ml-10">
             {navItems.filter(item => item.value !== "quotation").map((item) => (
               <button
                 key={item.value}
