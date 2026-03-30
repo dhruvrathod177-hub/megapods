@@ -78,7 +78,7 @@ export default function Header({ currentPage, onNavigate, openSignup, openForgot
           ? "bg-white/40 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.05)] border-b border-white/20 py-2" 
           : "bg-transparent py-5"}`}
     >
-     <div className="w-full max-w-[1400px] mx-auto px-6 sm:px-12 lg:px-10">
+     <div className="w-full max-w-[1400px] mx-auto px-6 sm:px-12 lg:px-13">
       <div className="flex justify-between items-center h-20 gap-6 lg:gap-10">
 
           {/* LOGO */}
