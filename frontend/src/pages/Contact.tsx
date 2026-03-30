@@ -1,5 +1,6 @@
-import { useState, useRef } from 'react';
-import { Phone, Mail, MapPin, Clock, Send, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Phone, Mail, MapPin, Clock, Send, ChevronDown,  ArrowRight } from 'lucide-react';
+import VanillaTilt from 'vanilla-tilt';
 
 type HTMLTag = 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'span' | 'div';
 
@@ -12,33 +13,25 @@ interface Heading3DProps {
 function Heading3D({ children, className = '', tag: Tag = 'h2' }: Heading3DProps) {
   const ref = useRef<HTMLElement>(null);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
-    const el = ref.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const cx = rect.width / 2;
-    const cy = rect.height / 2;
-    const rotateX = ((y - cy) / cy) * -10;
-    const rotateY = ((x - cx) / cx) * 14;
-    el.style.transform = `perspective(600px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.04)`;
-    el.style.textShadow = `${-rotateY * 0.6}px ${rotateX * 0.6}px 18px rgba(234,88,12,0.22), 0 2px 32px rgba(0,0,0,0.10)`;
-  };
-
-  const handleMouseLeave = () => {
-    const el = ref.current;
-    if (!el) return;
-    el.style.transform = 'perspective(600px) rotateX(0deg) rotateY(0deg) scale(1)';
-    el.style.textShadow = 'none';
-  };
+  useEffect(() => {
+    if (ref.current) {
+      VanillaTilt.init(ref.current, {
+        max: 12,
+        speed: 400,
+        glare: true,
+        "max-glare": 0.2,
+        scale: 1.05,
+      });
+    }
+    return () => {
+      (ref.current as any)?.vanillaTilt?.destroy();
+    };
+  }, []);
 
   return (
     <Tag
       ref={ref as React.RefObject<HTMLHeadingElement>}
       className={`heading-3d ${className}`}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
     >
       {children}
     </Tag>
@@ -53,6 +46,26 @@ export default function Contact() {
     service: '',
     message: '',
   });
+
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    cardRefs.current.forEach((ref) => {
+      if (ref) {
+        VanillaTilt.init(ref, {
+          max: 5,
+          speed: 1000,
+          glare: true,
+          "max-glare": 0.1,
+          perspective: 2000,
+          scale: 1.02,
+        });
+      }
+    });
+    return () => {
+      cardRefs.current.forEach((ref) => (ref as any)?.vanillaTilt?.destroy());
+    };
+  }, []);
 
   const [expandedFaq, setExpandedFaq] = useState<number | null>(0);
 
@@ -98,22 +111,24 @@ export default function Contact() {
   };
 
   return (
-    <div>
+    <div className="bg-transparent relative z-10 overflow-hidden">
 
       {/* HERO */}
 
-      <section className="bg-gradient-to-br from-orange-50 to-white py-16 lg:py-24">
+      <section className="relative py-24 lg:py-40 flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 bg-slate-950/5"></div>
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-orange-600/30 to-transparent"></div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
-          <div className="text-center mb-12">
-
-            <Heading3D tag="h1" className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
-              Get in <span className="text-orange-600">Touch</span>
+          <div className="text-center">
+            <div className="text-orange-600 font-black uppercase tracking-[0.5em] text-[10px] mb-8 animate-fade-in">Communication Node</div>
+            <Heading3D tag="h1" className="text-6xl sm:text-8xl lg:text-9xl font-black text-slate-900 mb-10 tracking-tighter uppercase leading-[0.8]">
+              ESTABLISH <span className="text-orange-600">CONTACT</span>
             </Heading3D>
 
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Ready to transform your business with innovative container solutions? Contact us for a free consultation
+            <p className="text-xl text-slate-500 max-w-4xl mx-auto font-light leading-relaxed uppercase tracking-widest animate-fade-up">
+              Initiate project <span className="text-slate-900 font-black">dialogue</span> with our modular architecture specialists to catalyze your vision.
             </p>
 
           </div>
@@ -122,210 +137,183 @@ export default function Contact() {
 
       </section>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-40 relative z-10">
 
-      {/* CONTACT FORM & INFO */}
+        <div className="grid lg:grid-cols-2 gap-32">
 
-      <section className="py-16 bg-white">
+          {/* CONTACT INFO */}
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div>
 
-          <div className="grid lg:grid-cols-2 gap-12">
+            <div className="text-orange-600 font-black uppercase tracking-[0.4em] text-xs mb-8">Infrastructure</div>
+            <Heading3D tag="h2" className="text-5xl font-black text-slate-900 mb-16 uppercase tracking-tighter leading-tight">Project <span className="text-orange-600">Sync.</span></Heading3D>
 
-            <div>
+            <div className="space-y-10">
 
-              <Heading3D tag="h2" className="text-3xl font-bold text-gray-900 mb-6">
-                Send Us a Message
-              </Heading3D>
+              {[
+                { icon: Phone, label: 'Transmission Line', value: '+91 87581 76693', subValue: '+91 92653 80907' },
+                { icon: Mail, label: 'Digital Identity', value: 'megapodsindia@gmail.com' },
+                { icon: MapPin, label: 'Physical HQ', value: 'Surat, Gujarat, India' },
+                { icon: Clock, label: 'Operational Window', value: 'Mon - Sat: 9:00 AM - 7:00 PM', subValue: 'Sun: Closed' },
+              ].map((item, index) => (
 
-              <p className="text-gray-600 mb-8">
-                Fill out the form below and we'll get back to you within 24 hours with a detailed response.
-              </p>
+                <div key={index} className="glass-card rounded-[2.5rem] p-10 flex items-center gap-10 group">
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">Full Name *</label>
-                  <input
-                    type="text" id="name" required value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    placeholder="Enter your full name"
-                  />
+                  <div className="bg-orange-600 text-white w-20 h-20 rounded-[1.5rem] flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-700 shadow-2xl shadow-orange-600/30">
+                    <item.icon size={36} />
+                  </div>
+
+                  <div>
+                    <p className="text-[10px] font-black text-orange-600 uppercase tracking-[0.4em] mb-3">{item.label}</p>
+                    <p className="text-2xl font-black text-slate-900 tracking-tighter uppercase">{item.value}</p>
+                    {item.subValue && <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-2">{item.subValue}</p>}
+                  </div>
+
                 </div>
-                <div>
-                  <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">Email Address *</label>
-                  <input
-                    type="email" id="email" required value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    placeholder="your.email@example.com"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">Phone Number *</label>
-                  <input
-                    type="tel" id="phone" required value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    placeholder="+91 XXXXX XXXXX"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="service" className="block text-sm font-semibold text-gray-700 mb-2">Service Interested In *</label>
-                  <select
-                    id="service" required value={formData.service}
-                    onChange={(e) => setFormData({ ...formData, service: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  >
-                    <option value="">Select a service</option>
-                    <option value="Container Cafe">Container Cafe</option>
-                    <option value="Container Office">Container Office</option>
-                    <option value="Public Toilet">Public Toilet</option>
-                    <option value="Custom Solution">Custom Solution</option>
-                    <option value="General Inquiry">General Inquiry</option>
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="message" className="block text-sm font-semibold text-gray-700 mb-2">Project Details *</label>
-                  <textarea
-                    id="message" required value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    rows={5}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    placeholder="Tell us about your project requirements, timeline, and budget..."
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="w-full bg-orange-600 text-white px-6 py-4 rounded-lg font-semibold hover:bg-orange-700 transition-colors flex items-center justify-center gap-2"
-                >
-                  <Send size={20} />
-                  Send Message via WhatsApp
-                </button>
-                <p className="text-sm text-gray-500 text-center">
-                  By submitting this form, you agree to be contacted by Megapodsindia regarding your inquiry.
-                </p>
-              </form>
+
+              ))}
 
             </div>
 
-            <div>
+          </div>
 
-              <Heading3D tag="h2" className="text-3xl font-bold text-gray-900 mb-6">
-                Contact Information
-              </Heading3D>
 
-              <div className="space-y-6 mb-8">
+          {/* CONTACT FORM */}
 
-                <div className="flex items-start gap-4 bg-gray-50 p-6 rounded-lg">
-                  <Phone className="text-orange-600 flex-shrink-0 mt-1" size={24} />
+          <div 
+            ref={(el) => (cardRefs.current[0] = el)}
+            className="glass-card rounded-[4rem] p-12 lg:p-20 relative overflow-hidden group transform-gpu"
+          >
+            <div className="absolute top-0 right-0 w-[30rem] h-[30rem] bg-orange-600/5 rounded-full -mr-60 -mt-60 transition-all duration-1000 group-hover:bg-orange-600/10 group-hover:scale-125"></div>
+
+            <div className="relative z-10 tilt-inner">
+              <Heading3D tag="h2" className="text-4xl font-black text-slate-900 mb-14 uppercase tracking-tighter leading-none">Submit <span className="text-orange-600">Protocol.</span></Heading3D>
+
+              <form onSubmit={handleSubmit} className="space-y-10">
+
+                <div className="grid sm:grid-cols-2 gap-10">
+
                   <div>
-                    <Heading3D tag="h3" className="font-semibold text-gray-900 mb-2">Phone Numbers</Heading3D>
-                    <a href="tel:+9187581 76693" className="text-gray-600 hover:text-orange-600 transition-colors block">+91 87581 76693</a>
-                    <a href="tel:+919265380907" className="text-gray-600 hover:text-orange-600 transition-colors block">+91 92653 90907</a>
+                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-4 ml-2">Identity</label>
+                    <input
+                      type="text"
+                      required
+                      className="w-full px-8 py-5 glass-input rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none transition-all placeholder:text-slate-300 font-bold uppercase tracking-widest text-xs"
+                      placeholder="John Doe"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    />
                   </div>
+
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-4 ml-2">Digital Endpoint</label>
+                    <input
+                      type="email"
+                      required
+                      className="w-full px-8 py-5 glass-input rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none transition-all placeholder:text-slate-300 font-bold uppercase tracking-widest text-xs"
+                      placeholder="john@protocol.com"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    />
+                  </div>
+
                 </div>
 
-                <div className="flex items-start gap-4 bg-gray-50 p-6 rounded-lg">
-                  <Mail className="text-orange-600 flex-shrink-0 mt-1" size={24} />
-                  <div>
-                    <Heading3D tag="h3" className="font-semibold text-gray-900 mb-2">Email</Heading3D>
-                    <a href="mailto:megapodsindia@gmail.com" className="text-gray-600 hover:text-orange-600 transition-colors">megapodsindia@gmail.com</a>
-                  </div>
-                </div>
+                <div className="grid sm:grid-cols-2 gap-10">
 
-                <div className="flex items-start gap-4 bg-gray-50 p-6 rounded-lg">
-                  <MapPin className="text-orange-600 flex-shrink-0 mt-1" size={24} />
                   <div>
-                    <Heading3D tag="h3" className="font-semibold text-gray-900 mb-2">Location</Heading3D>
-                    <p className="text-gray-600">Surat, Gujarat, India</p>
-                    <a
-                      href="https://share.google/nx4gFYYdioqxu0HND"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-orange-600 hover:text-orange-700 transition-colors text-sm mt-2 inline-block"
+                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-4 ml-2">Secure Line</label>
+                    <input
+                      type="tel"
+                      required
+                      className="w-full px-8 py-5 glass-input rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none transition-all placeholder:text-slate-300 font-bold uppercase tracking-widest text-xs"
+                      placeholder="+91 00000 00000"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-4 ml-2">Ecosystem Type</label>
+                    <select
+                      className="w-full px-8 py-5 glass-input rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none transition-all font-black uppercase tracking-widest text-[10px] appearance-none cursor-pointer text-slate-900"
+                      value={formData.service}
+                      onChange={(e) => setFormData({ ...formData, service: e.target.value })}
                     >
-                      View on Google Maps →
-                    </a>
+                      <option value="">Initialize Selection</option>
+                      <option value="Cafe">Modular Cafe</option>
+                      <option value="Office">Modular Office</option>
+                      <option value="Toilet">Public Infrastructure</option>
+                      <option value="Custom">Bespoke Solution</option>
+                    </select>
                   </div>
+
                 </div>
 
-                <div className="flex items-start gap-4 bg-gray-50 p-6 rounded-lg">
-                  <Clock className="text-orange-600 flex-shrink-0 mt-1" size={24} />
-                  <div>
-                    <Heading3D tag="h3" className="font-semibold text-gray-900 mb-2">Business Hours</Heading3D>
-                    <p className="text-gray-600">Monday - Saturday: 9:00 AM - 7:00 PM</p>
-                    <p className="text-gray-600">Sunday: By Appointment</p>
-                  </div>
+                <div>
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-4 ml-2">System Parameters</label>
+                  <textarea
+                    rows={5}
+                    required
+                    className="w-full px-8 py-5 glass-input rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none transition-all resize-none placeholder:text-slate-300 font-bold text-sm leading-relaxed"
+                    placeholder="Detail project operational requirements..."
+                    value={formData.message}
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  ></textarea>
                 </div>
 
-              </div>
-
-              <div className="mt-6 p-5 border rounded-xl bg-orange-50">
-                <Heading3D tag="h3" className="text-lg font-semibold text-gray-900 mb-1">
-                  Download Our Catalog
-                </Heading3D>
-                <p className="text-sm text-gray-600 mb-4">
-                  Click below to download our complete container solutions catalog.
-                </p>
-                <a
-                  href="Megapodsindia.pdf.pdf"
-                  download
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-full font-medium transition-all"
+                <button
+                  type="submit"
+                  className="w-full bg-orange-600 text-white px-12 py-6 rounded-full font-black uppercase tracking-[0.3em] hover:bg-orange-700 transition-all duration-700 hover:scale-105 active:scale-95 shadow-2xl shadow-orange-600/40 flex items-center justify-center gap-6 group"
                 >
-                  📥 Download Catalog
-                </a>
-              </div>
+                  Transmit via WhatsApp
+                  <Send size={24} className="group-hover:translate-x-3 group-hover:-translate-y-2 transition-transform duration-700" />
+                </button>
 
+              </form>
             </div>
 
           </div>
 
         </div>
 
-      </section>
+      </div>
 
 
       {/* FAQ */}
 
-      <section className="py-16 bg-gray-50">
+      <section className="py-40 bg-orange-600 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-600/20 to-transparent opacity-40"></div>
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-orange-600/50 to-transparent"></div>
 
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
-          <div className="text-center mb-12">
-
-            <Heading3D tag="h2" className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Frequently Asked Questions
+          <div className="text-center mb-32">
+            <div className="text-orange-600 font-black uppercase tracking-[0.4em] text-[10px] mb-8">System Knowledge Base</div>
+            <Heading3D tag="h2" className="text-5xl sm:text-7xl font-black text-white mb-10 tracking-tighter uppercase leading-[0.8]">
+              LOGISTICAL <span className="text-slate-950">INVARIANTS</span>
             </Heading3D>
-
-            <p className="text-lg text-gray-600">
-              Find answers to common questions about our container solutions
-            </p>
-
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
 
             {faqs.map((faq, index) => (
 
-              <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div key={index} className="glass-card bg-white/5 border-white/10 rounded-[2.5rem] overflow-hidden group/faq transition-all duration-700">
 
                 <button
                   onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}
-                  className="w-full flex items-center justify-between p-6 text-left hover:bg-gray-50 transition-colors"
+                  className="w-full flex items-center justify-between p-10 text-left hover:bg-white/5 transition-all duration-500"
                 >
-                  <span className="font-semibold text-gray-900 pr-4">{faq.question}</span>
-                  {expandedFaq === index ? (
-                    <ChevronUp className="text-orange-600 flex-shrink-0" size={24} />
-                  ) : (
-                    <ChevronDown className="text-gray-400 flex-shrink-0" size={24} />
-                  )}
+                  <span className="text-xl font-black text-slate-950 uppercase tracking-tight pr-8">{faq.question}</span>
+                  <div className={`bg-orange-600/10 p-3 rounded-xl transition-all duration-500 ${expandedFaq === index ? 'rotate-180 bg-orange-600 text-white' : 'text-orange-600'}`}>
+                    <ChevronDown size={24} />
+                  </div>
                 </button>
 
                 {expandedFaq === index && (
-                  <div className="px-6 pb-6">
-                    <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
+                  <div className="px-10 pb-10 animate-fade-in">
+                    <p className="text-slate-950 leading-relaxed font-medium text-lg uppercase tracking-wider">{faq.answer}</p>
                   </div>
                 )}
 
@@ -335,15 +323,15 @@ export default function Contact() {
 
           </div>
 
-          <div className="text-center mt-8">
-            <p className="text-gray-600 mb-4">Still have questions?</p>
+          <div className="text-center mt-20">
+            <p className="text-slate-950 font-black uppercase tracking-[0.3em] text-s mb-2">Immediate Resolution Required?</p>
             <a
               href="https://wa.me/918758176693?text=Hello!%20I%20have%20a%20question%20about%20your%20container%20solutions."
               target="_blank"
               rel="noopener noreferrer"
-              className="text-orange-600 font-semibold hover:text-orange-700 transition-colors"
+              className="inline-flex items-center gap-4 text-orange-600 font-black uppercase tracking-[0.4em] text-[10px] hover:text-white transition-all duration-500 group"
             >
-              Contact us directly →
+              Direct Link Established <ArrowRight size={16} className="group-hover:translate-x-3 transition-transform" />
             </a>
           </div>
 

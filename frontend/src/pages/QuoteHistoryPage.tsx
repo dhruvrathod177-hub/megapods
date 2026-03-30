@@ -6,30 +6,32 @@ import {
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
 import QuotationPage, { SavedQuote } from "./QuotationPage";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import { generateQuotationPDF } from "../utils/pdfGenerator";
+import VanillaTilt from 'vanilla-tilt';
 
 type HTMLTag = 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'span' | 'div';
 interface Heading3DProps { children: React.ReactNode; className?: string; tag?: HTMLTag; }
 
 function Heading3D({ children, className = '', tag: Tag = 'h2' }: Heading3DProps) {
   const ref = useRef<HTMLElement>(null);
-  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
-    const el = ref.current; if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const rotateX = (((e.clientY - rect.top) - rect.height / 2) / (rect.height / 2)) * -10;
-    const rotateY = (((e.clientX - rect.left) - rect.width  / 2) / (rect.width  / 2)) *  14;
-    el.style.transform  = `perspective(600px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.04)`;
-    el.style.textShadow = `${-rotateY * 0.6}px ${rotateX * 0.6}px 18px rgba(234,88,12,0.22)`;
-  };
-  const handleMouseLeave = () => {
-    const el = ref.current; if (!el) return;
-    el.style.transform  = 'perspective(600px) rotateX(0deg) rotateY(0deg) scale(1)';
-    el.style.textShadow = 'none';
-  };
+
+  useEffect(() => {
+    if (ref.current) {
+      VanillaTilt.init(ref.current, {
+        max: 12,
+        speed: 400,
+        glare: true,
+        "max-glare": 0.2,
+        scale: 1.05,
+      });
+    }
+    return () => {
+      (ref.current as any)?.vanillaTilt?.destroy();
+    };
+  }, []);
+
   return (
-    <Tag ref={ref as React.RefObject<HTMLHeadingElement>} className={`heading-3d ${className}`}
-      onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
+    <Tag ref={ref as React.RefObject<HTMLHeadingElement>} className={`heading-3d ${className}`}>
       {children}
     </Tag>
   );
@@ -52,13 +54,13 @@ const formatINR = (n: number) =>
 
 function NegotiationBadge({ status }: { status: Negotiation["status"] }) {
   const map = {
-    pending:  { label: "Negotiation Pending",  classes: "bg-yellow-50 text-yellow-700 border-yellow-200" },
-    accepted: { label: "Negotiation Accepted", classes: "bg-green-50  text-green-700  border-green-200"  },
-    rejected: { label: "Negotiation Rejected", classes: "bg-red-50    text-red-600    border-red-200"    },
+    pending:  { label: "Pending",  classes: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20" },
+    accepted: { label: "Accepted", classes: "bg-green-500/10  text-green-600  border-green-500/20"  },
+    rejected: { label: "Rejected", classes: "bg-red-500/10    text-red-600    border-red-500/20"    },
   };
   const { label, classes } = map[status];
   return (
-    <span className={`inline-flex items-center whitespace-nowrap text-xs font-semibold px-3 py-1 rounded-full border ${classes}`}>
+    <span className={`inline-flex items-center whitespace-nowrap text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border ${classes}`}>
       {label}
     </span>
   );
@@ -72,10 +74,23 @@ interface NegotiateModalProps {
 
 function NegotiateModal({ quote, onClose, onSubmitted }: NegotiateModalProps) {
   const { token } = useAuth();
+  const modalRef = useRef<HTMLDivElement>(null);
   const [offeredPrice, setOfferedPrice] = useState<string>("");
   const [message, setMessage]           = useState("");
   const [loading, setLoading]           = useState(false);
   const [error, setError]               = useState("");
+
+  useEffect(() => {
+    if (modalRef.current) {
+      VanillaTilt.init(modalRef.current, {
+        max: 5,
+        speed: 400,
+        glare: true,
+        "max-glare": 0.1,
+      });
+    }
+    return () => (modalRef.current as any)?.vanillaTilt?.destroy();
+  }, []);
 
   const discount = offeredPrice
     ? Math.max(0, (((quote.total - parseFloat(offeredPrice)) / quote.total) * 100)).toFixed(1)
@@ -102,54 +117,53 @@ function NegotiateModal({ quote, onClose, onSubmitted }: NegotiateModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
-        <div className="bg-gradient-to-br from-orange-600 to-orange-700 p-6 text-white">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-[30px]">
+      <div ref={modalRef} className="glass-card rounded-[3rem] shadow-2xl w-full max-w-md overflow-hidden border border-white/10 transform-gpu">
+        <div className="bg-slate-950 p-10 text-white relative">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-white/20 p-2 rounded-xl"><HandshakeIcon size={22} /></div>
+            <div className="flex items-center gap-5">
+              <div className="bg-orange-600 text-white p-4 rounded-[1.5rem] shadow-2xl shadow-orange-600/30 tilt-inner"><HandshakeIcon size={28} /></div>
               <div>
-                <h2 className="font-bold text-lg leading-tight">Make an Offer</h2>
-                <p className="text-orange-200 text-xs">{quote.quoteNumber}</p>
+                <h2 className="text-3xl font-black tracking-tighter uppercase leading-none">Negotiate <span className="text-orange-600">Price</span></h2>
+                <p className="text-gray-400 text-[10px] font-black uppercase tracking-[0.4em] mt-2">{quote.quoteNumber}</p>
               </div>
             </div>
-            <button onClick={onClose} className="text-white/70 hover:text-white transition"><X size={20} /></button>
+            <button onClick={onClose} className="text-white/40 hover:text-white transition-all duration-500 p-2.5 bg-white/5 rounded-full backdrop-blur-xl border border-white/10"><X size={20} /></button>
           </div>
-          <div className="mt-4 bg-white/10 rounded-2xl p-4 flex justify-between items-center">
-            <span className="text-orange-200 text-sm">Original Total</span>
-            <span className="font-bold text-xl">{formatINR(quote.total)}</span>
+          <div className="mt-10 bg-white/5 backdrop-blur-2xl rounded-[2rem] p-8 flex justify-between items-center border border-white/10 tilt-inner">
+            <span className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em]">Original Total</span>
+            <span className="font-black text-3xl tracking-tighter text-white">{formatINR(quote.total)}</span>
           </div>
         </div>
-        <div className="p-6 space-y-5">
-          {error && <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">{error}</div>}
+        <div className="p-12 space-y-10">
+          {error && <div className="bg-red-600/10 border border-red-600/30 text-red-500 px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] animate-shake">{error}</div>}
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Your Offered Price (₹)</label>
+            <label className="block text-[10px] font-black text-gray-500 uppercase tracking-[0.3em] mb-4 ml-1">Proposed Investment (₹)</label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">₹</span>
+              <span className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 font-black text-xl">₹</span>
               <input type="number" value={offeredPrice} onChange={(e) => setOfferedPrice(e.target.value)}
                 placeholder={String(Math.round(quote.total * 0.9))}
-                className="w-full pl-8 pr-4 py-3 border-2 border-gray-200 rounded-2xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none text-gray-800 text-lg font-semibold" />
+                className="w-full pl-12 pr-8 py-5 glass-input rounded-2xl outline-none text-slate-900 text-2xl font-black tracking-tighter" />
             </div>
             {discount && parseFloat(offeredPrice) < quote.total && (
-              <div className="mt-2 flex items-center justify-between text-sm">
-                <span className="text-gray-500">Discount requested</span>
-                <span className="font-bold text-orange-600">{discount}% off — saving {formatINR(quote.total - parseFloat(offeredPrice))}</span>
+              <div className="mt-4 flex items-center justify-between text-[10px] font-black uppercase tracking-[0.3em] px-1">
+                <span className="text-gray-400">Strategic Discount</span>
+                <span className="text-orange-600 bg-orange-600/10 px-3 py-1 rounded-full">{discount}% OFF</span>
               </div>
             )}
           </div>
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Message to Megapodsindia</label>
+            <label className="block text-[10px] font-black text-gray-500 uppercase tracking-[0.3em] mb-4 ml-1">Operational Justification</label>
             <textarea value={message} onChange={(e) => setMessage(e.target.value)}
-              placeholder="Explain why you're requesting this price — bulk order, long-term relationship, budget constraints…"
-              rows={4} className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none text-sm text-gray-700 placeholder-gray-400 resize-none" />
+              placeholder="Detail your requirements or budget constraints..."
+              rows={4} className="w-full px-8 py-5 glass-input rounded-2xl outline-none text-sm text-slate-700 font-bold placeholder-gray-400 resize-none leading-relaxed" />
           </div>
-          <p className="text-xs text-gray-400 text-center">Our team will review your offer and reach out to you directly.</p>
-          <div className="flex gap-3">
-            <button onClick={onClose} className="flex-1 py-3 rounded-2xl border-2 border-gray-200 text-gray-500 font-semibold hover:border-gray-300 transition">Cancel</button>
+          <div className="flex gap-6">
+            <button onClick={onClose} className="flex-1 py-5 rounded-full border border-slate-950/10 text-slate-400 font-black uppercase tracking-[0.2em] text-[10px] hover:bg-slate-950/5 transition-all duration-700">Cancel</button>
             <button onClick={handleSubmit} disabled={loading}
-              className="flex-1 py-3 rounded-2xl bg-orange-600 hover:bg-orange-700 disabled:opacity-60 text-white font-bold transition flex items-center justify-center gap-2">
-              {loading ? <RefreshCw size={16} className="animate-spin" /> : <HandshakeIcon size={16} />}
-              {loading ? "Submitting…" : "Submit Offer"}
+              className="flex-1 py-5 rounded-full bg-orange-600 hover:bg-orange-700 disabled:opacity-60 text-white font-black uppercase tracking-[0.2em] text-[10px] transition-all duration-700 shadow-2xl shadow-orange-600/30 flex items-center justify-center gap-3">
+              {loading ? <RefreshCw size={18} className="animate-spin" /> : <HandshakeIcon size={18} />}
+              {loading ? "Transmitting…" : "Submit Offer"}
             </button>
           </div>
         </div>
@@ -170,6 +184,7 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
   const [editingQuote,     setEditingQuote]     = useState<SavedQuote | null>(null);
   const [negotiatingQuote, setNegotiatingQuote] = useState<SavedQuote | null>(null);
   const [downloadingId,    setDownloadingId]    = useState<string | null>(null);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const fetchAll = async () => {
     setLoading(true);
@@ -194,6 +209,21 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
     const interval = setInterval(() => fetchAll(), 10000);
     return () => clearInterval(interval);
   }, [token]);
+
+  useEffect(() => {
+    cardRefs.current.forEach((ref) => {
+      if (ref) {
+        VanillaTilt.init(ref, {
+          max: 3,
+          speed: 1000,
+          glare: true,
+          "max-glare": 0.05,
+          perspective: 2000,
+        });
+      }
+    });
+    return () => cardRefs.current.forEach((ref) => (ref as any)?.vanillaTilt?.destroy());
+  }, [quotes, expanded]);
 
   const handleDelete = async (e: React.MouseEvent, quoteId: string) => {
     e.stopPropagation();
@@ -221,180 +251,65 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
     fetchAll();
   };
 
-  // ── Shared HTML builder ──
-  const buildQuoteHTML = (quote: SavedQuote, neg: Negotiation | undefined, quoteDate: string): string => {
-    const displayTotal = neg?.status === "accepted" ? neg.offeredPrice : quote.total;
-
-    const addonRows = quote.addons?.map(a => `
-      <tr>
-        <td style="padding:10px 8px;border-bottom:1px solid #f3f4f6;font-size:13px;color:#374151">${a.name}<br/><span style="font-size:11px;color:#9ca3af">Add-on</span></td>
-        <td style="padding:10px 8px;border-bottom:1px solid #f3f4f6;text-align:center;font-size:13px;color:#374151">1</td>
-        <td style="padding:10px 8px;border-bottom:1px solid #f3f4f6;text-align:right;font-size:13px;color:#374151">${formatINR(a.price)}</td>
-        <td style="padding:10px 8px;border-bottom:1px solid #f3f4f6;text-align:right;font-size:13px;color:#374151">${formatINR(a.price)}</td>
-      </tr>`).join("") ?? "";
-
-    const negotiatedRow = neg?.status === "accepted"
-      ? `<div style="display:flex;justify-content:space-between;font-size:14px;color:#16a34a;font-weight:600;padding:4px 0"><span>Negotiated Price</span><span>${formatINR(neg.offeredPrice)}</span></div>`
-      : "";
-
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"/>
-<title>${quote.quoteNumber}</title>
-<style>
-  * { box-sizing:border-box; margin:0; padding:0; }
-  body { font-family:'Segoe UI',Arial,sans-serif; background:#f3f4f6; display:flex; justify-content:center; padding:40px 16px; }
-  .page { background:#fff; width:100%; max-width:720px; border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.13); }
-  .header { background:linear-gradient(135deg,#ea580c,#c2410c); color:#fff; padding:36px 40px 28px; }
-  .header-top { display:flex; justify-content:space-between; align-items:flex-start; }
-  .brand-name { font-size:22px; font-weight:700; }
-  .brand-loc { font-size:12px; color:#fed7aa; margin-top:2px; }
-  .quote-label { text-align:right; }
-  .quote-label .title { font-size:28px; font-weight:800; letter-spacing:2px; }
-  .quote-label .num { font-size:13px; color:#fed7aa; margin-top:4px; }
-  .quote-label .date { font-size:13px; color:#fed7aa; }
-  .divider { border:none; border-top:1px solid rgba(255,255,255,0.25); margin:20px 0 16px; }
-  .client-name { font-size:16px; font-weight:700; }
-  .client-email { font-size:13px; color:#fed7aa; }
-  .body { padding:36px 40px; }
-  table { width:100%; border-collapse:collapse; font-size:14px; margin-bottom:8px; }
-  thead th { padding:10px 8px; color:#6b7280; font-weight:600; text-align:left; border-bottom:2px solid #e5e7eb; }
-  thead th.right { text-align:right; }
-  thead th.center { text-align:center; }
-  tbody td { padding:12px 8px; color:#111827; vertical-align:top; }
-  .totals { border-top:1px solid #e5e7eb; padding-top:16px; margin-top:8px; }
-  .total-row { display:flex; justify-content:space-between; font-size:14px; color:#4b5563; padding:4px 0; }
-  .total-final { display:flex; justify-content:space-between; font-size:20px; font-weight:800; color:#111827; border-top:2px solid #111827; margin-top:10px; padding-top:12px; }
-  .total-final .amount { color:#ea580c; }
-  .strip { background:#fff7ed; border-top:1px solid #fed7aa; padding:14px 40px; display:flex; justify-content:space-between; font-size:12px; color:#9ca3af; }
-  .strip strong { color:#ea580c; }
-</style>
-</head>
-<body>
-<div class="page">
-  <div class="header">
-    <div class="header-top">
-      <div>
-        <div class="brand-name">Megapodsindia</div>
-        <div class="brand-loc">Surat, Gujarat, India</div>
-      </div>
-      <div class="quote-label">
-        <div class="title">QUOTATION</div>
-        <div class="num">#${quote.quoteNumber}</div>
-        <div class="date">${quoteDate}</div>
-      </div>
-    </div>
-    <hr class="divider"/>
-    <div style="font-size:12px;color:#fed7aa;margin-bottom:4px">Prepared for:</div>
-    <div class="client-name">${user?.fullName ?? ""}</div>
-    <div class="client-email">${user?.email ?? ""}</div>
-  </div>
-  <div class="body">
-    <table>
-      <thead>
-        <tr>
-          <th>Description</th>
-          <th class="center">Qty</th>
-          <th class="right">Unit Price</th>
-          <th class="right">Amount</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td style="padding:12px 8px">
-            <div style="font-weight:600;color:#111827">${quote.containerSize} Container</div>
-            <div style="font-size:12px;color:#9ca3af">Material: ${(quote as any).materialTypeNote || quote.materialType}</div>
-          </td>
-          <td style="padding:12px 8px;text-align:center">${quote.quantity}</td>
-          <td style="padding:12px 8px;text-align:right">${formatINR(quote.unitPrice)}</td>
-          <td style="padding:12px 8px;text-align:right;font-weight:700">${formatINR(quote.unitPrice * quote.quantity)}</td>
-        </tr>
-        ${addonRows}
-      </tbody>
-    </table>
-    <div class="totals">
-      <div class="total-row"><span>Subtotal</span><span>${formatINR(quote.subtotal)}</span></div>
-      <div class="total-row"><span>GST (18%)</span><span>${formatINR(quote.taxAmount)}</span></div>
-      ${negotiatedRow}
-      <div class="total-final"><span>TOTAL</span><span class="amount">${formatINR(displayTotal)}</span></div>
-    </div>
-    <p style="font-size:11px;color:#9ca3af;font-style:italic;margin-top:28px;line-height:1.6">
-      * This is an indicative quotation. Final pricing may vary based on site conditions, customizations, and delivery location. Valid for 30 days from the date of issue.
-    </p>
-  </div>
-  <div class="strip">
-    <span>Generated by <strong>Megapodsindia</strong> Quotation System</span>
-    <span>${quoteDate}</span>
-  </div>
-</div>
-</body>
-</html>`;
-  };
-
-  // ── Download PDF (mobile-safe: iframe render → html2canvas → jsPDF) ──
   const handleDownload = async (e: React.MouseEvent, quote: SavedQuote) => {
     e.stopPropagation();
+    if (downloadingId === quote._id) return;
     setDownloadingId(quote._id);
-  
+
     const neg = negotiations[quote._id];
     const quoteDate = new Date(quote.createdAt).toLocaleDateString("en-IN", {
       day: "numeric", month: "long", year: "numeric",
     });
-  
-    const html = buildQuoteHTML(quote, neg, quoteDate);
-  
-    const iframe = document.createElement("iframe");
-    iframe.style.cssText =
-      "position:fixed;top:-99999px;left:-99999px;width:794px;height:1123px;border:none;background:white;";
-    document.body.appendChild(iframe);
-  
+
     try {
-      const doc = iframe.contentDocument || iframe.contentWindow?.document;
-      if (!doc) throw new Error("Iframe error");
-  
-      doc.open();
-      doc.write(html);
-      doc.close();
-  
-      await new Promise((r) => setTimeout(r, 700));
-  
-     
-  
-      const pageEl = doc.querySelector(".page") as HTMLElement;
-      
-      const canvas = await html2canvas(pageEl, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-      });
-  
-      const imgData = canvas.toDataURL("image/png");
-  
-      // 🔥 FIX: Use A4 size (correct ratio)
-      const pdf = new jsPDF("p", "mm", "a4");
-  
-      const pdfWidth = 210; // A4 width in mm
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-  
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`${quote.quoteNumber}.pdf`);
-  
+      const pdfData = {
+        quoteNumber: quote.quoteNumber,
+        quoteDate: quoteDate,
+        customerName: user?.fullName ?? "Customer",
+        customerEmail: user?.email ?? "",
+        items: [
+          {
+            description: `${quote.containerSize} Container`,
+            subtext: `Material: ${(quote as any).materialTypeNote || quote.materialType}`,
+            quantity: quote.quantity,
+            unitPrice: quote.unitPrice,
+            total: quote.unitPrice * quote.quantity,
+          },
+          ...(quote.addons || []).map((a) => ({
+            description: a.name,
+            subtext: "Add-on",
+            quantity: 1,
+            unitPrice: a.price,
+            total: a.price,
+          })),
+        ],
+        subtotal: quote.subtotal,
+        taxRate: 0.18, // GST 18%
+        taxAmount: quote.taxAmount,
+        total: quote.total,
+        negotiatedPrice: neg?.status === "accepted" ? neg.offeredPrice : undefined,
+        notes: [
+          quote.containerSizeNote && { label: "Container Size", text: quote.containerSizeNote },
+          (quote as any).materialTypeNote && { label: "Material Type", text: (quote as any).materialTypeNote },
+          quote.addonsNote && { label: "Additional Options", text: quote.addonsNote },
+        ].filter(Boolean) as { label: string; text: string }[],
+      };
+
+      await generateQuotationPDF(pdfData);
     } catch (err) {
-      console.error(err);
-      alert("PDF download failed");
+      console.error("PDF download failed:", err);
+      alert("Failed to download PDF. Please try again.");
     } finally {
-      document.body.removeChild(iframe);
       setDownloadingId(null);
     }
   };
   if (editingQuote) {
     return (
-      <div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
+      <div className="bg-transparent min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-10">
           <button onClick={() => setEditingQuote(null)}
-            className="flex items-center gap-2 text-gray-500 hover:text-orange-600 transition text-sm font-semibold mb-2">
-            ← Back to Quotation History
+            className="flex items-center gap-3 text-slate-400 hover:text-orange-600 transition-all text-[10px] font-black uppercase tracking-[0.3em] bg-white/5 px-6 py-3 rounded-full border border-white/10 backdrop-blur-xl">
+            ← Return to History
           </button>
         </div>
         <QuotationPage editQuote={editingQuote} onEditSaved={handleEditSaved} />
@@ -403,7 +318,7 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-transparent py-24 lg:py-40 relative z-10 overflow-hidden">
 
       {negotiatingQuote && (
         <NegotiateModal
@@ -413,217 +328,205 @@ export default function QuoteHistoryPage({ onNavigate }: QuoteHistoryPageProps) 
         />
       )}
 
-      <div className="max-w-3xl mx-auto px-4 sm:px-6">
+      <div className="max-w-5xl mx-auto px-6 sm:px-10">
 
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-24 gap-12">
           <div>
-            <Heading3D tag="h1" className="text-3xl font-bold text-gray-900">Quotation History</Heading3D>
-            <p className="text-gray-500 mt-1">{quotes.length} saved quote{quotes.length !== 1 ? "s" : ""}</p>
+            <div className="text-orange-600 font-black uppercase tracking-[0.5em] text-[10px] mb-6 animate-fade-in">Project Records</div>
+            <Heading3D tag="h1" className="text-6xl sm:text-7xl font-black text-slate-900 uppercase tracking-tighter leading-none">ARCHIVE <span className="text-orange-600">HUB</span></Heading3D>
+            <p className="text-slate-500 mt-4 font-light text-xl tracking-wide uppercase">{quotes.length} Estimates Synchronized</p>
           </div>
           <button onClick={() => onNavigate("quotation")}
-            className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl font-semibold transition text-sm sm:text-base">
-            <Calculator size={16} className="sm:w-[18px] sm:h-[18px]" /> New Quote
+            className="group flex items-center gap-4 bg-orange-600 text-white px-10 py-6 rounded-full font-black uppercase tracking-[0.2em] text-xs shadow-2xl shadow-orange-600/30 transition-all duration-700 hover:scale-110 active:scale-95">
+            <Calculator size={22} className="group-hover:rotate-12 transition-transform" /> New Configuration
           </button>
         </div>
 
         {loading && (
-          <div className="flex items-center justify-center py-20">
-            <RefreshCw size={32} className="animate-spin text-orange-400" />
+          <div className="flex flex-col items-center justify-center py-40 gap-8">
+            <div className="relative">
+              <div className="absolute inset-0 bg-orange-500 blur-[80px] opacity-20 animate-pulse"></div>
+              <RefreshCw size={64} className="animate-spin text-orange-600 relative z-10" />
+            </div>
+            <p className="text-orange-600 font-black uppercase tracking-[0.5em] text-[10px] animate-pulse">Synchronizing Data Streams...</p>
           </div>
         )}
 
         {!loading && quotes.length === 0 && (
-          <div className="bg-white rounded-3xl shadow-xl p-12 text-center">
-            <div className="bg-orange-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FileText size={36} className="text-orange-300" />
+          <div className="glass-card rounded-[4rem] p-32 text-center border-2 border-dashed border-slate-200/50 group animate-fade-up">
+            <div className="bg-orange-600/5 w-32 h-32 rounded-[2.5rem] flex items-center justify-center mx-auto mb-12 group-hover:scale-110 group-hover:rotate-6 transition-all duration-1000">
+              <FileText size={64} className="text-orange-200" />
             </div>
-            <h3 className="text-xl font-bold text-gray-400 mb-2">No quotes saved yet</h3>
-            <p className="text-gray-400 text-sm mb-6">Generate and save a quotation to see it here</p>
+            <h3 className="text-3xl font-black text-slate-300 uppercase tracking-[0.2em] mb-6 leading-none">Archive Empty</h3>
+            <p className="text-slate-400 font-light max-w-sm mx-auto leading-relaxed mb-12 text-lg">Initiate your first modular configuration to begin your project timeline.</p>
             <button onClick={() => onNavigate("quotation")}
-              className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-xl font-semibold transition">
-              Generate Your First Quote
+              className="bg-orange-600 text-white px-12 py-6 rounded-full font-black uppercase tracking-[0.2em] text-xs shadow-2xl shadow-orange-600/30 transition-all duration-700 hover:scale-110">
+              Create Configuration
             </button>
           </div>
         )}
 
         {!loading && quotes.length > 0 && (
-          <div className="space-y-4">
-            {quotes.map((quote) => {
+          <div className="space-y-8">
+            {quotes.map((quote, idx) => {
               const neg = negotiations[quote._id];
-              const displayTotal = neg?.status === "accepted" ? neg.offeredPrice : quote.total;
+              const isExpanded = expanded === quote._id;
+              const isDownloading = downloadingId === quote._id;
 
               return (
-                <div key={quote._id} className="bg-white rounded-2xl shadow-lg overflow-hidden">
-
-                  <div className="w-full flex items-center justify-between p-4 sm:p-6 hover:bg-gray-50 transition-colors">
-
-                    <button
-                      onClick={() => setExpanded(expanded === quote._id ? null : quote._id)}
-                      className="flex items-center gap-3 flex-1 text-left min-w-0"
-                    >
-                      <div className="bg-orange-100 p-2.5 sm:p-3 rounded-xl flex-shrink-0">
-                        <Package size={18} className="text-orange-600 sm:w-5 sm:h-5" />
+                <div key={quote._id}
+                  ref={(el) => (cardRefs.current[idx] = el)}
+                  className={`glass-card transition-all duration-700 overflow-hidden cursor-pointer transform-gpu
+                    ${isExpanded ? "rounded-[3.5rem] border-orange-600/30 shadow-2xl scale-[1.02] bg-white/30" : "rounded-[2.5rem] border-white/10 hover:border-orange-600/30"}`}
+                  onClick={() => setExpanded(isExpanded ? null : quote._id)}>
+                  
+                  <div className="p-10 lg:p-14">
+                    <div className="flex flex-col lg:flex-row justify-between items-center gap-10">
+                      <div className="flex items-center gap-10 w-full lg:w-auto">
+                        <div className={`w-24 h-24 rounded-[2rem] flex items-center justify-center transition-all duration-1000 shadow-2xl ${isExpanded ? "bg-orange-600 text-white shadow-orange-600/40 rotate-12" : "bg-orange-600/5 text-orange-600"}`}>
+                          <Package size={40} className="tilt-inner" />
+                        </div>
+                        <div className="tilt-inner">
+                          <div className="flex items-center gap-6 mb-4">
+                            <h3 className="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none">
+                              #{quote.quoteNumber.split('-')[1]}
+                            </h3>
+                            {neg && <NegotiationBadge status={neg.status} />}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-x-10 gap-y-3 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
+                            <span className="flex items-center gap-3"><Calendar size={18} className="text-orange-600" /> {new Date(quote.createdAt).toLocaleDateString()}</span>
+                            <span className="text-orange-600 text-xl font-black tracking-tighter">{formatINR(neg?.status === "accepted" ? neg.offeredPrice : quote.total)}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="font-bold text-gray-900 text-sm sm:text-base truncate">{quote.quoteNumber}</p>
-                        <p className="text-xs sm:text-sm text-gray-500 truncate">
-                          {quote.containerSize} · {(quote as any).materialTypeNote || quote.materialType} · Qty {quote.quantity}
-                        </p>
-                        {neg && <div className="mt-1"><NegotiationBadge status={neg.status} /></div>}
-                      </div>
-                    </button>
-
-                    <div className="flex flex-col items-end gap-1.5 ml-2 flex-shrink-0">
-
-                      <button
-                        onClick={() => setExpanded(expanded === quote._id ? null : quote._id)}
-                        className="text-right"
-                      >
-                        <p className="font-bold text-orange-600 text-sm sm:text-lg leading-tight">
-                          {formatINR(displayTotal)}
-                        </p>
-                        {neg?.status === "accepted" && (
-                          <p className="text-xs text-green-600 font-semibold">Negotiated ✓</p>
-                        )}
-                        <p className="text-xs text-gray-400 flex items-center gap-0.5 justify-end">
-                          <Calendar size={9} />
-                          {new Date(quote.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                        </p>
-                      </button>
-
-                      <div className="flex items-center gap-1">
-
-                        {/* Download PDF */}
+                      
+                      <div className="flex items-center gap-4 w-full lg:w-auto justify-center lg:justify-end tilt-inner">
                         <button
                           onClick={(e) => handleDownload(e, quote)}
-                          disabled={downloadingId === quote._id}
-                          className="p-1.5 sm:p-2 rounded-lg border border-gray-200 text-gray-400 hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600 transition-colors disabled:opacity-50"
-                          title="Download PDF"
+                          disabled={isDownloading}
+                          className="p-5 rounded-[1.5rem] bg-white/5 border border-white/10 text-slate-400 hover:text-orange-600 hover:border-orange-600/30 transition-all duration-500 backdrop-blur-xl disabled:opacity-50"
+                          title="Generate PDF Protocol"
                         >
-                          {downloadingId === quote._id
-                            ? <RefreshCw size={14} className="animate-spin sm:w-4 sm:h-4" />
-                            : <Download size={14} className="sm:w-4 sm:h-4" />}
+                          {isDownloading ? <RefreshCw size={24} className="animate-spin" /> : <Download size={24} />}
                         </button>
 
-                        {/* Negotiate */}
                         {!neg && (
                           <button
                             onClick={(e) => { e.stopPropagation(); setNegotiatingQuote(quote); }}
-                            className="p-1.5 sm:p-2 rounded-lg border border-gray-200 text-gray-400 hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600 transition-colors"
-                            title="Negotiate price"
+                            className="p-5 rounded-[1.5rem] bg-white/5 border border-white/10 text-slate-400 hover:text-orange-600 hover:border-orange-600/30 transition-all duration-500 backdrop-blur-xl"
+                            title="Negotiate Investment"
                           >
-                            <HandshakeIcon size={14} className="sm:w-4 sm:h-4" />
+                            <HandshakeIcon size={24} />
                           </button>
                         )}
 
-                        {/* Edit */}
                         <button
                           onClick={(e) => { e.stopPropagation(); setEditingQuote(quote); }}
-                          className="p-1.5 sm:p-2 rounded-lg border border-gray-200 text-gray-400 hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600 transition-colors"
-                          title="Edit quote"
+                          className="p-5 rounded-[1.5rem] bg-white/5 border border-white/10 text-slate-400 hover:text-orange-600 hover:border-orange-600/30 transition-all duration-500 backdrop-blur-xl"
+                          title="Edit Configuration"
                         >
-                          <Pencil size={14} className="sm:w-4 sm:h-4" />
+                          <Pencil size={24} />
                         </button>
 
-                        {/* Delete */}
                         <button
                           onClick={(e) => handleDelete(e, quote._id)}
                           disabled={deletingId === quote._id}
-                          className="p-1.5 sm:p-2 rounded-lg border border-gray-200 text-gray-400 hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-colors disabled:opacity-50"
-                          title="Delete quote"
+                          className="p-5 rounded-[1.5rem] bg-white/5 border border-white/10 text-slate-400 hover:text-red-600 hover:border-red-600/30 transition-all duration-500 backdrop-blur-xl disabled:opacity-50"
+                          title="Purge Record"
                         >
-                          {deletingId === quote._id
-                            ? <RefreshCw size={14} className="animate-spin sm:w-4 sm:h-4" />
-                            : <Trash2 size={14} className="sm:w-4 sm:h-4" />}
+                          {deletingId === quote._id ? <RefreshCw size={24} className="animate-spin" /> : <Trash2 size={24} />}
                         </button>
-
                       </div>
                     </div>
-                  </div>
 
-                  {expanded === quote._id && (
-                    <div className="border-t border-gray-100 px-4 sm:px-6 pb-6 pt-4 bg-gray-50 space-y-4">
-
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b border-gray-200">
-                            <th className="text-left py-2 text-gray-500 font-semibold">Item</th>
-                            <th className="text-right py-2 text-gray-500 font-semibold">Amount</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                          <tr>
-                            <td className="py-3">
-                              <p className="font-semibold text-gray-900">{quote.containerSize} Container × {quote.quantity}</p>
-                              <p className="text-xs text-gray-400">{(quote as any).materialTypeNote || quote.materialType}</p>
-                            </td>
-                            <td className="py-3 text-right font-semibold">{formatINR(quote.unitPrice * quote.quantity)}</td>
-                          </tr>
-                          {quote.addons?.map((addon) => (
-                            <tr key={addon.name}>
-                              <td className="py-2 text-gray-600">{addon.name}</td>
-                              <td className="py-2 text-right">{formatINR(addon.price)}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-
-                      <div className="space-y-1 pt-3 border-t border-gray-200">
-                        <div className="flex justify-between text-sm text-gray-600">
-                          <span>Subtotal</span><span>{formatINR(quote.subtotal)}</span>
+                    {isExpanded && (
+                      <div className="mt-14 pt-14 border-t border-slate-950/5 space-y-12 animate-fade-in" onClick={(e) => e.stopPropagation()}>
+                        
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left">
+                            <thead>
+                              <tr className="text-slate-400 font-black uppercase tracking-[0.4em] text-[10px]">
+                                <th className="pb-8">System Module</th>
+                                <th className="pb-8 text-right">Investment</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-950/5">
+                              <tr>
+                                <td className="py-8">
+                                  <p className="font-black text-slate-900 text-xl tracking-tighter uppercase">{quote.containerSize} Container Module × {quote.quantity}</p>
+                                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-600 mt-2">{(quote as any).materialTypeNote || quote.materialType}</p>
+                                </td>
+                                <td className="py-8 text-right font-black text-slate-900 text-xl tracking-tighter">{formatINR(quote.unitPrice * quote.quantity)}</td>
+                              </tr>
+                              {quote.addons?.map((addon) => (
+                                <tr key={addon.name}>
+                                  <td className="py-6 text-slate-500 font-bold uppercase tracking-tight">{addon.name}</td>
+                                  <td className="py-6 text-right font-black text-slate-700">{formatINR(addon.price)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
                         </div>
-                        <div className="flex justify-between text-sm text-gray-600">
-                          <span>GST (18%)</span><span>{formatINR(quote.taxAmount)}</span>
-                        </div>
-                        {neg?.status === "accepted" && (
-                          <div className="flex justify-between text-sm font-semibold text-green-600">
-                            <span>Negotiated Price</span><span>{formatINR(neg.offeredPrice)}</span>
-                          </div>
-                        )}
-                        <div className="flex justify-between font-bold text-gray-900 text-base pt-2 border-t border-gray-300">
-                          <span>Total</span>
-                          <span className="text-orange-600">{formatINR(displayTotal)}</span>
-                        </div>
-                      </div>
 
-                      {neg && (
-                        <div className={`rounded-2xl p-4 border ${
-                          neg.status === "pending"  ? "bg-yellow-50 border-yellow-200" :
-                          neg.status === "accepted" ? "bg-green-50  border-green-200"  :
-                                                      "bg-red-50    border-red-200"
-                        }`}>
-                          <div className="flex items-center justify-between mb-3">
-                            <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Your Negotiation</p>
-                            <NegotiationBadge status={neg.status} />
+                        <div className="bg-slate-950/5 rounded-[2.5rem] p-10 lg:p-14 space-y-5 border border-slate-950/5">
+                          <div className="flex justify-between text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">
+                            <span>Subtotal Stream</span><span>{formatINR(quote.subtotal)}</span>
                           </div>
-                          <div className="flex gap-4 text-sm mb-3">
-                            <div>
-                              <p className="text-gray-400 text-xs">Original</p>
-                              <p className="font-semibold text-gray-700">{formatINR(neg.originalTotal)}</p>
-                            </div>
-                            <div>
-                              <p className="text-gray-400 text-xs">Your Offer</p>
-                              <p className="font-semibold text-green-600">{formatINR(neg.offeredPrice)}</p>
-                            </div>
-                            <div>
-                              <p className="text-gray-400 text-xs">Discount</p>
-                              <p className="font-semibold text-orange-600">
-                                {(((neg.originalTotal - neg.offeredPrice) / neg.originalTotal) * 100).toFixed(1)}%
-                              </p>
-                            </div>
+                          <div className="flex justify-between text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">
+                            <span>GST Protocol (18%)</span><span>{formatINR(quote.taxAmount)}</span>
                           </div>
-                          <p className="text-xs text-gray-500 italic">"{neg.message}"</p>
-                          {neg.adminResponse && (
-                            <div className="mt-3 pt-3 border-t border-current/10">
-                              <p className="text-xs font-semibold text-gray-500 mb-1">Response from Megapodsindia</p>
-                              <p className="text-sm text-gray-700">{neg.adminResponse}</p>
+                          {neg?.status === "accepted" && (
+                            <div className="flex justify-between text-xs font-black uppercase tracking-[0.3em] text-green-600 pt-4 border-t border-green-500/10">
+                              <span>Negotiated Settlement</span><span>{formatINR(neg.offeredPrice)}</span>
                             </div>
                           )}
+                          <div className="flex justify-between font-black text-slate-950 text-4xl pt-8 border-t border-orange-600/20 tracking-tighter uppercase">
+                            <span>Total Investment</span>
+                            <span className="text-orange-600">{formatINR(neg?.status === "accepted" ? neg.offeredPrice : quote.total)}</span>
+                          </div>
                         </div>
-                      )}
 
-                    </div>
-                  )}
+                        {neg && (
+                          <div className={`rounded-[3rem] p-10 lg:p-14 border ${
+                            neg.status === "pending"  ? "bg-yellow-600/5 border-yellow-600/20" :
+                            neg.status === "accepted" ? "bg-green-600/5  border-green-600/20"  :
+                                                        "bg-red-600/5    border-red-600/20"
+                          }`}>
+                            <div className="flex items-center justify-between mb-10">
+                              <p className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-400">Negotiation Pipeline</p>
+                              <NegotiationBadge status={neg.status} />
+                            </div>
+                            <div className="grid grid-cols-3 gap-10 mb-10">
+                              <div>
+                                <p className="text-slate-400 text-[9px] font-black uppercase tracking-[0.3em] mb-2">Original</p>
+                                <p className="font-black text-slate-900 text-lg tracking-tighter">{formatINR(neg.originalTotal)}</p>
+                              </div>
+                              <div>
+                                <p className="text-slate-400 text-[9px] font-black uppercase tracking-[0.3em] mb-2">Proposed</p>
+                                <p className="font-black text-green-600 text-lg tracking-tighter">{formatINR(neg.offeredPrice)}</p>
+                              </div>
+                              <div>
+                                <p className="text-slate-400 text-[9px] font-black uppercase tracking-[0.3em] mb-2">Differential</p>
+                                <p className="font-black text-orange-600 text-lg tracking-tighter">
+                                  {(((neg.originalTotal - neg.offeredPrice) / neg.originalTotal) * 100).toFixed(1)}%
+                                </p>
+                              </div>
+                            </div>
+                            <div className="bg-white/20 backdrop-blur-3xl rounded-[2rem] p-8 border border-white/30">
+                              <p className="text-slate-600 font-bold italic text-lg leading-relaxed">"{neg.message}"</p>
+                            </div>
+                            {neg.adminResponse && (
+                              <div className="mt-10 pt-10 border-t border-slate-950/5">
+                                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-4">Admin Determination</p>
+                                <p className="text-lg text-slate-900 font-black tracking-tight uppercase">{neg.adminResponse}</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             })}

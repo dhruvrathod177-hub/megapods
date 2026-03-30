@@ -1,5 +1,6 @@
 import { Coffee, Building2, DoorOpen, Box, CheckCircle, Users, Award, Clock, ArrowRight, PhoneCall } from 'lucide-react';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import VanillaTilt from 'vanilla-tilt';
 
 type HTMLTag = 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'span' | 'div';
 
@@ -12,60 +13,57 @@ interface Heading3DProps {
 function Heading3D({ children, className = '', tag: Tag = 'h2' }: Heading3DProps) {
   const ref = useRef<HTMLElement>(null);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
-    const el = ref.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const cx = rect.width / 2;
-    const cy = rect.height / 2;
-    const rotateX = ((y - cy) / cy) * -10;
-    const rotateY = ((x - cx) / cx) * 14;
-    el.style.transform = `perspective(600px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.04)`;
-    el.style.textShadow = `${-rotateY * 0.6}px ${rotateX * 0.6}px 18px rgba(234,88,12,0.22), 0 2px 32px rgba(0,0,0,0.10)`;
-  };
-
-  const handleMouseLeave = () => {
-    const el = ref.current;
-    if (!el) return;
-    el.style.transform = 'perspective(600px) rotateX(0deg) rotateY(0deg) scale(1)';
-    el.style.textShadow = 'none';
-  };
+  useEffect(() => {
+    if (ref.current) {
+      VanillaTilt.init(ref.current, {
+        max: 12,
+        speed: 400,
+        glare: true,
+        "max-glare": 0.2,
+        scale: 1.05,
+      });
+    }
+    return () => {
+      (ref.current as any)?.vanillaTilt?.destroy();
+    };
+  }, []);
 
   return (
     <Tag
       ref={ref as React.RefObject<HTMLHeadingElement>}
       className={`heading-3d ${className}`}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
     >
       {children}
     </Tag>
   );
 }
 
-function useTypewriter(text: string, speed = 32) {
-  const [displayText, setDisplayText] = useState('');
-
-  useEffect(() => {
-    let index = 0;
-    const interval = setInterval(() => {
-      setDisplayText(text.slice(0, index + 1));
-      index++;
-      if (index === text.length) clearInterval(interval);
-    }, speed);
-    return () => clearInterval(interval);
-  }, [text, speed]);
-
-  return displayText;
-}
 
 interface HomeProps {
   onNavigate: (page: string) => void;
 }
 
 export default function Home({ onNavigate }: HomeProps) {
+
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    cardRefs.current.forEach((ref) => {
+      if (ref) {
+        VanillaTilt.init(ref, {
+          max: 8,
+          speed: 1000,
+          glare: true,
+          "max-glare": 0.15,
+          perspective: 1000,
+          scale: 1.02,
+        });
+      }
+    });
+    return () => {
+      cardRefs.current.forEach((ref) => (ref as any)?.vanillaTilt?.destroy());
+    };
+  }, []);
 
   const services = [
     {
@@ -104,20 +102,15 @@ export default function Home({ onNavigate }: HomeProps) {
     { icon: CheckCircle, title: 'Customizable', description: 'Fully tailored solutions to match your brand' },
   ];
 
-  const typedParagraph = useTypewriter(
-    'Megapods India specializes in innovative container conversions for cafes, offices, public toilets, and custom projects. Build your dream space with our expert modular solutions.',
-    32
-  );
-
   return (
-    <div>
+    <div className="bg-transparent overflow-hidden">
 
       {/* HERO */}
 
-      <section className="relative min-h-[75vh] overflow-hidden py-16">
+      <section className="relative min-h-screen flex items-center justify-center py-20">
 
         <video
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover scale-110"
           src="/video/video.mov"
           autoPlay
           muted
@@ -126,37 +119,43 @@ export default function Home({ onNavigate }: HomeProps) {
           preload="auto"
         />
 
-        <div className="absolute inset-0 bg-black/35"></div>
+<div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/10"></div>
+<div className="absolute inset-0 backdrop-blur-[0px]"></div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-          <div className="flex flex-col items-center justify-center text-center min-h-[60vh]">
+          <div className="flex flex-col items-center justify-center text-center">
 
-            <Heading3D tag="h1" className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6 text-white drop-shadow-lg animate-fade-up">
-              Transform Spaces with{' '}
-              <span className="text-orange-400">Premium Container Solutions</span>
-            </Heading3D>
-
-            <p className="text-lg text-white/90 mb-8 leading-relaxed max-w-3xl drop-shadow animate-fade-up delay-1">
-              {typedParagraph}
+            <div className="inline-block px-6 py-2 mb-10 rounded-full bg-orange-600/10 backdrop-blur-xl border border-orange-600/30 text-orange-600 text-[10px] font-black uppercase tracking-[0.5em] animate-fade-in shadow-2xl shadow-orange-600/20">
+              Future of Modular Architecture
+            </div>
+            <Heading3D tag="h1" className="text-6xl sm:text-8xl lg:text-[10rem] font-black leading-[0.8] mb-12 text-slate-900 drop-shadow-[0_20px_50px_rgba(255,255,255,0.5)] animate-fade-up">
+  BEYOND <br/>
+  <span className="text-orange-600">LIMITS.</span>
+</Heading3D>
+            <p className="text-xl md:text-3xl text-slate-700 mb-16 leading-relaxed max-w-3xl font-light tracking-widest animate-fade-up delay-1 uppercase">
+              Crafting <span className="text-slate-900 font-black">Ultra-Premium</span> spaces with visionary modular engineering.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-up delay-2">
+            <div className="flex flex-col sm:flex-row gap-8 justify-center animate-fade-up delay-2">
 
               <button
                 onClick={() => onNavigate('contact')}
-                className="bg-orange-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-orange-700 transition-colors flex items-center justify-center gap-2"
+                className="group px-12 py-6 bg-orange-600 text-white rounded-full font-black uppercase tracking-[0.2em] transition-all duration-700 hover:scale-110 hover:bg-orange-700 hover:shadow-[0_0_60px_rgba(234,88,12,0.6)]"
               >
-                Get Free Consultation
-                <ArrowRight size={20} />
+                <div className="flex items-center gap-4">
+                  Start Building <ArrowRight size={24} className="group-hover:translate-x-3 transition-transform duration-700" />
+                </div>
               </button>
 
               <a
                 href="tel:+918758176693"
-                className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-black transition-colors flex items-center justify-center gap-2"
+                className="group px-12 py-6 bg-white border-2 border-slate-200 text-slate-900 rounded-full font-black uppercase tracking-[0.2em] transition-all duration-700 hover:scale-110 hover:bg-slate-50 hover:border-slate-300"
               >
-                <PhoneCall size={20} />
-                Call Now
+                <div className="flex items-center gap-4">
+                  <PhoneCall size={24} className="group-hover:rotate-12 transition-transform" />
+                  Live Chat
+                </div>
               </a>
 
             </div>
@@ -165,64 +164,59 @@ export default function Home({ onNavigate }: HomeProps) {
 
         </div>
 
+        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 animate-bounce opacity-40">
+          <div className="w-px h-24 rounded-full bg-gradient-to-b from-white via-white/50 to-transparent"></div>
+        </div>
+
       </section>
 
 
       {/* SOLUTIONS */}
 
-      <section className="py-16 bg-white">
+      <section className="py-40 relative z-10">
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-          <div className="text-center mb-12">
+          <div className="text-center mb-32">
 
-            <Heading3D tag="h2" className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Our Solutions
+            <div className="text-orange-600 font-black uppercase tracking-[0.4em] text-xs mb-6">Our Capabilities</div>
+            <Heading3D tag="h2" className="text-5xl sm:text-7xl lg:text-8xl font-black text-slate-900 mb-10 tracking-tighter">
+              ELITE <span className="text-orange-600">SOLUTIONS</span>
             </Heading3D>
 
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Innovative container conversions designed to meet diverse business needs across India
+            <p className="text-xl text-slate-500 max-w-3xl mx-auto font-light leading-relaxed uppercase tracking-widest">
+              Fusing architectural artistry with industrial precision to redefine modern living.
             </p>
 
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-12">
 
             {services.map((service, index) => (
 
               <div
                 key={index}
-                className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-xl transition-shadow cursor-pointer group"
+                ref={(el) => (cardRefs.current[index] = el)}
+                className="glass-card rounded-[3rem] p-12 cursor-pointer group animate-fade-up relative overflow-hidden"
+                style={{ animationDelay: `${index * 0.15}s` }}
                 onClick={() => onNavigate('solutions')}
               >
+                <div className="absolute top-0 right-0 w-48 h-48 bg-orange-600/5 rounded-full -mr-24 -mt-24 transition-all duration-1000 group-hover:bg-orange-600/10 group-hover:scale-150"></div>
 
-                <div className="bg-orange-100 w-14 h-14 rounded-lg flex items-center justify-center mb-4 group-hover:bg-orange-600 transition-colors">
-                  <service.icon className="text-orange-600 group-hover:text-white transition-colors" size={28} />
+                <div className="bg-orange-600 text-white w-20 h-20 rounded-3xl flex items-center justify-center mb-12 transform group-hover:scale-110 group-hover:rotate-12 transition-all duration-700 shadow-2xl shadow-orange-600/40 tilt-inner">
+                  <service.icon size={40} />
                 </div>
 
-                <Heading3D tag="h3" className="text-xl font-bold text-gray-900 mb-3">
-                  {service.title}
-                </Heading3D>
+                <h3 className="text-3xl font-black text-black mb-6 group-hover:text-orange-600 transition-colors uppercase tracking-tighter tilt-inner">{service.title}</h3>
+                <p className="text-slate-400 leading-relaxed font-light tilt-inner">{service.description}</p>
 
-                <p className="text-gray-600 leading-relaxed">
-                  {service.description}
-                </p>
+                <div className="mt-12 flex items-center text-orange-600 font-black text-xs uppercase tracking-[0.3em] opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-20px] group-hover:translate-x-0 tilt-inner">
+                  View Detail <ArrowRight size={18} className="ml-3" />
+                </div>
 
               </div>
 
             ))}
-
-          </div>
-
-          <div className="text-center mt-10">
-
-            <button
-              onClick={() => onNavigate('solutions')}
-              className="text-orange-600 font-semibold hover:text-orange-700 transition-colors flex items-center gap-2 mx-auto"
-            >
-              Explore All Solutions
-              <ArrowRight size={20} />
-            </button>
 
           </div>
 
@@ -233,48 +227,47 @@ export default function Home({ onNavigate }: HomeProps) {
 
       {/* PROCESS */}
 
-      <section className="py-16 bg-gray-50">
+      <section className="py-40 relative z-10">
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-          <div className="text-center mb-12">
-
-            <Heading3D tag="h2" className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Our Process
+          <div className="text-center mb-32">
+            <div className="text-orange-600 font-black uppercase tracking-[0.4em] text-xs mb-6">The Methodology</div>
+            <Heading3D tag="h2" className="text-5xl sm:text-7xl lg:text-8xl font-black text-slate-900 mb-10 tracking-tighter">
+              THE <span className="text-orange-600">BLUEPRINT</span>
             </Heading3D>
-
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              From concept to completion, we ensure a smooth and transparent journey
+            <p className="text-xl text-slate-500 max-w-3xl mx-auto font-light leading-relaxed uppercase tracking-widest">
+              A high-performance ecosystem ensuring flawless execution from concept to completion.
             </p>
-
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10">
 
             {process.map((item, index) => (
 
-              <div key={index} className="relative">
+              <div key={index} className="relative group">
 
-                <div className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow">
+                <div 
+                  ref={(el) => (cardRefs.current[index + 4] = el)}
+                  className="glass-card rounded-[3.5rem] p-12 h-full transition-all duration-700 hover:bg-orange-600/5 group-hover:border-orange-600/40"
+                >
 
-                  <div className="bg-orange-600 text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mb-4">
-                    {item.step}
+                  <div className="relative mb-12 tilt-inner">
+                    <div className="text-[10rem] font-black text-slate-950/5 absolute -top-16 -left-6 group-hover:text-orange-600/10 transition-colors duration-700">
+                      0{item.step}
+                    </div>
+                    <div className="bg-orange-600 text-white w-16 h-16 rounded-[1.5rem] flex items-center justify-center text-2xl font-black relative z-10 shadow-2xl shadow-orange-600/30">
+                      {item.step}
+                    </div>
                   </div>
 
-                  <Heading3D tag="h3" className="text-xl font-bold text-gray-900 mb-2">
-                    {item.title}
-                  </Heading3D>
-
-                  <p className="text-gray-600">
-                    {item.description}
-                  </p>
+                  <h3 className="text-2xl font-black text-slate-900 mb-6 uppercase tracking-tighter tilt-inner">{item.title}</h3>
+                  <p className="text-slate-500 text-sm leading-relaxed font-light tilt-inner">{item.description}</p>
 
                 </div>
 
                 {index < process.length - 1 && (
-                  <div className="hidden lg:block absolute top-1/2 -right-4 transform -translate-y-1/2">
-                    <ArrowRight className="text-orange-300" size={24} />
-                  </div>
+                  <div className="hidden lg:block absolute top-1/2 -right-5 w-10 h-px bg-gradient-to-r from-orange-600/40 to-transparent z-0"></div>
                 )}
 
               </div>
@@ -290,39 +283,37 @@ export default function Home({ onNavigate }: HomeProps) {
 
       {/* WHY CHOOSE US */}
 
-      <section className="py-16 bg-white">
+      <section className="py-40 relative z-10">
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-          <div className="text-center mb-12">
-
-            <Heading3D tag="h2" className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Why Choose Megapods India?
+          <div className="text-center mb-32">
+            <div className="text-orange-600 font-black uppercase tracking-[0.4em] text-xs mb-6">Why Megapods</div>
+            <Heading3D tag="h2" className="text-5xl sm:text-7xl lg:text-8xl font-black text-slate-900 mb-10 tracking-tighter">
+              ELITE <span className="text-orange-600">EDGE</span>
             </Heading3D>
-
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Your trusted partner for innovative and reliable container solutions
+            <p className="text-xl text-slate-500 max-w-3xl mx-auto font-light leading-relaxed uppercase tracking-widest">
+              Defining the gold standard in modular construction with zero compromise on quality.
             </p>
-
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-12">
 
             {whyChooseUs.map((item, index) => (
 
-              <div key={index} className="text-center">
-
-                <div className="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <item.icon className="text-orange-600" size={32} />
+              <div 
+                key={index} 
+                ref={(el) => (cardRefs.current[index + 8] = el)}
+                className="glass-card rounded-[3rem] p-12 text-center animate-fade-up relative group" 
+                style={{ animationDelay: `${index * 0.15}s` }}
+              >
+                
+                <div className="bg-orange-600/5 w-24 h-24 rounded-[2rem] flex items-center justify-center mb-10 mx-auto group-hover:bg-orange-600 group-hover:text-white transition-all duration-700 shadow-inner group-hover:scale-110 group-hover:rotate-6 tilt-inner">
+                  <item.icon className="text-orange-600 group-hover:text-black transition-colors duration-700" size={44} />
                 </div>
 
-                <Heading3D tag="h3" className="text-xl font-bold text-gray-900 mb-2">
-                  {item.title}
-                </Heading3D>
-
-                <p className="text-gray-600">
-                  {item.description}
-                </p>
+                <h3 className="text-3xl font-black text-slate-900 mb-6 group-hover:text-orange-600 transition-colors uppercase tracking-tighter tilt-inner"></h3>
+                <p className="text-slate-500 text-sm leading-relaxed font-light tilt-inner">{item.description}</p>
 
               </div>
 
@@ -337,34 +328,37 @@ export default function Home({ onNavigate }: HomeProps) {
 
       {/* CTA */}
 
-      <section className="py-16 bg-gradient-to-br from-orange-600 to-orange-700 text-white">
+      <section className="py-32 relative overflow-hidden bg-slate-50">
+        
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-600/5 to-transparent opacity-30"></div>
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-orange-600/20 to-transparent"></div>
 
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
 
-          <Heading3D tag="h2" className="text-3xl sm:text-4xl font-bold mb-4">
-            Ready to Build Your Dream Project?
+          <Heading3D tag="h2" className="text-5xl sm:text-7xl font-black mb-10 text-slate-900 tracking-tighter">
+            READY TO <span className="text-orange-600">EVOLVE?</span>
           </Heading3D>
 
-          <p className="text-xl mb-8 text-orange-100">
-            Get a free consultation and discover how container solutions can transform your business
+          <p className="text-2xl mb-16 text-slate-500 font-light uppercase tracking-[0.3em]">
+            Elevate your vision with <span className="text-slate-900 font-bold">Megapods India</span>
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-8 justify-center items-center">
 
             <button
               onClick={() => onNavigate('contact')}
-              className="bg-white text-orange-600 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+              className="w-full sm:w-auto px-16 py-6 bg-orange-600 text-white rounded-full font-black uppercase tracking-widest transition-all duration-700 hover:scale-110 shadow-2xl shadow-orange-600/30"
             >
-              Get Free Consultation
+              Consult Experts
             </button>
 
             <a
               href="https://wa.me/919265380907?text=Hello!%20I%20would%20like%20to%20know%20more%20about%20your%20container%20solutions."
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-green-500 text-white px-8 py-4 rounded-lg font-semibold hover:bg-green-600 transition-colors"
+              className="w-full sm:w-auto px-16 py-6 bg-green-600/10 backdrop-blur-xl border-2 border-green-600/30 text-green-600 rounded-full font-black uppercase tracking-widest hover:bg-green-600 hover:text-white transition-all duration-700 hover:scale-110 shadow-2xl shadow-green-600/10"
             >
-              WhatsApp Us
+              WhatsApp
             </a>
 
           </div>

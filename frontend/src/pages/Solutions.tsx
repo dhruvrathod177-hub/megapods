@@ -1,5 +1,6 @@
 import { Coffee, Building2, DoorOpen, Box, CheckCircle, ArrowRight } from 'lucide-react';
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
+import VanillaTilt from 'vanilla-tilt';
 
 type HTMLTag = 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'span' | 'div';
 
@@ -12,33 +13,25 @@ interface Heading3DProps {
 function Heading3D({ children, className = '', tag: Tag = 'h2' }: Heading3DProps) {
   const ref = useRef<HTMLElement>(null);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
-    const el = ref.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const cx = rect.width / 2;
-    const cy = rect.height / 2;
-    const rotateX = ((y - cy) / cy) * -10;
-    const rotateY = ((x - cx) / cx) * 14;
-    el.style.transform = `perspective(600px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.04)`;
-    el.style.textShadow = `${-rotateY * 0.6}px ${rotateX * 0.6}px 18px rgba(234,88,12,0.22), 0 2px 32px rgba(0,0,0,0.10)`;
-  };
-
-  const handleMouseLeave = () => {
-    const el = ref.current;
-    if (!el) return;
-    el.style.transform = 'perspective(600px) rotateX(0deg) rotateY(0deg) scale(1)';
-    el.style.textShadow = 'none';
-  };
+  useEffect(() => {
+    if (ref.current) {
+      VanillaTilt.init(ref.current, {
+        max: 15,
+        speed: 400,
+        glare: true,
+        "max-glare": 0.2,
+        scale: 1.05,
+      });
+    }
+    return () => {
+      (ref.current as any)?.vanillaTilt?.destroy();
+    };
+  }, []);
 
   return (
     <Tag
       ref={ref as React.RefObject<HTMLHeadingElement>}
       className={`heading-3d ${className}`}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
     >
       {children}
     </Tag>
@@ -50,6 +43,26 @@ interface SolutionsProps {
 }
 
 export default function Solutions({ onNavigate }: SolutionsProps) {
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    cardRefs.current.forEach((ref) => {
+      if (ref) {
+        VanillaTilt.init(ref, {
+          max: 5,
+          speed: 1000,
+          glare: true,
+          "max-glare": 0.1,
+          perspective: 2000,
+          scale: 1.01,
+        });
+      }
+    });
+    return () => {
+      cardRefs.current.forEach((ref) => (ref as any)?.vanillaTilt?.destroy());
+    };
+  }, []);
+
   const solutions = [
     {
       icon: Coffee,
@@ -110,149 +123,183 @@ export default function Solutions({ onNavigate }: SolutionsProps) {
   ];
 
   return (
-    <div>
-      <section className="bg-gradient-to-br from-orange-50 to-white py-16 lg:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <Heading3D tag="h1" className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
-              Our <span className="text-orange-600">Container Solutions</span>
+    <div className="bg-transparent relative z-10 overflow-hidden">
+
+      {/* HERO */}
+
+      <section className="relative py-24 lg:py-40 flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 bg-slate-950/5"></div>
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-orange-600/30 to-transparent"></div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+
+          <div className="text-center">
+            <div className="text-orange-600 font-black uppercase tracking-[0.5em] text-xs mb-8 animate-fade-in">Precision Engineering</div>
+            <Heading3D tag="h1" className="text-6xl sm:text-8xl lg:text-9xl font-black text-slate-900 mb-10 tracking-tighter uppercase leading-[0.8]">
+              ELITE <span className="text-orange-600">MODULAR</span>
             </Heading3D>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Discover how our innovative container conversions can transform your business space and elevate your brand
+
+            <p className="text-xl text-slate-500 max-w-4xl mx-auto font-light leading-relaxed uppercase tracking-widest animate-fade-up">
+              Redefining physical space with <span className="text-slate-900 font-black">advanced modular ecosystems</span> tailored for visionary entrepreneurs.
             </p>
+
           </div>
+
         </div>
+
       </section>
 
-      <section className="py-16 bg-white">
+      {/* SOLUTIONS GRID */}
+
+      <section className="py-40 bg-transparent relative z-10">
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {solutions.map((solution, index) => (
-            <div
-              key={index}
-              className={`mb-16 ${index !== solutions.length - 1 ? 'pb-16 border-b border-gray-200' : ''}`}
-            >
-              <div className="grid lg:grid-cols-2 gap-12 items-center">
-                <div className={index % 2 === 1 ? 'lg:order-2' : ''}>
-                  <div className="bg-orange-100 w-16 h-16 rounded-xl flex items-center justify-center mb-6">
-                    <solution.icon className="text-orange-600" size={32} />
+
+          <div className="space-y-40">
+
+            {solutions.map((solution, index) => (
+
+              <div
+                key={index}
+                ref={(el) => (cardRefs.current[index] = el)}
+                className="glass-card rounded-[4rem] p-12 lg:p-24 animate-fade-up relative overflow-hidden group transform-gpu"
+                style={{ animationDelay: `${index * 0.2}s` }}
+              >
+                <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-orange-600/5 rounded-full -mr-80 -mt-80 transition-all duration-1000 group-hover:bg-orange-600/10 group-hover:scale-125"></div>
+
+                <div className="grid lg:grid-cols-12 gap-20 items-center relative z-10">
+
+                  <div className="lg:col-span-5 tilt-inner">
+
+                    <div className="bg-orange-600 text-white w-24 h-24 rounded-[2rem] flex items-center justify-center mb-12 shadow-2xl shadow-orange-600/30 transform group-hover:scale-110 group-hover:rotate-12 transition-all duration-700">
+                      <solution.icon size={48} />
+                    </div>
+
+                    <Heading3D tag="h2" className="text-5xl font-black text-slate-900 mb-10 uppercase tracking-tighter leading-tight">{solution.title}</Heading3D>
+
+                    <p className="text-slate-500 text-2xl leading-relaxed mb-12 font-light tracking-wide">
+                      {solution.description}
+                    </p>
+
+                    <div className="bg-slate-950/5 rounded-[2rem] p-10 border border-slate-950/5 mb-12 backdrop-blur-xl">
+                      <p className="text-[10px] font-black text-orange-600 uppercase tracking-[0.4em] mb-4">Strategic Applications</p>
+                      <p className="text-slate-800 font-black text-xl leading-snug uppercase tracking-tight">{solution.idealFor}</p>
+                    </div>
+
+                    <button
+                      onClick={() => onNavigate('contact')}
+                      className="group relative px-12 py-6 bg-orange-600 text-white rounded-full font-black uppercase tracking-[0.2em] overflow-hidden transition-all duration-700 hover:scale-110 hover:shadow-[0_0_60px_rgba(234,88,12,0.6)] flex items-center gap-4"
+                    >
+                      <span className="relative z-10 flex items-center gap-4">
+                        Initiate Project <ArrowRight size={24} className="group-hover:translate-x-3 transition-transform duration-700" />
+                      </span>
+                      <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-orange-700 translate-y-full group-hover:translate-y-0 transition-transform duration-700"></div>
+                    </button>
+
                   </div>
-                  <Heading3D tag="h2" className="text-3xl font-bold text-gray-900 mb-4">
-                    {solution.title}
-                  </Heading3D>
-                  <p className="text-lg text-gray-600 leading-relaxed mb-6">
-                    {solution.description}
-                  </p>
-                  <div className="mb-6">
-                    <Heading3D tag="h3" className="text-xl font-semibold text-gray-900 mb-4">
-                      Key Features:
-                    </Heading3D>
-                    <ul className="space-y-3">
-                      {solution.features.map((feature, idx) => (
-                        <li key={idx} className="flex items-start gap-3">
-                          <CheckCircle className="text-orange-600 flex-shrink-0 mt-1" size={20} />
-                          <span className="text-gray-700">{feature}</span>
-                        </li>
+
+                  <div className="lg:col-span-7 tilt-inner">
+
+                    <div className="grid sm:grid-cols-2 gap-8">
+
+                      {solution.features.map((feature, fIndex) => (
+
+                        <div key={fIndex} className="glass-card bg-white/5 backdrop-blur-2xl border border-white/10 p-10 rounded-[2.5rem] flex flex-col gap-6 hover:bg-white/10 transition-all duration-700 hover:-translate-y-4 group/item">
+                          <div className="bg-orange-600 text-white w-10 h-10 rounded-xl flex items-center justify-center shadow-xl shadow-orange-600/20 group-hover/item:scale-110 transition-transform duration-500">
+                            <CheckCircle size={20} />
+                          </div>
+                          <span className="text-slate-800 font-black text-lg leading-tight uppercase tracking-tighter">{feature}</span>
+                        </div>
+
                       ))}
-                    </ul>
-                  </div>
-                  <div className="bg-orange-50 rounded-lg p-4 mb-6">
-                    <h4 className="font-semibold text-gray-900 mb-2">Ideal For:</h4>
-                    <p className="text-gray-700">{solution.idealFor}</p>
-                  </div>
-                  <button
-                    onClick={() => onNavigate('contact')}
-                    className="bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-700 transition-colors flex items-center gap-2"
-                  >
-                    Request Quote
-                    <ArrowRight size={20} />
-                  </button>
-                </div>
-                <div className={index % 2 === 1 ? 'lg:order-1' : ''}>
-                  <img
-                    src={
-                      index === 0
-                        ? '/img/img1.png'
-                        : index === 1
-                        ? '/img/img6.png'
-                        : index === 2
-                        ? '/img/img2.png'
-                        : '/img/img8.jpg'
-                    }
-                    alt={solution.title}
-                    className="w-full rounded-2xl shadow-2xl border-2 border-transparent transition-all duration-300 hover:scale-105 hover:border-orange-500"
-                  />
-                  <p className="text-sm text-gray-500 mt-3 italic text-center">
-                    *Design concept for illustration purposes. Final design will be customized to your requirements.
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
 
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-2xl p-8 lg:p-12 shadow-xl">
-            <Heading3D tag="h2" className="text-3xl font-bold text-gray-900 mb-8 text-center">
-              What Makes Our Solutions Special?
-            </Heading3D>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="text-center">
-                <div className="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl font-bold text-orange-600">100%</span>
+                    </div>
+
+                  </div>
+
                 </div>
-                <Heading3D tag="h3" className="text-xl font-semibold text-gray-900 mb-2">
-                  Customizable
-                </Heading3D>
-                <p className="text-gray-600">Every project is tailored to your specific needs, brand identity, and budget requirements</p>
+
               </div>
-              <div className="text-center">
-                <div className="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl font-bold text-orange-600">ISO</span>
-                </div>
-                <Heading3D tag="h3" className="text-xl font-semibold text-gray-900 mb-2">
-                  Quality Certified
-                </Heading3D>
-                <p className="text-gray-600">We use only premium, certified materials that meet international quality standards</p>
-              </div>
-              <div className="text-center">
-                <div className="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl font-bold text-orange-600">24/7</span>
-                </div>
-                <Heading3D tag="h3" className="text-xl font-semibold text-gray-900 mb-2">
-                  Support
-                </Heading3D>
-                <p className="text-gray-600">Comprehensive after-sales support to ensure your container solution performs perfectly</p>
-              </div>
-            </div>
+
+            ))}
+
           </div>
+
         </div>
+
       </section>
 
-      <section className="py-16 bg-gradient-to-br from-orange-600 to-orange-700 text-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <Heading3D tag="h2" className="text-3xl sm:text-4xl font-bold mb-4">
-            Ready to Start Your Project?
+      {/* WHY CHOOSE US REFINED */}
+
+      <section className="py-40 relative overflow-hidden bg-white">
+        <div className="absolute inset-0 bg-orange-600/5"></div>
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-orange-600/20 to-transparent"></div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          
+          <div className="text-center mb-32">
+            <div className="text-orange-600 font-black uppercase tracking-[0.4em] text-xs mb-8">Performance Invariants</div>
+            <Heading3D tag="h2" className="text-5xl sm:text-7xl font-black text-slate-900 mb-10 tracking-tighter uppercase">
+              THE <span className="text-orange-600">DIFFERENCE</span>
+            </Heading3D>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-12">
+
+            {[
+              { label: 'Tailored', value: '100%', desc: 'Hyper-customized ecosystems aligned with brand DNA' },
+              { label: 'Quality', value: 'ISO', desc: 'Precision manufacturing with aerospace-grade standards' },
+              { label: 'Support', value: '24/7', desc: 'Continuous lifecycle management for your modular assets' }
+            ].map((item, i) => (
+              <div key={i} className="glass-card bg-white p-16 rounded-[4rem] text-center group hover:bg-orange-600/5 transition-all duration-700">
+                <div className="bg-orange-600/10 w-24 h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-10 group-hover:scale-110 transition-transform">
+                  <span className="text-orange-600 font-black text-2xl">{item.value}</span>
+                </div>
+                <h3 className="text-3xl font-black text-slate-900 mb-4 uppercase tracking-tighter leading-none">{item.label}</h3>
+                <p className="text-slate-500 font-medium text-sm leading-relaxed uppercase tracking-widest">{item.desc}</p>
+              </div>
+            ))}
+
+          </div>
+
+        </div>
+
+      </section>
+
+      {/* CTA REFINED */}
+
+      <section className="py-32 relative overflow-hidden bg-white">
+        
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+
+          <Heading3D tag="h2" className="text-5xl sm:text-7xl font-black mb-12 text-slate-900 tracking-tighter uppercase leading-[0.8]">
+            READY TO <span className="text-orange-600">EVOLVE?</span>
           </Heading3D>
-          <p className="text-xl mb-8 text-orange-100">
-            Get a free consultation and custom quote for your container solution
+
+          <p className="text-2xl mb-20 text-slate-500 font-light uppercase tracking-[0.3em]">
+            Elevate your modular strategy with <span className="text-slate-900 font-black">Megapods India</span>
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+
+          <div className="flex flex-col sm:flex-row gap-10 justify-center items-center">
+
             <button
               onClick={() => onNavigate('contact')}
-              className="bg-white text-orange-600 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+              className="w-full sm:w-auto px-16 py-8 bg-orange-600 text-white rounded-full font-black uppercase tracking-widest hover:bg-orange-700 transition-all duration-700 hover:scale-110 shadow-2xl shadow-orange-600/30"
             >
-              Get Free Consultation
+              Consult Strategy
             </button>
+
             <button
               onClick={() => onNavigate('gallery')}
-              className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-orange-800 transition-colors"
+              className="w-full sm:w-auto px-16 py-8 bg-transparent border-2 border-orange-600 text-orange-600 rounded-full font-black uppercase tracking-widest hover:bg-orange-600 hover:text-white transition-all duration-700 hover:scale-110"
             >
-              View Gallery
+              View Portfolio
             </button>
+
           </div>
+
         </div>
+
       </section>
     </div>
   );

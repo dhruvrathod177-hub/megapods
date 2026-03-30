@@ -10,6 +10,11 @@ html {
 /* Optional: better scrolling physics */
 body {
   scroll-behavior: smooth;
+  background: #ffffff;
+  min-height: 100vh;
+  color: #0f172a;
+  overflow-x: hidden;
+  font-family: 'DM Sans', sans-serif;
 }
 
 /* ───────── FADE UP ANIMATION ───────── */
@@ -44,15 +49,70 @@ body {
   cursor: default;
   will-change: transform;
   transform-style: preserve-3d;
-  transform: perspective(600px) rotateX(0deg) rotateY(0deg) scale(1);
-  transition: transform 0.12s cubic-bezier(0.23, 1, 0.32, 1),
-    text-shadow 0.12s cubic-bezier(0.23, 1, 0.32, 1);
+  transform: perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1);
+  transition: transform 0.2s cubic-bezier(0.23, 1, 0.32, 1),
+    text-shadow 0.2s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 /* ───────── HOVER EFFECT (EXTRA PREMIUM 🔥) ───────── */
 .heading-3d:hover {
-  transform: perspective(600px) rotateX(6deg) rotateY(-6deg) scale(1.05);
-  text-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  transform: perspective(1000px) rotateX(8deg) rotateY(-8deg) scale(1.08);
+  text-shadow: 0 15px 35px rgba(234, 88, 12, 0.25);
+}
+
+/* ───────── ULTRA PREMIUM GLASSMORPHISM (WHITE THEME) ───────── */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.05);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.04);
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 1);
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.08);
+}
+
+.glass-input {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  color: #0f172a !important;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-input:focus {
+  background: #ffffff !important;
+  border-color: rgba(234, 88, 12, 0.4) !important;
+  box-shadow: 0 0 30px rgba(234, 88, 12, 0.1) !important;
+  transform: translateY(-2px);
+}
+
+/* 3D Transform Utilities */
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.tilt-inner {
+  transform: translateZ(60px);
 }
 
 /* ───────── SCROLLBAR STYLING (MODERN LOOK) ───────── */
@@ -61,14 +121,24 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0f172a; /* dark */
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #f97316; /* orange */
-  border-radius: 10px;
+  background: rgba(249, 115, 22, 0.3);
+  backdrop-filter: blur(8px);
+  border-radius: 20px;
+  border: 2px solid transparent;
+  background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #ea580c;
+  background: rgba(234, 88, 12, 0.6);
+}
+
+/* Custom Utilities */
+.text-gradient-orange {
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }

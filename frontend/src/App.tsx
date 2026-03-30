@@ -10,11 +10,12 @@ import Gallery from "./pages/Gallery";
 import Contact from "./pages/Contact";
 import QuotationPage from "./pages/QuotationPage";
 import AccountPage from "./pages/AccountPage";
-import QuoteHistoryPage from "./pages/QuoteHistoryPage.tsx";
+import QuoteHistoryPage from "./pages/QuoteHistoryPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import Footer from "./components/Footer";
 import WhatsAppButton from "./components/WhatsAppButton";
+import HoneycombCursor from "./components/HoneycombCursor";
 
 // ── Pages that require login ──────────────────────────────────────────────────
 const PROTECTED_PAGES = ["quotation", "account", "quote-history"];
@@ -157,14 +158,26 @@ function AppInner() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col relative selection:bg-orange-600 selection:text-white">
+      {/* GLOBAL BACKGROUND ELEMENTS */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#f8fafc]">
+        <div className="absolute top-[-10%] -left-[10%] w-[40%] h-[40%] bg-orange-600/5 rounded-full blur-[120px] opacity-40"></div>
+        <div className="absolute bottom-[-10%] -right-[10%] w-[50%] h-[50%] bg-blue-600/5 rounded-full blur-[150px] opacity-40"></div>
+        <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] bg-orange-200/20 rounded-full blur-[100px] opacity-50"></div>
+      </div>
+
+      {/* INTERACTIVE BACKGROUND (DESKTOP ONLY) */}
+      <div className="hidden lg:block">
+        <HoneycombCursor />
+      </div>
+
       <Header
         currentPage={currentPage}
         onNavigate={handleNavigate}
         openSignup={openSignup}
         openForgotPassword={openForgotPassword}
       />
-      <main className="flex-1">{renderPage()}</main>
+      <main className="flex-1 relative z-10">{renderPage()}</main>
       <Footer onNavigate={handleNavigate} />
       <WhatsAppButton />
       <AuthModal

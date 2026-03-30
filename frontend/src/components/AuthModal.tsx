@@ -1,4 +1,4 @@
-import { useState, useEffect, ChangeEvent, FormEvent } from "react";
+import { useState, useEffect, ChangeEvent, FormEvent, useRef } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 
@@ -23,6 +23,7 @@ const API = import.meta.env.VITE_API_URL || "https://megapods.onrender.com/api";
 
 export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: AuthModalProps) {
   const { login } = useAuth();
+  const modalRef = useRef<HTMLDivElement>(null);
 
   const [currentMode, setCurrentMode] = useState<ModalMode>("login");
   const [showPassword, setShowPassword] = useState(false);
@@ -47,6 +48,20 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
   }, [mode, startOnForgot]);
 
   useEffect(() => { setError(""); setSuccess(""); }, [currentMode]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen, onClose]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -141,15 +156,6 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
 
   if (!isOpen) return null;
 
-  // Preload font via link tag injection (more reliable than @import)
-  if (typeof document !== "undefined" && !document.getElementById("archivo-black-font")) {
-    const link = document.createElement("link");
-    link.id = "archivo-black-font";
-    link.rel = "stylesheet";
-    link.href = "https://fonts.googleapis.com/css2?family=Archivo+Black&display=swap";
-    document.head.appendChild(link);
-  }
-
   const titles: Record<ModalMode, string> = {
     login: "Welcome Back!",
     register: "Create Account",
@@ -171,8 +177,6 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
   };
 
   // ── GLASSY WHITE THEME ──
-  const inputClass =
-    "w-full px-4 py-3.5 rounded-xl text-gray-800 placeholder-gray-400 text-sm focus:outline-none transition-all duration-200"
   const inputStyle = {
     background: "rgba(255,255,255,0.7)",
     border: "1px solid rgba(255,255,255,0.9)",
@@ -208,7 +212,6 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
           to   { opacity: 1; transform: translateY(0)    scale(1);    }
         }
 
-        /* Shimmer on primary button hover */
         .auth-btn-primary { position: relative; overflow: hidden; }
         .auth-btn-primary::after {
           content: '';
@@ -221,14 +224,12 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
         .auth-btn-primary:hover::after { opacity: 1; }
         .auth-btn-primary span { position: relative; z-index: 1; }
 
-        /* Ghost button hover */
         .auth-btn-ghost:hover {
           background: rgba(249,115,22,0.06) !important;
           border-color: #f97316 !important;
           color: #ea580c !important;
         }
 
-        /* Input hover glow */
         .glass-input:hover {
           background: rgba(255,255,255,0.85) !important;
           border-color: rgba(249,115,22,0.4) !important;
@@ -251,7 +252,6 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
           background: linear-gradient(to right, transparent, rgba(0,0,0,0.1), transparent);
         }
 
-        /* Floating blobs behind card */
         .blob-1 {
           position: absolute; width: 280px; height: 280px; border-radius: 50%;
           background: radial-gradient(circle, rgba(251,146,60,0.35) 0%, rgba(249,115,22,0.1) 50%, transparent 70%);
@@ -273,7 +273,6 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
         className="auth-modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
         style={{ fontFamily: "'DM Sans', sans-serif" }}
       >
-        {/* Backdrop — warm blurred overlay */}
         <div
           className="absolute inset-0"
           style={{
@@ -284,8 +283,8 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
           onClick={onClose}
         />
 
-        {/* Glass Card */}
         <div
+          ref={modalRef}
           className="auth-modal-card relative w-full max-w-[420px] rounded-3xl overflow-hidden"
           style={{
             background: "linear-gradient(145deg, rgba(255,255,255,0.82) 0%, rgba(255,250,245,0.88) 100%)",
@@ -296,12 +295,10 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
             WebkitBackdropFilter: "blur(24px)",
           }}
         >
-          {/* Decorative blobs inside card */}
           <div className="blob-1" />
           <div className="blob-2" />
           <div className="blob-3" />
 
-          {/* Top gradient bar */}
           <div style={{
             height: "3px",
             background: "linear-gradient(90deg, #fed7aa, #f97316, #fb923c, #fed7aa)",
@@ -309,7 +306,6 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
 
           <div className="relative p-8">
 
-            {/* ── HEADER ── */}
             <div className="flex justify-between items-start mb-7">
               <div className="flex items-center gap-3">
                 {backMode[currentMode] && (
@@ -325,7 +321,6 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                   </button>
                 )}
                 <div>
-                  {/* Brand badge */}
                   <div className="flex items-center gap-2 mb-2">
                     <img
                       src="/img/logo1.JPG"
@@ -370,7 +365,6 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
               </button>
             </div>
 
-            {/* ── ALERTS ── */}
             {error && (
               <div className="mb-5 flex items-start gap-3 px-4 py-3 rounded-2xl text-sm"
                 style={{ background: "rgba(254,226,226,0.7)", border: "1px solid rgba(252,165,165,0.6)", color: "#dc2626", backdropFilter: "blur(8px)" }}>
@@ -393,7 +387,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                   <label style={labelStyle}>Email</label>
                   <input type="email" name="email" placeholder="you@example.com" required
                     value={formData.email} onChange={handleChange}
-                    className={`${inputClass} glass-input`} style={inputStyle}
+                    className="w-full px-4 py-3.5 rounded-xl text-gray-800 placeholder-gray-400 text-sm focus:outline-none transition-all duration-200 glass-input" style={inputStyle}
                   />
                 </div>
                 <div>
@@ -408,7 +402,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                   <div className="relative">
                     <input type={showPassword ? "text" : "password"} name="password" placeholder="••••••••" required
                       value={formData.password} onChange={handleChange}
-                      className={`${inputClass} glass-input`} style={{ ...inputStyle, paddingRight: "44px" }}
+                      className="w-full px-4 py-3.5 rounded-xl text-gray-800 placeholder-gray-400 text-sm focus:outline-none transition-all duration-200 glass-input" style={{ ...inputStyle, paddingRight: "44px" }}
                     />
                     <span onClick={() => setShowPassword(!showPassword)} className={eyeButtonClass}>
                       {showPassword ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
@@ -459,7 +453,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                     <label style={labelStyle}>{field.label}</label>
                     <input type={field.type} name={field.name} placeholder={field.placeholder} required
                       value={formData[field.name as keyof FormData]} onChange={handleChange}
-                      className={`${inputClass} glass-input`} style={inputStyle}
+                      className="w-full px-4 py-3.5 rounded-xl text-gray-800 placeholder-gray-400 text-sm focus:outline-none transition-all duration-200 glass-input" style={inputStyle}
                     />
                   </div>
                 ))}
@@ -473,7 +467,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                     <div className="relative">
                       <input type={field.show ? "text" : "password"} name={field.name} placeholder="••••••••" required
                         value={field.value} onChange={handleChange}
-                        className={`${inputClass} glass-input`} style={{ ...inputStyle, paddingRight: "44px" }}
+                        className="w-full px-4 py-3.5 rounded-xl text-gray-800 placeholder-gray-400 text-sm focus:outline-none transition-all duration-200 glass-input" style={{ ...inputStyle, paddingRight: "44px" }}
                       />
                       <span onClick={field.toggle} className={eyeButtonClass}>
                         {field.show ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
@@ -482,126 +476,102 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                   </div>
                 ))}
 
-                <div style={{ paddingTop: "4px" }}>
+                <div style={{ paddingTop: "8px" }}>
                   <button type="submit" disabled={loading}
                     className="auth-btn-primary w-full py-3.5 rounded-2xl font-bold text-sm text-white disabled:opacity-60 transition-all duration-300"
                     style={{
                       background: "linear-gradient(135deg, #f97316 0%, #ea580c 100%)",
                       boxShadow: "0 6px 20px rgba(249,115,22,0.4), 0 2px 6px rgba(249,115,22,0.2)",
+                      letterSpacing: "0.02em",
                     }}>
-                    <span>{loading ? "Creating Account…" : "Create Account"}</span>
+                    <span>{loading ? "Processing…" : "Create Account"}</span>
                   </button>
                 </div>
-                <p style={{ textAlign: "center", fontSize: "13px", color: "#78716c" }}>
-                  Already a member?{" "}
-                  <span onClick={() => setCurrentMode("login")}
-                    style={{ color: "#f97316", cursor: "pointer", fontWeight: 600 }}>
-                    Sign In
-                  </span>
-                </p>
+
+                <button type="button" onClick={() => setCurrentMode("login")}
+                  className="auth-btn-ghost w-full py-3.5 rounded-2xl font-semibold text-sm transition-all duration-200 mt-2"
+                  style={{
+                    background: "rgba(255,255,255,0.5)",
+                    border: "1px solid rgba(0,0,0,0.1)",
+                    color: "#78716c",
+                  }}>
+                  Back to Sign In
+                </button>
               </form>
             )}
 
-            {/* ── FORGOT ── */}
+            {/* ── FORGOT PASSWORD ── */}
             {currentMode === "forgot" && (
               <form className="space-y-4" onSubmit={handleForgotPassword}>
                 <div>
-                  <label style={labelStyle}>Email Address</label>
+                  <label style={labelStyle}>Email</label>
                   <input type="email" placeholder="you@example.com" required
                     value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)}
-                    className={`${inputClass} glass-input`} style={inputStyle}
+                    className="w-full px-4 py-3.5 rounded-xl text-gray-800 placeholder-gray-400 text-sm focus:outline-none transition-all duration-200 glass-input" style={inputStyle}
                   />
                 </div>
-                <div style={{ paddingTop: "4px" }}>
-                  <button type="submit" disabled={loading}
-                    className="auth-btn-primary w-full py-3.5 rounded-2xl font-bold text-sm text-white disabled:opacity-60 transition-all duration-300"
-                    style={{
-                      background: "linear-gradient(135deg, #f97316 0%, #ea580c 100%)",
-                      boxShadow: "0 6px 20px rgba(249,115,22,0.4)",
-                    }}>
-                    <span>{loading ? "Sending Code…" : "Send Reset Code"}</span>
-                  </button>
-                </div>
-                <p style={{ textAlign: "center", fontSize: "13px", color: "#78716c" }}>
-                  Remembered it?{" "}
-                  <span onClick={() => setCurrentMode("login")}
-                    style={{ color: "#f97316", cursor: "pointer", fontWeight: 600 }}>
-                    Back to Sign In
-                  </span>
-                </p>
+                <button type="submit" disabled={loading}
+                  className="auth-btn-primary w-full py-3.5 rounded-2xl font-bold text-sm text-white disabled:opacity-60 transition-all duration-300"
+                  style={{
+                    background: "linear-gradient(135deg, #f97316 0%, #ea580c 100%)",
+                    boxShadow: "0 6px 20px rgba(249,115,22,0.4), 0 2px 6px rgba(249,115,22,0.2)",
+                  }}>
+                  <span>{loading ? "Sending…" : "Send Reset Code"}</span>
+                </button>
               </form>
             )}
 
             {/* ── OTP ── */}
             {currentMode === "otp" && (
               <form className="space-y-4" onSubmit={handleVerifyOtp}>
-                <div style={{
-                  padding: "14px 16px", borderRadius: "16px",
-                  background: "rgba(255,237,213,0.6)",
-                  border: "1px solid rgba(249,115,22,0.2)",
-                  backdropFilter: "blur(8px)",
-                }}>
-                  <p style={{ fontSize: "12px", color: "#a8a29e", marginBottom: "2px" }}>Code sent to</p>
-                  <p style={{ fontSize: "14px", color: "#ea580c", fontWeight: 700 }}>{forgotEmail}</p>
-                </div>
                 <div>
-                  <label style={labelStyle}>6-Digit OTP</label>
-                  <input type="text" placeholder="000000" required maxLength={6}
-                    value={otpValue} onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, ""))}
-                    className={`${inputClass} glass-input otp-input`}
-                    style={{ ...inputStyle, textAlign: "center", fontSize: "22px", fontWeight: 700, paddingRight: "16px", color: "#1c1917" }}
+                  <label style={labelStyle}>Verification Code</label>
+                  <input type="text" placeholder="••••••" required maxLength={6}
+                    value={otpValue} onChange={(e) => setOtpValue(e.target.value)}
+                    className="w-full px-4 py-3.5 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none transition-all duration-200 glass-input otp-input text-center text-xl font-bold" style={inputStyle}
                   />
                 </div>
-                <div style={{ paddingTop: "4px" }}>
-                  <button type="submit"
-                    className="auth-btn-primary w-full py-3.5 rounded-2xl font-bold text-sm text-white transition-all duration-300"
-                    style={{
-                      background: "linear-gradient(135deg, #f97316 0%, #ea580c 100%)",
-                      boxShadow: "0 6px 20px rgba(249,115,22,0.4)",
-                    }}>
-                    <span>Verify Code</span>
-                  </button>
-                </div>
-                <p style={{ textAlign: "center", fontSize: "13px", color: "#78716c" }}>
-                  Didn't receive it?{" "}
-                  <span onClick={() => setCurrentMode("forgot")}
-                    style={{ color: "#f97316", cursor: "pointer", fontWeight: 600 }}>
-                    Resend
-                  </span>
-                </p>
+                <button type="submit"
+                  className="auth-btn-primary w-full py-3.5 rounded-2xl font-bold text-sm text-white transition-all duration-300"
+                  style={{
+                    background: "linear-gradient(135deg, #f97316 0%, #ea580c 100%)",
+                    boxShadow: "0 6px 20px rgba(249,115,22,0.4), 0 2px 6px rgba(249,115,22,0.2)",
+                  }}>
+                  <span>Verify Code</span>
+                </button>
               </form>
             )}
 
-            {/* ── RESET ── */}
+            {/* ── RESET PASSWORD ── */}
             {currentMode === "reset" && (
-              <form className="space-y-3" onSubmit={handleResetPassword}>
-                {[
-                  { label: "New Password", value: newPassword, setter: setNewPassword, show: showNewPassword, toggle: () => setShowNewPassword(!showNewPassword) },
-                  { label: "Confirm New Password", value: confirmNewPassword, setter: setConfirmNewPassword, show: showConfirmPassword, toggle: () => setShowConfirmPassword(!showConfirmPassword) },
-                ].map((field, i) => (
-                  <div key={i}>
-                    <label style={labelStyle}>{field.label}</label>
-                    <div className="relative">
-                      <input type={field.show ? "text" : "password"} placeholder="••••••••" required
-                        value={field.value} onChange={(e) => field.setter(e.target.value)}
-                        className={`${inputClass} glass-input`} style={{ ...inputStyle, paddingRight: "44px" }}
-                      />
-                      <span onClick={field.toggle} className={eyeButtonClass}>
-                        {field.show ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
-                      </span>
-                    </div>
+              <form className="space-y-4" onSubmit={handleResetPassword}>
+                <div>
+                  <label style={labelStyle}>New Password</label>
+                  <div className="relative">
+                    <input type={showNewPassword ? "text" : "password"} placeholder="••••••••" required
+                      value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full px-4 py-3.5 rounded-xl text-gray-800 placeholder-gray-400 text-sm focus:outline-none transition-all duration-200 glass-input" style={{ ...inputStyle, paddingRight: "44px" }}
+                    />
+                    <span onClick={() => setShowNewPassword(!showNewPassword)} className={eyeButtonClass}>
+                      {showNewPassword ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
+                    </span>
                   </div>
-                ))}
-                <div style={{ paddingTop: "4px" }}>
-                  <button type="submit" disabled={loading}
-                    className="auth-btn-primary w-full py-3.5 rounded-2xl font-bold text-sm text-white disabled:opacity-60 transition-all duration-300"
-                    style={{
-                      background: "linear-gradient(135deg, #f97316 0%, #ea580c 100%)",
-                      boxShadow: "0 6px 20px rgba(249,115,22,0.4)",
-                    }}>
-                    <span>{loading ? "Resetting…" : "Reset Password"}</span>
-                  </button>
                 </div>
+                <div>
+                  <label style={labelStyle}>Confirm Password</label>
+                  <input type="password" placeholder="••••••••" required
+                    value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    className="w-full px-4 py-3.5 rounded-xl text-gray-800 placeholder-gray-400 text-sm focus:outline-none transition-all duration-200 glass-input" style={inputStyle}
+                  />
+                </div>
+                <button type="submit" disabled={loading}
+                  className="auth-btn-primary w-full py-3.5 rounded-2xl font-bold text-sm text-white disabled:opacity-60 transition-all duration-300"
+                  style={{
+                    background: "linear-gradient(135deg, #f97316 0%, #ea580c 100%)",
+                    boxShadow: "0 6px 20px rgba(249,115,22,0.4), 0 2px 6px rgba(249,115,22,0.2)",
+                  }}>
+                  <span>{loading ? "Updating…" : "Update Password"}</span>
+                </button>
               </form>
             )}
 
