@@ -85,27 +85,25 @@ export default function Header({ currentPage, onNavigate, openSignup, openForgot
           <div className="flex items-center gap-3 cursor-pointer flex-shrink-0 group" onClick={() => handleNavigate("home")}>
             <div className="relative">
               <div className="absolute inset-0 bg-orange-500 blur-3xl opacity-0 group-hover:opacity-10 transition-opacity duration-700"></div>
-              <div className="relative h-12 w-12 md:h-14 md:w-14 group">
+              <div className="relative h-10 w-10 md:h-12 md:w-12 flex-shrink-0 group">
 
-  {/* 🔥 Glow */}
-  <div className="absolute inset-0 rounded-full bg-orange-500 blur-md opacity-50 group-hover:opacity-80 transition duration-500"></div>
+{/* Glow */}
+<div className="absolute inset-0 rounded-full bg-orange-500 blur-md opacity-40 group-hover:opacity-70 transition duration-300"></div>
 
-  {/* 🔥 Logo wrapper */}
-  <div className="relative h-full w-full rounded-full overflow-hidden border-2 border-white shadow-md">
-
-    {/* Shine effect */}
-    <div className="absolute inset-0 overflow-hidden rounded-full">
-      <div className="absolute top-0 -left-[120%] h-full w-[120%] bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 group-hover:left-[120%] transition-all duration-700"></div>
-    </div>
-
-    {/* Logo image */}
-    <img
-      src="/img/logo1.JPG"
-      alt="Megapods India"
-      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-    />
-
+{/* Logo */}
+<div className="relative h-full w-full rounded-full overflow-hidden border border-white shadow-sm">
+  
+  {/* Shine */}
+  <div className="absolute inset-0 overflow-hidden rounded-full">
+    <div className="absolute top-0 -left-[100%] h-full w-[100%] bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 group-hover:left-[100%] transition-all duration-500"></div>
   </div>
+
+  <img
+    src="/img/logo1.JPG"
+    alt="Megapods India"
+    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+  />
+</div>
 </div>
 </div>
             <div className="flex flex-col -space-y-1">
