@@ -117,7 +117,7 @@ export default function Footer({ onNavigate }: FooterProps) {
             <h4 className="text-xs font-black uppercase tracking-[0.3em] text-orange-600 mb-8">Social Presence</h4>
             <div className="flex gap-4">
               {[
-                { icon: Instagram, href: "https://www.instagram.com/megapodsindia" },
+                { icon: Instagram, href: "https://www.instagram.com/megapods_india?igsh=dmhvaWk2d3J4c25p" },
                 { icon: Facebook, href: "https://www.facebook.com/share/1HHNbTTaTn/?mibextid=wwXIfr" },
                 { icon: Globe, href: "https://share.google/Y0sBn8WEMHjAFcjl7" }
               ].map((social, i) => (
