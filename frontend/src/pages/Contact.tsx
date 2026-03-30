@@ -137,9 +137,9 @@ export default function Contact() {
 
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-40 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-40 relative z-10">
 
-        <div className="grid lg:grid-cols-2 gap-32">
+        <div className="grid lg:grid-cols-2 gap-16 lg:gap-32">
 
           {/* CONTACT INFO */}
 
@@ -148,7 +148,7 @@ export default function Contact() {
             <div className="text-orange-600 font-black uppercase tracking-[0.4em] text-xs mb-8">Infrastructure</div>
             <Heading3D tag="h2" className="text-5xl font-black text-slate-900 mb-16 uppercase tracking-tighter leading-tight">Project <span className="text-orange-600">Sync.</span></Heading3D>
 
-            <div className="space-y-10">
+            <div className="space-y-6 lg:space-y-10">
 
               {[
                 { icon: Phone, label: 'Transmission Line', value: '+91 87581 76693', subValue: '+91 92653 80907' },
@@ -157,16 +157,16 @@ export default function Contact() {
                 { icon: Clock, label: 'Operational Window', value: 'Mon - Sat: 9:00 AM - 7:00 PM', subValue: 'Sun: Closed' },
               ].map((item, index) => (
 
-                <div key={index} className="glass-card rounded-[2.5rem] p-10 flex items-center gap-10 group">
+                <div key={index} className="glass-card rounded-[2rem] lg:rounded-[2.5rem] p-6 lg:p-10 flex items-center gap-6 lg:gap-10 group overflow-hidden">
 
-                  <div className="bg-orange-600 text-white w-20 h-20 rounded-[1.5rem] flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-700 shadow-2xl shadow-orange-600/30">
-                    <item.icon size={36} />
+                  <div className="shrink-0 bg-orange-600 text-white w-16 h-16 lg:w-20 lg:h-20 rounded-[1rem] lg:rounded-[1.5rem] flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-700 shadow-2xl shadow-orange-600/30">
+                    <item.icon className="w-7 h-7 lg:w-9 lg:h-9" />
                   </div>
 
-                  <div>
-                    <p className="text-[10px] font-black text-orange-600 uppercase tracking-[0.4em] mb-3">{item.label}</p>
-                    <p className="text-2xl font-black text-slate-900 tracking-tighter uppercase">{item.value}</p>
-                    {item.subValue && <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-2">{item.subValue}</p>}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-black text-orange-600 uppercase tracking-[0.2em] lg:tracking-[0.4em] mb-2 lg:mb-3 truncate">{item.label}</p>
+                    <p className="text-sm sm:text-lg lg:text-2xl font-black text-slate-900 tracking-tight lg:tracking-tighter uppercase break-words">{item.value}</p>
+                    {item.subValue && <p className="text-slate-400 font-bold text-[10px] lg:text-xs uppercase tracking-widest mt-1 lg:mt-2 break-words">{item.subValue}</p>}
                   </div>
 
                 </div>
@@ -194,8 +194,10 @@ export default function Contact() {
                 <div className="grid sm:grid-cols-2 gap-10">
 
                   <div>
-                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-4 ml-2">Identity</label>
+                    <label htmlFor="name" className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-4 ml-2">Identity</label>
                     <input
+                      id="name"
+                      name="name"
                       type="text"
                       required
                       className="w-full px-8 py-5 glass-input rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none transition-all placeholder:text-slate-300 font-bold uppercase tracking-widest text-xs"
@@ -206,8 +208,10 @@ export default function Contact() {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-4 ml-2">Digital Endpoint</label>
+                    <label htmlFor="email" className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-4 ml-2">Digital Endpoint</label>
                     <input
+                      id="email"
+                      name="email"
                       type="email"
                       required
                       className="w-full px-8 py-5 glass-input rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none transition-all placeholder:text-slate-300 font-bold uppercase tracking-widest text-xs"
@@ -222,8 +226,10 @@ export default function Contact() {
                 <div className="grid sm:grid-cols-2 gap-10">
 
                   <div>
-                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-4 ml-2">Secure Line</label>
+                    <label htmlFor="phone" className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-4 ml-2">Secure Line</label>
                     <input
+                      id="phone"
+                      name="phone"
                       type="tel"
                       required
                       className="w-full px-8 py-5 glass-input rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none transition-all placeholder:text-slate-300 font-bold uppercase tracking-widest text-xs"
@@ -234,8 +240,10 @@ export default function Contact() {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-4 ml-2">Ecosystem Type</label>
+                    <label htmlFor="service" className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-4 ml-2">Ecosystem Type</label>
                     <select
+                      id="service"
+                      name="service"
                       className="w-full px-8 py-5 glass-input rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none transition-all font-black uppercase tracking-widest text-[10px] appearance-none cursor-pointer text-slate-900"
                       value={formData.service}
                       onChange={(e) => setFormData({ ...formData, service: e.target.value })}
@@ -251,8 +259,10 @@ export default function Contact() {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-4 ml-2">System Parameters</label>
+                  <label htmlFor="message" className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-4 ml-2">System Parameters</label>
                   <textarea
+                    id="message"
+                    name="message"
                     rows={5}
                     required
                     className="w-full px-8 py-5 glass-input rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none transition-all resize-none placeholder:text-slate-300 font-bold text-sm leading-relaxed"
