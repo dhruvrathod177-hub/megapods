@@ -134,12 +134,12 @@ export default function Solutions({ onNavigate }: SolutionsProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
           <div className="text-center">
-            <div className="text-orange-600 font-black uppercase tracking-[0.5em] text-xs mb-8 animate-fade-in">Precision Engineering</div>
+            <div className="text-orange-600 font-black uppercase tracking-[0.5em] text-xs mb-8">Precision Engineering</div>
             <Heading3D tag="h1" className="text-6xl sm:text-8xl lg:text-9xl font-black text-slate-900 mb-10 tracking-tighter uppercase leading-[0.8]">
               ELITE <span className="text-orange-600">MODULAR</span>
             </Heading3D>
 
-            <p className="text-xl text-slate-500 max-w-4xl mx-auto font-light leading-relaxed uppercase tracking-widest animate-fade-up">
+            <p className="text-xl text-slate-500 max-w-4xl mx-auto font-light leading-relaxed uppercase tracking-widest">
               Redefining physical space with <span className="text-slate-900 font-black">advanced modular ecosystems</span> tailored for visionary entrepreneurs.
             </p>
 
@@ -162,8 +162,7 @@ export default function Solutions({ onNavigate }: SolutionsProps) {
               <div
                 key={index}
                 ref={(el) => (cardRefs.current[index] = el)}
-                className="glass-card rounded-[4rem] p-12 lg:p-24 animate-fade-up relative overflow-hidden group transform-gpu"
-                style={{ animationDelay: `${index * 0.2}s` }}
+                className="glass-card rounded-[4rem] p-12 lg:p-24 relative overflow-hidden group transform-gpu"
               >
                 <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-orange-600/5 rounded-full -mr-80 -mt-80 transition-all duration-1000 group-hover:bg-orange-600/10 group-hover:scale-125"></div>
 

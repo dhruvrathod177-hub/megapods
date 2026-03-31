@@ -47,8 +47,6 @@ interface HomeProps {
 
 
 const CinematicText = () => {
-  const textRef = useRef<HTMLDivElement>(null);
-
   const words = [
     "CRAFTING",
     "ULTRA-PREMIUM",
@@ -59,33 +57,8 @@ const CinematicText = () => {
     "ENGINEERING."
   ];
 
-  useEffect(() => {
-    const el = textRef.current;
-    if (!el) return;
-
-    const spans = el.querySelectorAll("span");
-
-    gsap.fromTo(
-      spans,
-      {
-        opacity: 0,
-        y: 40,
-        filter: "blur(10px)"
-      },
-      {
-        opacity: 1,
-        y: 0,
-        filter: "blur(0px)",
-        duration: 1,
-        ease: "power3.out",
-        stagger: 0.2
-      }
-    );
-  }, []);
-
   return (
     <div
-      ref={textRef}
       className="flex flex-wrap justify-center text-sm md:text-sm tracking-[0.25em] uppercase text-white"
     >
       {words.map((word, i) => (
@@ -106,12 +79,7 @@ export default function Home({ onNavigate }: HomeProps) {
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
-    // Premium 3D Entrance for the heading words
-    gsap.fromTo(
-      ".hero-3d-line",
-      { rotationX: 90, y: 100, z: -400, opacity: 0, transformPerspective: 1000 },
-      { rotationX: 0, y: 0, z: 0, opacity: 1, duration: 1.8, stagger: 0.15, ease: "power4.out", delay: 0.1 }
-    );
+    // Premium 3D Entrance for the heading words removed for a static feel
 
     cardRefs.current.forEach((ref) => {
       if (ref) {
@@ -194,10 +162,10 @@ export default function Home({ onNavigate }: HomeProps) {
             <div className="inline-block px-6 py-2 mb-10 rounded-full bg-orange-600/10 backdrop-blur-xl border border-orange-600/30 text-orange-600 text-[10px] font-black uppercase tracking-[0.5em] animate-fade-in shadow-2xl shadow-orange-600/20">
               Future of Modular Architecture
             </div>
-            <Heading3D tag="h1" className="text-6xl sm:text-8xl lg:text-[10rem] font-black leading-[0.8] mb-12 text-slate-900 pointer-events-auto [transform-style:preserve-3d]">
+            <h1 className="text-6xl sm:text-8xl lg:text-[10rem] font-black leading-[0.8] mb-12 text-slate-900 pointer-events-none [transform-style:preserve-3d]">
               <span className="hero-3d-line block-3d-dark block">BEYOND</span>
               <span className="hero-3d-line block-3d-orange block text-orange-600 mt-2">LIMITS.</span>
-            </Heading3D>
+            </h1>
 
             <style>{`
               .block-3d-dark {
@@ -206,26 +174,12 @@ export default function Home({ onNavigate }: HomeProps) {
                 transform-origin: center bottom;
                 cursor: default;
               }
-              .block-3d-dark:hover {
-                transform: translateY(-12px) translateZ(30px) rotateX(-5deg);
-                text-shadow: 
-                  1px 1px 0 #cbd5e1, 2px 2px 0 #94a3b8, 3px 3px 0 #64748b, 
-                  4px 4px 0 #475569, 5px 5px 0 #334155, 6px 6px 0 #1e293b, 
-                  7px 7px 0 #0f172a, 15px 25px 30px rgba(0,0,0,0.6);
-              }
 
               .block-3d-orange {
                 text-shadow: 1px 1px 0 #fb923c, 2px 2px 0 #f97316, 3px 3px 0 #ea580c, 4px 4px 20px rgba(234,88,12,0.3);
                 transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                 transform-origin: center bottom;
                 cursor: default;
-              }
-              .block-3d-orange:hover {
-                transform: translateY(-12px) translateZ(30px) rotateX(-5deg);
-                text-shadow: 
-                  1px 1px 0 #fb923c, 2px 2px 0 #f97316, 3px 3px 0 #ea580c, 
-                  4px 4px 0 #c2410c, 5px 5px 0 #9a3412, 6px 6px 0 #7c2d12, 
-                  7px 7px 0 #431407, 15px 25px 30px rgba(234,88,12,0.6);
               }
             `}</style>
             <div className="mb-12">

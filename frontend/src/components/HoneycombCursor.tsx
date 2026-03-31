@@ -2,11 +2,12 @@ import React, { useEffect, useRef } from 'react';
 
 const HoneycombCursor: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const offscreenCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const glowCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const mouseRef = useRef({ x: -1000, y: -1000 });
   const scrollRef = useRef(0);
 
   useEffect(() => {
-    // Only run effect on desktop (width >= 1024px)
     if (window.innerWidth < 1024) return;
 
     const canvas = canvasRef.current;
@@ -23,6 +24,34 @@ const HoneycombCursor: React.FC = () => {
     const hexWidth = hexRadius * Math.sqrt(3);
     const hexHeight = hexRadius * 2;
     const hexVerticalSpacing = hexHeight * 0.75;
+
+    // PRE-RENDER HEXAGONS
+    const createHexTexture = (color: string) => {
+      const offscreen = document.createElement('canvas');
+      const padding = 10;
+      offscreen.width = hexWidth + padding;
+      offscreen.height = hexHeight + padding;
+      const octx = offscreen.getContext('2d');
+      if (octx) {
+        octx.translate(padding/2, padding/2);
+        octx.beginPath();
+        for (let i = 0; i < 6; i++) {
+          const angle = (Math.PI / 3) * i + Math.PI / 6;
+          const px = (hexWidth/2) + hexRadius * Math.cos(angle);
+          const py = (hexHeight/2) + hexRadius * Math.sin(angle);
+          if (i === 0) octx.moveTo(px, py);
+          else octx.lineTo(px, py);
+        }
+        octx.closePath();
+        octx.strokeStyle = color;
+        octx.lineWidth = 0.7;
+        octx.stroke();
+      }
+      return offscreen;
+    };
+
+    offscreenCanvasRef.current = createHexTexture('rgba(0, 0, 0, 1)');
+    glowCanvasRef.current = createHexTexture('#f97316');
 
     const resizeCanvas = () => {
       width = window.innerWidth;
@@ -48,43 +77,16 @@ const HoneycombCursor: React.FC = () => {
     window.addEventListener('scroll', handleScroll);
     resizeCanvas();
 
-    const drawHexagon = (x: number, y: number, radius: number, alpha: number, glow: boolean) => {
-      ctx.beginPath();
-      for (let i = 0; i < 6; i++) {
-        const angle = (Math.PI / 3) * i + Math.PI / 6;
-        const px = x + radius * Math.cos(angle);
-        const py = y + radius * Math.sin(angle);
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      }
-      ctx.closePath();
-      
-      if (glow) {
-        ctx.strokeStyle = `rgba(249, 115, 22, ${alpha})`;
-        ctx.shadowBlur = 15 * alpha;
-        ctx.shadowColor = 'rgba(249, 115, 22, 0.5)';
-      } else {
-        ctx.strokeStyle = `rgba(0, 0, 0, ${alpha})`;
-        ctx.shadowBlur = 0;
-      }
-      
-      ctx.lineWidth = 0.5;
-      ctx.stroke();
-    };
-
     const render = () => {
       ctx.clearRect(0, 0, width, height);
 
-      const cols = Math.ceil(width / hexWidth) + 2;
-      const rows = Math.ceil(height / hexVerticalSpacing) + 2;
-
-      // Offsets for smooth tiling
-      const offsetX = 0;
+      const cols = Math.ceil(width / hexWidth) + 1;
+      const rows = Math.ceil(height / hexVerticalSpacing) + 1;
       const offsetY = -(scrollRef.current % hexVerticalSpacing);
 
       for (let r = -1; r < rows; r++) {
         for (let c = -1; c < cols; c++) {
-          let x = c * hexWidth + offsetX;
+          let x = c * hexWidth;
           const y = r * hexVerticalSpacing + offsetY;
 
           if (r % 2 !== 0) {
@@ -93,17 +95,25 @@ const HoneycombCursor: React.FC = () => {
 
           const dx = x - mouseRef.current.x;
           const dy = y - mouseRef.current.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
+          const distSq = dx * dx + dy * dy; // Use squared distance for performance
           
           const maxDist = 250;
-          const baseAlpha = 0.03; // Very subtle base grid
+          const maxDistSq = maxDist * maxDist;
+          const baseAlpha = 0.04;
           
-          if (dist < maxDist) {
-            const interactionAlpha = (1 - dist / maxDist) * 0.4;
+          if (distSq < maxDistSq) {
+            const dist = Math.sqrt(distSq);
+            const interactionAlpha = (1 - dist / maxDist) * 1;
             const totalAlpha = Math.max(baseAlpha, interactionAlpha);
-            drawHexagon(x, y, hexRadius, totalAlpha, interactionAlpha > baseAlpha);
+            
+            ctx.globalAlpha = totalAlpha;
+            const texture = interactionAlpha > baseAlpha ? glowCanvasRef.current : offscreenCanvasRef.current;
+            if (texture) ctx.drawImage(texture, x - hexWidth/2, y - hexHeight/2);
           } else {
-            drawHexagon(x, y, hexRadius, baseAlpha, false);
+            ctx.globalAlpha = baseAlpha;
+            if (offscreenCanvasRef.current) {
+              ctx.drawImage(offscreenCanvasRef.current, x - hexWidth/2, y - hexHeight/2);
+            }
           }
         }
       }
@@ -121,12 +131,7 @@ const HoneycombCursor: React.FC = () => {
     };
   }, []);
 
-  return (
-    <canvas
-      ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-0 hidden lg:block"
-    />
-  );
+  return <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-0 hidden lg:block" />;
 };
 
 export default HoneycombCursor;

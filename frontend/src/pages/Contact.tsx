@@ -122,12 +122,12 @@ export default function Contact() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
           <div className="text-center">
-            <div className="text-orange-600 font-black uppercase tracking-[0.5em] text-[10px] mb-8 animate-fade-in">Communication Node</div>
+            <div className="text-orange-600 font-black uppercase tracking-[0.5em] text-[10px] mb-8">Communication Node</div>
             <Heading3D tag="h1" className="text-6xl sm:text-8xl lg:text-9xl font-black text-slate-900 mb-10 tracking-tighter uppercase leading-[0.8]">
               ESTABLISH <span className="text-orange-600">CONTACT</span>
             </Heading3D>
 
-            <p className="text-xl text-slate-500 max-w-4xl mx-auto font-light leading-relaxed uppercase tracking-widest animate-fade-up">
+            <p className="text-xl text-slate-500 max-w-4xl mx-auto font-light leading-relaxed uppercase tracking-widest">
               Initiate project <span className="text-slate-900 font-black">dialogue</span> with our modular architecture specialists to catalyze your vision.
             </p>
 
@@ -322,7 +322,7 @@ export default function Contact() {
                 </button>
 
                 {expandedFaq === index && (
-                  <div className="px-10 pb-10 animate-fade-in">
+                  <div className="px-10 pb-10">
                     <p className="text-slate-950 leading-relaxed font-medium text-lg uppercase tracking-wider">{faq.answer}</p>
                   </div>
                 )}

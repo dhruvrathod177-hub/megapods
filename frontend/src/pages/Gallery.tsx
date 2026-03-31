@@ -97,16 +97,16 @@ export default function Gallery({ onNavigate }: GalleryProps) {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-16">
-            <div className="text-orange-600 font-black uppercase tracking-[0.5em] text-[10px] mb-8 animate-fade-in">Visual Portfolio</div>
+            <div className="text-orange-600 font-black uppercase tracking-[0.5em] text-[10px] mb-8">Visual Portfolio</div>
             <Heading3D tag="h1" className="text-6xl sm:text-8xl lg:text-9xl font-black text-slate-900 mb-10 tracking-tighter uppercase leading-[0.8]">
               DESIGN <span className="text-orange-600">ARCHIVE</span>
             </Heading3D>
-            <p className="text-xl text-slate-500 max-w-4xl mx-auto font-light leading-relaxed uppercase tracking-widest animate-fade-up">
+            <p className="text-xl text-slate-500 max-w-4xl mx-auto font-light leading-relaxed uppercase tracking-widest">
               A curated collection of <span className="text-slate-900 font-black">conceptual ecosystems</span> pushing the boundaries of modular design.
             </p>
           </div>
 
-          <div className="glass-card bg-orange-600/5 backdrop-blur-[40px] border border-orange-600/10 rounded-[3rem] p-10 lg:p-16 max-w-5xl mx-auto animate-fade-up">
+          <div className="glass-card bg-orange-600/5 backdrop-blur-[40px] border border-orange-600/10 rounded-[3rem] p-10 lg:p-16 max-w-5xl mx-auto">
             <div className="flex flex-col lg:flex-row items-center gap-10">
               <div className="bg-orange-600/10 p-5 rounded-[2rem] shadow-inner">
                 <AlertCircle className="text-orange-600 flex-shrink-0" size={40} />
@@ -133,8 +133,7 @@ export default function Gallery({ onNavigate }: GalleryProps) {
               <div 
                 key={index} 
                 ref={(el) => (cardRefs.current[index] = el)}
-                className="glass-card rounded-[4rem] overflow-hidden group animate-fade-up transform-gpu cursor-crosshair" 
-                style={{ animationDelay: `${index * 0.2}s` }}
+                className="glass-card rounded-[4rem] overflow-hidden group transform-gpu cursor-crosshair" 
               >
                 <div className="relative overflow-hidden aspect-[16/10]">
                   <img

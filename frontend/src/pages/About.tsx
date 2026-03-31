@@ -98,12 +98,12 @@ export default function About({ onNavigate }: AboutProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
           <div className="text-center">
-            <div className="text-orange-600 font-black uppercase tracking-[0.5em] text-[10px] mb-8 animate-fade-in">Corporate Identity</div>
+            <div className="text-orange-600 font-black uppercase tracking-[0.5em] text-[10px] mb-8">Corporate Identity</div>
             <Heading3D tag="h1" className="text-6xl sm:text-8xl lg:text-9xl font-black text-slate-900 mb-10 tracking-tighter uppercase leading-[0.8]">
               MEGAPODS <span className="text-orange-600">INDIA</span>
             </Heading3D>
 
-            <p className="text-xl text-slate-500 max-w-4xl mx-auto font-light leading-relaxed uppercase tracking-widest animate-fade-up">
+            <p className="text-xl text-slate-500 max-w-4xl mx-auto font-light leading-relaxed uppercase tracking-widest">
               Architectural <span className="text-slate-900 font-black">pioneers</span> engineering the next generation of physical modular ecosystems.
             </p>
 
@@ -227,8 +227,7 @@ export default function About({ onNavigate }: AboutProps) {
               <div 
                 key={index} 
                 ref={(el) => (cardRefs.current[index + 3] = el)}
-                className="glass-card bg-white p-12 text-center animate-fade-up group transform-gpu" 
-                style={{ animationDelay: `${index * 0.15}s` }}
+                className="glass-card bg-white p-12 text-center group transform-gpu" 
               >
                 <div className="bg-orange-600/10 w-24 h-24 rounded-[2rem] flex items-center justify-center mb-10 mx-auto group-hover:bg-orange-600 group-hover:text-white transition-all duration-700 shadow-inner group-hover:scale-110 group-hover:rotate-6 tilt-inner">
                   <item.icon className="text-orange-600 group-hover:text-white transition-colors duration-700" size={44} />
