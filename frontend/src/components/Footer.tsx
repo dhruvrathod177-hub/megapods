@@ -45,7 +45,7 @@ export default function Footer({ onNavigate }: FooterProps) {
 
   {/* Image */}
   <img
-    src="/img/logo1.png"
+    src="/img/logo1.JPG"
     alt="Megapodsindia"
     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
   />

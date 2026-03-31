@@ -99,7 +99,7 @@ export default function Header({ currentPage, onNavigate, openSignup, openForgot
   </div>
 
   <img
-    src="/img/logo1.png"
+    src="/img/logo1.JPG"
     alt="Megapods India"
     className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
   />
