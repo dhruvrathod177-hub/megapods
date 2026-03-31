@@ -45,7 +45,7 @@ export default function Footer({ onNavigate }: FooterProps) {
 
   {/* Image */}
   <img
-    src="/img/logo1.JPG"
+    src="/img/logo1.png"
     alt="Megapodsindia"
     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
   />
@@ -82,35 +82,55 @@ export default function Footer({ onNavigate }: FooterProps) {
 
           <div>
             <h4 className="text-xs font-black uppercase tracking-[0.3em] text-orange-600 mb-8">Get In Touch</h4>
-            <ul className="space-y-6">
-              <li className="flex items-start gap-4 group">
-                <div className="bg-slate-50 p-2.5 rounded-xl group-hover:bg-orange-600 transition-all duration-500">
-                  <Phone size={18} className="text-orange-600 group-hover:text-white transition-colors" />
-                </div>
-                <div>
-                  <a href="tel:+918758176693" className="text-slate-700 hover:text-orange-600 transition-all block text-sm font-bold tracking-wide">
-                    +91 87581 76693
-                  </a>
-                  <a href="tel:+919265380907" className="text-slate-700 hover:text-orange-600 transition-all block text-sm font-bold tracking-wide">
-                    +91 92653 80907
-                  </a>
-                </div>
-              </li>
-              <li className="flex items-start gap-4 group">
-                <div className="bg-slate-50 p-2.5 rounded-xl group-hover:bg-orange-600 transition-all duration-500">
-                  <Mail size={18} className="text-orange-600 group-hover:text-white transition-colors" />
-                </div>
-                <a href="mailto:megapodsindia@gmail.com" className="text-slate-700 hover:text-orange-600 transition-all text-sm font-bold tracking-wide">
-  megapodsindia@gmail.com
-</a>
-              </li>
-              <li className="flex items-start gap-4 group">
-                <div className="bg-slate-50 p-2.5 rounded-xl group-hover:bg-orange-600 transition-all duration-500">
-                  <MapPin size={18} className="text-orange-600 group-hover:text-white transition-colors" />
-                </div>
-                <span className="text-slate-700 text-sm font-bold tracking-wide">Surat, Gujarat, India</span>
-              </li>
-            </ul>
+            <ul className="space-y-8 max-w-md mx-auto">
+
+  {/* 📞 PHONE */}
+  <li className="flex items-center gap-4">
+    <div className="w-14 h-14 flex items-center justify-center bg-slate-100 rounded-full shrink-0">
+      <Phone size={18} className="text-orange-600" />
+    </div>
+
+    <div className="text-left">
+      <a href="tel:+918758176693" className="block text-slate-700 text-sm font-bold hover:text-orange-600">
+        +91 87581 76693
+      </a>
+      <a href="tel:+919265380907" className="block text-slate-700 text-sm font-bold hover:text-orange-600">
+        +91 92653 80907
+      </a>
+    </div>
+  </li>
+
+  {/* 📧 EMAIL */}
+  <li className="flex items-center gap-4">
+    <div className="w-14 h-14 flex items-center justify-center bg-slate-100 rounded-full shrink-0">
+      <Mail size={18} className="text-orange-600" />
+    </div>
+
+    <a
+      href="mailto:megapodsindia@gmail.com"
+      className="text-slate-700 text-sm font-bold hover:text-orange-600"
+    >
+      megapodsindia@gmail.com
+    </a>
+  </li>
+
+  {/* 📍 ADDRESS */}
+  <li className="flex items-center gap-4">
+    <div className="w-14 h-14 flex items-center justify-center bg-slate-100 rounded-full shrink-0">
+      <MapPin size={18} className="text-orange-600" />
+    </div>
+
+    <a
+      href="https://www.google.com/maps?q=Surat,Gujarat,India"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-slate-700 text-sm font-bold hover:text-orange-600"
+    >
+      Surat, Gujarat, India
+    </a>
+  </li>
+
+</ul>
           </div>
 
           <div className="space-y-8">

@@ -133,8 +133,8 @@ export default function Home({ onNavigate }: HomeProps) {
   BEYOND <br/>
   <span className="text-orange-600">LIMITS.</span>
 </Heading3D>
-            <p className="text-xl md:text-3xl text-slate-700 mb-16 leading-relaxed max-w-3xl font-light tracking-widest animate-fade-up delay-1 uppercase">
-              Crafting <span className="text-slate-900 font-black">Ultra-Premium</span> spaces with visionary modular engineering.
+            <p className="text-xl md:text-3xl text-white mb-16 leading-relaxed max-w-3xl font-light tracking-widest animate-fade-up delay-1 uppercase">
+              Crafting <span className="text-orange-600 font-black">Ultra-Premium</span> spaces with visionary modular engineering.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-8 justify-center animate-fade-up delay-2">
