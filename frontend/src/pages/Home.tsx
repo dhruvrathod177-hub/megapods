@@ -1,6 +1,7 @@
 import { Coffee, Building2, DoorOpen, Box, CheckCircle, Users, Award, Clock, ArrowRight, PhoneCall } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef} from 'react';
 import VanillaTilt from 'vanilla-tilt';
+import { gsap } from "gsap";
 
 type HTMLTag = 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'span' | 'div';
 
@@ -42,7 +43,66 @@ function Heading3D({ children, className = '', tag: Tag = 'h2' }: Heading3DProps
 interface HomeProps {
   onNavigate: (page: string) => void;
 }
+// 🔥 PREMIUM TYPEWRITER
 
+
+const CinematicText = () => {
+  const textRef = useRef<HTMLDivElement>(null);
+
+  const words = [
+    "CRAFTING",
+    "ULTRA-PREMIUM",
+    "SPACES",
+    "WITH",
+    "VISIONARY",
+    "MODULAR",
+    "ENGINEERING."
+  ];
+
+  useEffect(() => {
+    const el = textRef.current;
+    if (!el) return;
+
+    const spans = el.querySelectorAll("span");
+
+    gsap.fromTo(
+      spans,
+      {
+        opacity: 0,
+        y: 40,
+        filter: "blur(10px)"
+      },
+      {
+        opacity: 1,
+        y: 0,
+        filter: "blur(0px)",
+        duration: 1,
+        ease: "power3.out",
+        stagger: 0.2
+      }
+    );
+  }, []);
+
+  return (
+    <div
+      ref={textRef}
+      className="flex flex-wrap justify-center text-sm md:text-sm tracking-[0.25em] uppercase text-white"
+    >
+      {words.map((word, i) => (
+        <span
+          key={i}
+          className={`mr-3 ${
+            word === "ULTRA-PREMIUM"
+              ? "text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-600 font-bold"
+              : ""
+          }`}
+        >
+          {word}
+        </span>
+      ))}
+    </div>
+  );
+};
 export default function Home({ onNavigate }: HomeProps) {
 
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -108,16 +168,16 @@ export default function Home({ onNavigate }: HomeProps) {
       {/* HERO */}
 
       <section className="relative min-h-screen flex items-center justify-center py-20">
-
-        <video
-          className="absolute inset-0 w-full h-full object-cover scale-110"
-          src="/video/video.mov"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-        />
+      <video
+  autoPlay
+  loop
+  muted
+  playsInline
+  preload="auto"
+  className="absolute inset-0 w-full h-full object-cover"
+>
+  <source src="/video/hero-1080.mp4" type="video/mp4" />
+</video>
 
 <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/10"></div>
 <div className="absolute inset-0 backdrop-blur-[0px]"></div>
@@ -133,11 +193,9 @@ export default function Home({ onNavigate }: HomeProps) {
   BEYOND <br/>
   <span className="text-orange-600">LIMITS.</span>
 </Heading3D>
-            <p className="text-xl md:text-3xl text-white mb-16 leading-relaxed max-w-3xl font-light tracking-widest animate-fade-up delay-1 uppercase">
-              Crafting <span className="text-orange-600 font-black">Ultra-Premium</span> spaces with visionary modular engineering.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-8 justify-center animate-fade-up delay-2">
+<div className="mb-12">
+  <CinematicText />
+</div>    <div className="flex flex-col sm:flex-row gap-8 justify-center animate-fade-up delay-2">
 
               <button
                 onClick={() => onNavigate('contact')}
