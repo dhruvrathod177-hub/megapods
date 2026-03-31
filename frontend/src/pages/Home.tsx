@@ -1,5 +1,5 @@
 import { Coffee, Building2, DoorOpen, Box, CheckCircle, Users, Award, Clock, ArrowRight, PhoneCall } from 'lucide-react';
-import { useEffect, useRef} from 'react';
+import { useEffect, useRef } from 'react';
 import VanillaTilt from 'vanilla-tilt';
 import { gsap } from "gsap";
 
@@ -91,11 +91,10 @@ const CinematicText = () => {
       {words.map((word, i) => (
         <span
           key={i}
-          className={`mr-3 ${
-            word === "ULTRA-PREMIUM"
-              ? "text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-600 font-bold"
-              : ""
-          }`}
+          className={`mr-3 ${word === "ULTRA-PREMIUM"
+            ? "text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-600 font-bold"
+            : ""
+            }`}
         >
           {word}
         </span>
@@ -104,10 +103,16 @@ const CinematicText = () => {
   );
 };
 export default function Home({ onNavigate }: HomeProps) {
-
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
+    // Premium 3D Entrance for the heading words
+    gsap.fromTo(
+      ".hero-3d-line",
+      { rotationX: 90, y: 100, z: -400, opacity: 0, transformPerspective: 1000 },
+      { rotationX: 0, y: 0, z: 0, opacity: 1, duration: 1.8, stagger: 0.15, ease: "power4.out", delay: 0.1 }
+    );
+
     cardRefs.current.forEach((ref) => {
       if (ref) {
         VanillaTilt.init(ref, {
@@ -167,20 +172,20 @@ export default function Home({ onNavigate }: HomeProps) {
 
       {/* HERO */}
 
-      <section className="relative min-h-screen flex items-center justify-center py-20">
-      <video
-  autoPlay
-  loop
-  muted
-  playsInline
-  preload="auto"
-  className="absolute inset-0 w-full h-full object-cover"
->
-  <source src="/video/hero-1080.mp4" type="video/mp4" />
-</video>
+      <section className="relative min-h-[100dvh] w-full flex items-center justify-center overflow-hidden">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          className="absolute inset-0 w-full h-full object-cover object-center contrast-110 brightness-95 saturate-110"
+        >
+          <source src="/video/hero-1080.mp4" type="video/mp4" />
+        </video>
 
-<div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/10"></div>
-<div className="absolute inset-0 backdrop-blur-[0px]"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/10"></div>
+        <div className="absolute inset-0 backdrop-blur-[0px]"></div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -189,13 +194,43 @@ export default function Home({ onNavigate }: HomeProps) {
             <div className="inline-block px-6 py-2 mb-10 rounded-full bg-orange-600/10 backdrop-blur-xl border border-orange-600/30 text-orange-600 text-[10px] font-black uppercase tracking-[0.5em] animate-fade-in shadow-2xl shadow-orange-600/20">
               Future of Modular Architecture
             </div>
-            <Heading3D tag="h1" className="text-6xl sm:text-8xl lg:text-[10rem] font-black leading-[0.8] mb-12 text-slate-900 drop-shadow-[0_20px_50px_rgba(255,255,255,0.5)] animate-fade-up">
-  BEYOND <br/>
-  <span className="text-orange-600">LIMITS.</span>
-</Heading3D>
-<div className="mb-12">
-  <CinematicText />
-</div>    <div className="flex flex-col sm:flex-row gap-8 justify-center animate-fade-up delay-2">
+            <Heading3D tag="h1" className="text-6xl sm:text-8xl lg:text-[10rem] font-black leading-[0.8] mb-12 text-slate-900 pointer-events-auto [transform-style:preserve-3d]">
+              <span className="hero-3d-line block-3d-dark block">BEYOND</span>
+              <span className="hero-3d-line block-3d-orange block text-orange-600 mt-2">LIMITS.</span>
+            </Heading3D>
+
+            <style>{`
+              .block-3d-dark {
+                text-shadow: 1px 1px 0 #cbd5e1, 2px 2px 0 #94a3b8, 3px 3px 0 #64748b, 4px 4px 20px rgba(0,0,0,0.2);
+                transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                transform-origin: center bottom;
+                cursor: default;
+              }
+              .block-3d-dark:hover {
+                transform: translateY(-12px) translateZ(30px) rotateX(-5deg);
+                text-shadow: 
+                  1px 1px 0 #cbd5e1, 2px 2px 0 #94a3b8, 3px 3px 0 #64748b, 
+                  4px 4px 0 #475569, 5px 5px 0 #334155, 6px 6px 0 #1e293b, 
+                  7px 7px 0 #0f172a, 15px 25px 30px rgba(0,0,0,0.6);
+              }
+
+              .block-3d-orange {
+                text-shadow: 1px 1px 0 #fb923c, 2px 2px 0 #f97316, 3px 3px 0 #ea580c, 4px 4px 20px rgba(234,88,12,0.3);
+                transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                transform-origin: center bottom;
+                cursor: default;
+              }
+              .block-3d-orange:hover {
+                transform: translateY(-12px) translateZ(30px) rotateX(-5deg);
+                text-shadow: 
+                  1px 1px 0 #fb923c, 2px 2px 0 #f97316, 3px 3px 0 #ea580c, 
+                  4px 4px 0 #c2410c, 5px 5px 0 #9a3412, 6px 6px 0 #7c2d12, 
+                  7px 7px 0 #431407, 15px 25px 30px rgba(234,88,12,0.6);
+              }
+            `}</style>
+            <div className="mb-12">
+              <CinematicText />
+            </div>    <div className="flex flex-col sm:flex-row gap-8 justify-center animate-fade-up delay-2">
 
               <button
                 onClick={() => onNavigate('contact')}
@@ -305,7 +340,7 @@ export default function Home({ onNavigate }: HomeProps) {
 
               <div key={index} className="relative group">
 
-                <div 
+                <div
                   ref={(el) => (cardRefs.current[index + 4] = el)}
                   className="glass-card rounded-[3.5rem] p-12 h-full transition-all duration-700 hover:bg-orange-600/5 group-hover:border-orange-600/40"
                 >
@@ -359,13 +394,13 @@ export default function Home({ onNavigate }: HomeProps) {
 
             {whyChooseUs.map((item, index) => (
 
-              <div 
-                key={index} 
+              <div
+                key={index}
                 ref={(el) => (cardRefs.current[index + 8] = el)}
-                className="glass-card rounded-[3rem] p-12 text-center animate-fade-up relative group" 
+                className="glass-card rounded-[3rem] p-12 text-center animate-fade-up relative group"
                 style={{ animationDelay: `${index * 0.15}s` }}
               >
-                
+
                 <div className="bg-orange-600/5 w-24 h-24 rounded-[2rem] flex items-center justify-center mb-10 mx-auto group-hover:bg-orange-600 group-hover:text-white transition-all duration-700 shadow-inner group-hover:scale-110 group-hover:rotate-6 tilt-inner">
                   <item.icon className="text-orange-600 group-hover:text-black transition-colors duration-700" size={44} />
                 </div>
@@ -387,7 +422,7 @@ export default function Home({ onNavigate }: HomeProps) {
       {/* CTA */}
 
       <section className="py-32 relative overflow-hidden bg-slate-50">
-        
+
         <div className="absolute inset-0 bg-gradient-to-br from-orange-600/5 to-transparent opacity-30"></div>
         <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-orange-600/20 to-transparent"></div>
 

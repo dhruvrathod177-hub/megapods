@@ -71,15 +71,16 @@ export default function Header({ currentPage, onNavigate, openSignup, openForgot
   }, []);
 
   return (
-    <header 
-      ref={headerRef}
-      className={`sticky top-0 z-50 w-full transition-all duration-700 
-        ${scrolled 
-          ? "bg-white/40 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.05)] border-b border-white/20 py-2" 
-          : "bg-transparent py-5"}`}
-    >
-     <div className="w-full max-w-[1400px] mx-auto px-6 sm:px-12 lg:px-15">
-      <div className="flex justify-between items-center h-20 gap-6 lg:gap-8">
+    <div className="fixed top-0 left-0 right-0 z-50 flex justify-center px-4 sm:px-6 lg:px-8 pointer-events-none transition-all duration-700">
+      <header 
+        ref={headerRef}
+        className={`w-full max-w-[1400px] transition-all duration-700 pointer-events-auto
+          ${scrolled 
+            ? "mt-2 bg-white/30 backdrop-blur-xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] border border-white/40 py-2 rounded-[2rem] sm:rounded-full" 
+            : "mt-3 bg-white/10 backdrop-blur-md shadow-2xl border border-white/20 py-3 rounded-[2rem] sm:rounded-full"}`}
+      >
+       <div className="w-full mx-auto px-4 sm:px-8 lg:px-12">
+        <div className="flex justify-between items-center h-16 sm:h-20 gap-4 lg:gap-8">
 
           {/* LOGO */}
           <div className="flex items-center gap-3 cursor-pointer flex-shrink-0 group" onClick={() => handleNavigate("home")}>
@@ -266,6 +267,7 @@ export default function Header({ currentPage, onNavigate, openSignup, openForgot
           </div>
         </div>
       )}
-    </header>
+      </header>
+    </div>
   );
 }
