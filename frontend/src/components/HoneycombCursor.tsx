@@ -64,11 +64,11 @@ const HoneycombCursor: React.FC = () => {
         ctx.shadowBlur = 15 * alpha;
         ctx.shadowColor = 'rgba(249, 115, 22, 0.5)';
       } else {
-        ctx.strokeStyle = `rgba(0, 0, 0, ${alpha})`;
-        ctx.shadowBlur = 0;
+        ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+        ctx.shadowBlur = 25 * alpha;
       }
       
-      ctx.lineWidth = 0.5;
+      ctx.lineWidth = 1;
       ctx.stroke();
     };
 
@@ -96,10 +96,10 @@ const HoneycombCursor: React.FC = () => {
           const dist = Math.sqrt(dx * dx + dy * dy);
           
           const maxDist = 250;
-          const baseAlpha = 0.03; // Very subtle base grid
+          const baseAlpha = 0.12; // Very subtle base grid
           
           if (dist < maxDist) {
-            const interactionAlpha = (1 - dist / maxDist) * 0.4;
+            const interactionAlpha = (1 - dist / maxDist) * 0.7;
             const totalAlpha = Math.max(baseAlpha, interactionAlpha);
             drawHexagon(x, y, hexRadius, totalAlpha, interactionAlpha > baseAlpha);
           } else {
