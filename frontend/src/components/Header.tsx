@@ -80,7 +80,7 @@ export default function Header({ currentPage, onNavigate, openSignup, openForgot
             : "mt-3 bg-white/10 backdrop-blur-md shadow-2xl border border-white/20 py-3 rounded-[2rem] sm:rounded-full"}`}
       >
        <div className="w-full mx-auto px-4 sm:px-8 lg:px-12">
-        <div className="flex justify-between items-center h-16 sm:h-20 gap-4 lg:gap-8">
+        <div className="flex justify-between items-center h-16 sm:h-13 gap-4 lg:gap-8">
 
           {/* LOGO */}
           <div className="flex items-center gap-3 cursor-pointer flex-shrink-0 group" onClick={() => handleNavigate("home")}>
