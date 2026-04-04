@@ -407,7 +407,7 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
           </div>
 
           {/* ── RESULT PANEL ── */}
-          <div id="quote-result" className="lg:fixed lg:top-6">
+          <div id="quote-result" className="lg:static lg:top-6">
             {!quote ? (
               <div className="no-print bg-white rounded-2xl shadow-sm border border-gray-100 p-10 flex flex-col items-center justify-center text-center min-h-[400px]">
                 <div className="w-20 h-20 rounded-2xl bg-orange-50 border-2 border-dashed border-orange-200 flex items-center justify-center mb-5">
