@@ -242,7 +242,7 @@ export default function Header({ currentPage, onNavigate, openSignup, openForgot
                 key={item.value}
                 onClick={() => handleNavigate(item.value)}
                 className={`block w-full text-left px-4 py-3 rounded-xl font-semibold text-sm transition-colors
-                  ${item.value === "quotation" ? "bg-orange-600 text-white font-black" : ""}
+                  ${item.value === "quotation" ? "bg-white text-black font-black" : ""}
                   ${currentPage === item.value && item.value !== "quotation" ? "bg-orange-50 text-orange-600" : item.value !== "quotation" ? "text-slate-700 hover:bg-slate-50" : ""}`}
               >
                 {item.label}
