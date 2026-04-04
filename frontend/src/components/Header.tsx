@@ -72,7 +72,7 @@ export default function Header({ currentPage, onNavigate, openSignup, openForgot
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center px-4 sm:px-6 lg:px-8 pointer-events-none transition-all duration-700">
-      
+
       {/* ── PILL HEADER ── */}
       <header
         ref={headerRef}
@@ -81,14 +81,14 @@ export default function Header({ currentPage, onNavigate, openSignup, openForgot
             ? "mt-2 bg-white/30 backdrop-blur-xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] border border-white/40 py-2 rounded-full"
             : "mt-3 bg-white/10 backdrop-blur-md shadow-2xl border border-white/20 py-3 rounded-full"}`}
       >
-        <div className="w-full mx-auto px-4 sm:px-8 lg:px-12">
-          <div className="flex justify-between items-center h-16 sm:h-13 gap-4 lg:gap-8">
+        <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-14 gap-2">
 
             {/* LOGO */}
-            <div className="flex items-center gap-3 cursor-pointer flex-shrink-0 group" onClick={() => handleNavigate("home")}>
+            <div className="flex items-center gap-2 cursor-pointer flex-shrink-0 group" onClick={() => handleNavigate("home")}>
               <div className="relative">
                 <div className="absolute inset-0 bg-orange-500 blur-3xl opacity-0 group-hover:opacity-10 transition-opacity duration-700"></div>
-                <div className="relative h-10 w-10 md:h-12 md:w-12 flex-shrink-0 group">
+                <div className="relative h-9 w-9 md:h-10 md:w-10 flex-shrink-0 group">
                   <div className="absolute inset-0 rounded-full bg-orange-500 blur-md opacity-40 group-hover:opacity-70 transition duration-300"></div>
                   <div className="relative h-full w-full rounded-full overflow-hidden border border-white shadow-sm">
                     <div className="absolute inset-0 overflow-hidden rounded-full">
@@ -103,39 +103,41 @@ export default function Header({ currentPage, onNavigate, openSignup, openForgot
                 </div>
               </div>
               <div className="flex flex-col -space-y-1">
-                <span className="text-xl md:text-2xl font-black tracking-tight text-slate-900 group-hover:text-orange-600 transition-all duration-500">
+                <span className="text-base md:text-lg font-black tracking-tight text-slate-900 group-hover:text-orange-600 transition-all duration-500">
                   MEGAPODS
                 </span>
-                <span className="text-sm md:text-base font-bold tracking-[0.3em] text-orange-600 group-hover:text-slate-900 transition-all duration-500">
+                <span className="text-xs font-bold tracking-[0.3em] text-orange-600 group-hover:text-slate-900 transition-all duration-500">
                   INDIA
                 </span>
               </div>
             </div>
 
             {/* DESKTOP NAV */}
-            <div className="hidden lg:flex items-center gap-6 xl:gap-8 ml-6 xl:ml-10">
+            <div className="hidden lg:flex items-center gap-1 xl:gap-3 flex-1 justify-center">
               {navItems.filter(item => item.value !== "quotation").map((item) => (
                 <button
                   key={item.value}
                   onClick={() => handleNavigate(item.value)}
-                  className={`relative text-[13px] font-black uppercase tracking-[0.15em] transition-all duration-500 transform
+                  className={`relative text-[11px] font-black uppercase tracking-[0.08em] transition-all duration-500 transform whitespace-nowrap
                     ${currentPage === item.value ? "text-orange-600 scale-105" : "text-slate-700 hover:text-orange-600 hover:scale-105"}
                     group px-2 py-1`}
                 >
                   {item.label}
-                  <span className={`absolute -bottom-1 left-0 h-[3px] bg-orange-600 transition-all duration-500 rounded-full ${currentPage === item.value ? "w-full" : "w-0 group-hover:w-full"}`}></span>
+                  <span className={`absolute -bottom-1 left-0 h-[2px] bg-orange-600 transition-all duration-500 rounded-full ${currentPage === item.value ? "w-full" : "w-0 group-hover:w-full"}`}></span>
                 </button>
               ))}
+            </div>
 
-              <div className="h-8 w-px bg-slate-200/50 mx-2"></div>
+            {/* RIGHT SIDE — GET QUOTE + AUTH */}
+            <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
 
               {/* GET QUOTE BUTTON */}
               <button
                 onClick={() => handleNavigate("quotation")}
-                className={`group relative px-6 py-2.5 rounded-full font-black uppercase tracking-widest text-[12px] overflow-hidden transition-all duration-500
+                className={`group relative px-4 py-2 rounded-full font-black uppercase tracking-wider text-[11px] overflow-hidden transition-all duration-500 whitespace-nowrap
                   ${currentPage === "quotation"
                     ? "bg-orange-600 text-white shadow-[0_0_20px_rgba(234,88,12,0.3)]"
-                    : "glass text-orange-600 hover:text-white"}`}
+                    : "glass text-orange-600 hover:text-white border border-orange-200"}`}
               >
                 <span className="relative z-10">Get Quote</span>
                 <div className="absolute inset-0 bg-orange-600 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
@@ -146,19 +148,19 @@ export default function Header({ currentPage, onNavigate, openSignup, openForgot
                 <div className="relative flex-shrink-0" ref={dropdownRef}>
                   <button
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="flex items-center gap-3 bg-white/40 backdrop-blur-xl border border-slate-200/30 px-5 py-2.5 rounded-full hover:bg-orange-50 transition-all duration-300 shadow-lg shadow-black/5 group"
+                    className="flex items-center gap-2 bg-white/40 backdrop-blur-xl border border-slate-200/30 px-3 py-2 rounded-full hover:bg-orange-50 transition-all duration-300 shadow-lg shadow-black/5 group"
                   >
-                    <div className="bg-orange-600 text-white p-1.5 rounded-full shadow-lg shadow-orange-600/20 group-hover:scale-110 transition-transform">
-                      <User size={14} />
+                    <div className="bg-orange-600 text-white p-1 rounded-full shadow-lg shadow-orange-600/20 group-hover:scale-110 transition-transform flex-shrink-0">
+                      <User size={12} />
                     </div>
-                    <span className="text-sm font-black uppercase tracking-wider text-slate-800">
+                    <span className="text-[11px] font-black uppercase tracking-wider text-slate-800 max-w-[80px] truncate">
                       {user.fullName.split(" ")[0]}
                     </span>
-                    <ChevronDown size={14} className={`text-orange-600 transition-transform duration-500 ${dropdownOpen ? "rotate-180" : ""}`} />
+                    <ChevronDown size={12} className={`text-orange-600 transition-transform duration-500 flex-shrink-0 ${dropdownOpen ? "rotate-180" : ""}`} />
                   </button>
 
                   {dropdownOpen && (
-                    <div className="absolute right-0 top-12 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-50">
+                    <div className="absolute right-0 top-11 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-50">
                       <div className="bg-orange-50/50 px-4 py-3 border-b border-slate-100">
                         <p className="font-bold text-slate-900 text-sm">{user.fullName}</p>
                         <p className="text-xs text-slate-500 truncate">{user.email}</p>
@@ -192,7 +194,7 @@ export default function Header({ currentPage, onNavigate, openSignup, openForgot
                 </div>
               ) : (
                 <button onClick={openSignup}
-                  className="group relative px-8 py-3 bg-orange-600 text-white rounded-full font-black uppercase tracking-widest text-[12px] overflow-hidden transition-all duration-500 hover:scale-110 shadow-xl shadow-orange-600/20">
+                  className="group relative px-5 py-2 bg-orange-600 text-white rounded-full font-black uppercase tracking-widest text-[11px] overflow-hidden transition-all duration-500 hover:scale-105 shadow-xl shadow-orange-600/20 whitespace-nowrap">
                   <span className="relative z-10">Sign In</span>
                   <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-orange-600 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
                 </button>
@@ -201,14 +203,14 @@ export default function Header({ currentPage, onNavigate, openSignup, openForgot
 
             {/* MOBILE MENU BUTTON */}
             <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="lg:hidden p-2 text-slate-800 pointer-events-auto">
-              {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+              {mobileMenuOpen ? <X size={26} /> : <Menu size={26} />}
             </button>
 
           </div>
         </div>
       </header>
 
-      {/* ── MOBILE MENU — outside header pill so it doesn't break border-radius ── */}
+      {/* ── MOBILE MENU ── */}
       {mobileMenuOpen && (
         <div className="lg:hidden w-full max-w-[1400px] mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 pointer-events-auto overflow-hidden">
           <div className="px-4 py-4 space-y-3">
