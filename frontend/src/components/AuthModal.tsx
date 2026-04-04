@@ -153,7 +153,133 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     } catch (err: any) { setError(err.message); }
     finally { setLoading(false); }
   };
-
+  function AuthParticles() {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const mouseRef = useRef({ x: -9999, y: -9999 });
+  
+    useEffect(() => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d", { alpha: true });
+      if (!ctx) return;
+  
+      let width = window.innerWidth;
+      let height = window.innerHeight;
+      let animId: number;
+  
+      interface P {
+        x: number; y: number; vx: number; vy: number;
+        w: number; h: number; rotation: number; rotSpeed: number;
+        opacity: number; color: string;
+      }
+  
+      const COLORS = [
+        "#ea580c", "#f97316", "#fb923c", "#fed7aa", "#c2410c",
+        "#fdba74", "#1e293b", "#334155", "#64748b", "#94a3b8",
+      ];
+  
+      const make = (fromBottom = false): P => ({
+        x: Math.random() * width,
+        y: fromBottom ? height + Math.random() * 100 : Math.random() * height,
+        vx: (Math.random() - 0.5) * 0.2,
+        vy: -(Math.random() * 0.5 + 0.15),
+        w: Math.random() * 18 + 6,
+        h: Math.random() * 3 + 1.5,
+        rotation: Math.random() * Math.PI * 2,
+        rotSpeed: (Math.random() - 0.5) * 0.018,
+        opacity: Math.random() * 0.45 + 0.15,
+        color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      });
+  
+      let particles: P[] = Array.from({ length: 120 }, () => make(false));
+  
+      const resize = () => {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+        ctx.scale(dpr, dpr);
+      };
+  
+      const onMouse = (e: MouseEvent) => {
+        mouseRef.current = { x: e.clientX, y: e.clientY };
+      };
+  
+      window.addEventListener("resize", resize);
+      window.addEventListener("mousemove", onMouse);
+      resize();
+  
+      const drawPill = (p: P) => {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rotation);
+        ctx.globalAlpha = p.opacity;
+        ctx.fillStyle = p.color;
+        const r = p.h / 2;
+        ctx.beginPath();
+        ctx.moveTo(-p.w / 2 + r, -p.h / 2);
+        ctx.lineTo(p.w / 2 - r, -p.h / 2);
+        ctx.arcTo(p.w / 2, -p.h / 2, p.w / 2, p.h / 2, r);
+        ctx.lineTo(p.w / 2 - r, p.h / 2);
+        ctx.arcTo(p.w / 2, p.h / 2, -p.w / 2, p.h / 2, r);
+        ctx.lineTo(-p.w / 2 + r, p.h / 2);
+        ctx.arcTo(-p.w / 2, p.h / 2, -p.w / 2, -p.h / 2, r);
+        ctx.lineTo(-p.w / 2, -p.h / 2 + r);
+        ctx.arcTo(-p.w / 2, -p.h / 2, p.w / 2, -p.h / 2, r);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      };
+  
+      const render = () => {
+        ctx.clearRect(0, 0, width, height);
+        const mx = mouseRef.current.x;
+        const my = mouseRef.current.y;
+  
+        for (let i = 0; i < particles.length; i++) {
+          const p = particles[i];
+          const dx = p.x - mx;
+          const dy = p.y - my;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 130 && dist > 0) {
+            const force = (1 - dist / 130) * 0.7;
+            p.vx += (dx / dist) * force;
+            p.vy += (dy / dist) * force;
+          }
+          p.vx *= 0.97;
+          p.vy *= 0.97;
+          p.vy -= 0.003;
+          p.x += p.vx;
+          p.y += p.vy;
+          p.rotation += p.rotSpeed;
+          if (p.y < -30) { particles[i] = make(true); continue; }
+          if (p.x < -40) p.x = width + 30;
+          if (p.x > width + 40) p.x = -30;
+          drawPill(p);
+        }
+  
+        animId = requestAnimationFrame(render);
+      };
+  
+      render();
+  
+      return () => {
+        window.removeEventListener("resize", resize);
+        window.removeEventListener("mousemove", onMouse);
+        cancelAnimationFrame(animId);
+      };
+    }, []);
+  
+    return (
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full pointer-events-none"
+      />
+    );
+  }
   if (!isOpen) return null;
 
   const titles: Record<ModalMode, string> = {
@@ -273,7 +399,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
         className="auth-modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
         style={{ fontFamily: "'DM Sans', sans-serif" }}
       >
-        <div
+       <div
           className="absolute inset-0"
           style={{
             background: "linear-gradient(135deg, rgba(255,237,213,0.55) 0%, rgba(251,191,36,0.15) 40%, rgba(255,255,255,0.4) 100%)",
@@ -281,8 +407,9 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
             WebkitBackdropFilter: "blur(18px) saturate(1.4)",
           }}
           onClick={onClose}
-        />
-
+        >
+          <AuthParticles />
+        </div>
         <div
           ref={modalRef}
           className="auth-modal-card relative w-full max-w-[420px] rounded-3xl overflow-hidden"
