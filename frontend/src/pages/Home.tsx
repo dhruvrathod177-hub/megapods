@@ -1,7 +1,7 @@
 import { Coffee, Building2, DoorOpen, Box, CheckCircle, Users, Award, Clock, ArrowRight, PhoneCall } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import VanillaTilt from 'vanilla-tilt';
-import { gsap } from "gsap";
+
 
 type HTMLTag = 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'span' | 'div';
 
@@ -139,8 +139,7 @@ export default function Home({ onNavigate }: HomeProps) {
     <div className="bg-transparent overflow-hidden">
 
       {/* HERO */}
-
-      <section className="relative min-h-[100dvh] w-full flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[100dvh] w-full flex items-center justify-center overflow-hidden pt-24 sm:pt-28">
         <video
           autoPlay
           loop

@@ -179,7 +179,7 @@ export default function QuotationPage({ editQuote, onEditSaved }: QuotationPageP
     <div className="min-h-screen bg-[#f8f8f6]">
 
       {/* ── HERO ── */}
-      <section className="no-print relative overflow-hidden bg-white border-b border-gray-100">
+      <section className="no-print relative overflow-hidden bg-white border-b border-gray-100 pt-28 sm:pt-32">
         <div
           className="absolute inset-0 opacity-[0.025]"
           style={{ backgroundImage: 'radial-gradient(circle, #ea580c 1px, transparent 1px)', backgroundSize: '28px 28px' }}
