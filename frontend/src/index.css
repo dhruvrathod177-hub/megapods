@@ -1,6 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+.font-rajdhani {
+  font-family: 'Rajdhani', sans-serif;
+}
 
 /* ───────── SMOOTH SCROLL (PREMIUM FEEL) ───────── */
 html {

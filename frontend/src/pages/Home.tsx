@@ -161,7 +161,7 @@ export default function Home({ onNavigate }: HomeProps) {
             <div className="inline-block px-6 py-2 mb-10 rounded-full bg-orange-600/10 backdrop-blur-xl border border-orange-600/30 text-orange-600 text-[10px] font-black uppercase tracking-[0.5em] animate-fade-in shadow-2xl shadow-orange-600/20">
               Future of Modular Architecture
             </div>
-            <h1 className="text-6xl sm:text-8xl lg:text-[10rem] font-black leading-[0.8] mb-12 text-slate-900 pointer-events-none [transform-style:preserve-3d]">
+            <h1 className="font-rajdhani text-6xl sm:text-8xl lg:text-[10rem] font-black leading-[0.8] mb-12 text-slate-900 pointer-events-none [transform-style:preserve-3d]">
               <span className="hero-3d-line block-3d-dark block">BEYOND</span>
               <span className="hero-3d-line block-3d-orange block text-orange-600 mt-2">LIMITS.</span>
             </h1>

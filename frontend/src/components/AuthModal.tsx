@@ -183,8 +183,8 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
         y: fromBottom ? height + Math.random() * 100 : Math.random() * height,
         vx: (Math.random() - 0.5) * 0.2,
         vy: -(Math.random() * 0.5 + 0.15),
-        w: Math.random() * 18 + 6,
-        h: Math.random() * 3 + 1.5,
+        w: Math.random() * 2.5 + 0.8,  // this is now "size", same as StarCursor
+        h: 0,  // unused, keep for interface compat
         rotation: Math.random() * Math.PI * 2,
         rotSpeed: (Math.random() - 0.5) * 0.018,
         opacity: Math.random() * 0.45 + 0.15,
@@ -213,24 +213,50 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
       resize();
   
       const drawPill = (p: P) => {
+        const size = p.w; // w holds the size value
+        const w = size * 5;
+        const h = size * 2.5;
+        const r = size * 0.4;
+      
         ctx.save();
         ctx.translate(p.x, p.y);
         ctx.rotate(p.rotation);
         ctx.globalAlpha = p.opacity;
         ctx.fillStyle = p.color;
-        const r = p.h / 2;
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth = 0.4;
+      
+        // Body
         ctx.beginPath();
-        ctx.moveTo(-p.w / 2 + r, -p.h / 2);
-        ctx.lineTo(p.w / 2 - r, -p.h / 2);
-        ctx.arcTo(p.w / 2, -p.h / 2, p.w / 2, p.h / 2, r);
-        ctx.lineTo(p.w / 2 - r, p.h / 2);
-        ctx.arcTo(p.w / 2, p.h / 2, -p.w / 2, p.h / 2, r);
-        ctx.lineTo(-p.w / 2 + r, p.h / 2);
-        ctx.arcTo(-p.w / 2, p.h / 2, -p.w / 2, -p.h / 2, r);
-        ctx.lineTo(-p.w / 2, -p.h / 2 + r);
-        ctx.arcTo(-p.w / 2, -p.h / 2, p.w / 2, -p.h / 2, r);
-        ctx.closePath();
+        ctx.roundRect(-w / 2, -h / 2, w, h, r);
         ctx.fill();
+      
+        // Outline
+        ctx.globalAlpha = p.opacity * 0.8;
+        ctx.beginPath();
+        ctx.roundRect(-w / 2, -h / 2, w, h, r);
+        ctx.stroke();
+      
+        // Ribs
+        ctx.globalAlpha = p.opacity * 0.35;
+        ctx.lineWidth = 0.3;
+        const ribCount = Math.max(2, Math.floor(w / (size * 1.5)));
+        for (let i = 1; i < ribCount; i++) {
+          const rx = -w / 2 + (w / ribCount) * i;
+          ctx.beginPath();
+          ctx.moveTo(rx, -h / 2 + r);
+          ctx.lineTo(rx, h / 2 - r);
+          ctx.stroke();
+        }
+      
+        // Door split
+        ctx.globalAlpha = p.opacity * 0.5;
+        ctx.lineWidth = 0.4;
+        ctx.beginPath();
+        ctx.moveTo(0, -h / 2 + r);
+        ctx.lineTo(0, h / 2 - r);
+        ctx.stroke();
+      
         ctx.restore();
       };
   

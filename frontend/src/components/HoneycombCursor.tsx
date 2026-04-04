@@ -10,7 +10,6 @@ interface Particle {
   color: string;
   rotation: number;
   rotationSpeed: number;
-  shape: 'dot' | 'star' | 'cross';
 }
 
 const StarCursor: React.FC = () => {
@@ -31,36 +30,30 @@ const StarCursor: React.FC = () => {
     const PARTICLE_COUNT = Math.min(Math.floor((width * height) / 8000), 160);
 
     const COLORS = [
-      'rgba(249,115,22,',   // orange-500
-      'rgba(234,88,12,',    // orange-600
-      'rgba(251,146,60,',   // orange-400
-      'rgba(253,186,116,',  // orange-300
-      'rgba(255,237,213,',  // orange-100
-      'rgba(15,23,42,',     // slate-900
-      'rgba(51,65,85,',     // slate-700
-      'rgba(100,116,139,',  // slate-500
+      'rgba(249,115,22,',
+      'rgba(234,88,12,',
+      'rgba(251,146,60,',
+      'rgba(253,186,116,',
+      'rgba(255,237,213,',
+      'rgba(15,23,42,',
+      'rgba(51,65,85,',
+      'rgba(100,116,139,',
     ];
 
     const randomColor = () => COLORS[Math.floor(Math.random() * COLORS.length)];
-    const randomShape = (): Particle['shape'] => {
-      const r = Math.random();
-      return r < 0.5 ? 'dot' : r < 0.8 ? 'star' : 'cross';
-    };
 
     const makeParticle = (x?: number, y?: number): Particle => ({
       x: x ?? Math.random() * width,
       y: y ?? Math.random() * height,
       vx: (Math.random() - 0.5) * 0.3,
-      vy: -(Math.random() * 0.4 + 0.1), // drift upward
+      vy: -(Math.random() * 0.4 + 0.1),
       size: Math.random() * 2.5 + 0.8,
       opacity: Math.random() * 0.5 + 0.1,
       color: randomColor(),
       rotation: Math.random() * Math.PI * 2,
       rotationSpeed: (Math.random() - 0.5) * 0.015,
-      shape: randomShape(),
     });
 
-    // Init particles spread across full page
     particlesRef.current = Array.from({ length: PARTICLE_COUNT }, () => makeParticle());
 
     const resizeCanvas = () => {
@@ -82,27 +75,37 @@ const StarCursor: React.FC = () => {
     window.addEventListener('mousemove', handleMouseMove);
     resizeCanvas();
 
-    // Draw 4-point star
-    const drawStar4 = (x: number, y: number, size: number) => {
-      const outer = size * 1.8;
-      const inner = size * 0.4;
-      ctx.beginPath();
-      for (let i = 0; i < 8; i++) {
-        const angle = (Math.PI / 4) * i - Math.PI / 4;
-        const r = i % 2 === 0 ? outer : inner;
-        if (i === 0) ctx.moveTo(x + Math.cos(angle) * r, y + Math.sin(angle) * r);
-        else ctx.lineTo(x + Math.cos(angle) * r, y + Math.sin(angle) * r);
-      }
-      ctx.closePath();
-    };
+    // Draw a mini shipping container centered at 0,0
+    const drawContainer = (size: number) => {
+      const w = size * 5;
+      const h = size * 2.5;
+      const r = size * 0.4;
 
-    // Draw cross/plus
-    const drawCross = (x: number, y: number, size: number) => {
-      const len = size * 2;
-      const thick = size * 0.35;
+      // Body fill
       ctx.beginPath();
-      ctx.rect(x - thick, y - len, thick * 2, len * 2);
-      ctx.rect(x - len, y - thick, len * 2, thick * 2);
+      ctx.roundRect(-w / 2, -h / 2, w, h, r);
+      ctx.fill();
+
+      // Outline
+      ctx.beginPath();
+      ctx.roundRect(-w / 2, -h / 2, w, h, r);
+      ctx.stroke();
+
+      // Corrugation ribs
+      const ribCount = Math.max(2, Math.floor(w / (size * 1.5)));
+      for (let i = 1; i < ribCount; i++) {
+        const rx = -w / 2 + (w / ribCount) * i;
+        ctx.beginPath();
+        ctx.moveTo(rx, -h / 2 + r);
+        ctx.lineTo(rx, h / 2 - r);
+        ctx.stroke();
+      }
+
+      // Center door split
+      ctx.beginPath();
+      ctx.moveTo(0, -h / 2 + r);
+      ctx.lineTo(0, h / 2 - r);
+      ctx.stroke();
     };
 
     const render = () => {
@@ -111,7 +114,6 @@ const StarCursor: React.FC = () => {
       const mx = mouseRef.current.x;
       const my = mouseRef.current.y;
 
-      // Soft cursor glow
       if (mx > 0 && my > 0) {
         const grd = ctx.createRadialGradient(mx, my, 0, mx, my, 200);
         grd.addColorStop(0, 'rgba(249,115,22,0.07)');
@@ -127,7 +129,6 @@ const StarCursor: React.FC = () => {
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
 
-        // Mouse repulsion / attraction
         const dx = p.x - mx;
         const dy = p.y - my;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -139,14 +140,10 @@ const StarCursor: React.FC = () => {
           p.vy += (dy / dist) * force;
         }
 
-        // Velocity damping
         p.vx *= 0.98;
         p.vy *= 0.98;
-
-        // Restore upward drift
         p.vy -= 0.003;
 
-        // Clamp velocity
         const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
         if (speed > 1.5) {
           p.vx = (p.vx / speed) * 1.5;
@@ -157,7 +154,6 @@ const StarCursor: React.FC = () => {
         p.y += p.vy;
         p.rotation += p.rotationSpeed;
 
-        // Wrap around edges — respawn at bottom when going off top
         if (p.y < -20) {
           p.y = height + 10;
           p.x = Math.random() * width;
@@ -167,7 +163,6 @@ const StarCursor: React.FC = () => {
         if (p.x < -20) p.x = width + 10;
         if (p.x > width + 20) p.x = -10;
 
-        // Brightness boost near cursor
         let alpha = p.opacity;
         let size = p.size;
         if (dist < 200) {
@@ -181,30 +176,10 @@ const StarCursor: React.FC = () => {
         ctx.rotate(p.rotation);
         ctx.globalAlpha = alpha;
         ctx.fillStyle = `${p.color}1)`;
+        ctx.strokeStyle = `${p.color}0.6)`;
+        ctx.lineWidth = 0.4;
 
-        if (p.shape === 'dot') {
-          ctx.beginPath();
-          ctx.arc(0, 0, size, 0, Math.PI * 2);
-          ctx.fill();
-        } else if (p.shape === 'star') {
-          drawStar4(0, 0, size);
-          ctx.fill();
-          // Lens flare arms for larger stars
-          if (size > 2.5) {
-            ctx.globalAlpha = alpha * 0.25;
-            ctx.strokeStyle = `${p.color}1)`;
-            ctx.lineWidth = 0.6;
-            ctx.beginPath();
-            ctx.moveTo(-size * 4, 0);
-            ctx.lineTo(size * 4, 0);
-            ctx.moveTo(0, -size * 4);
-            ctx.lineTo(0, size * 4);
-            ctx.stroke();
-          }
-        } else {
-          drawCross(0, 0, size);
-          ctx.fill();
-        }
+        drawContainer(size);
 
         ctx.restore();
       }
