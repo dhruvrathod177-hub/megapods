@@ -15,6 +15,7 @@ import AdminLoginPage from "./pages/AdminLoginPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import Footer from "./components/Footer";
 import WhatsAppButton from "./components/WhatsAppButton";
+import ChatBot from "./components/ChatBot";
 import HoneycombCursor from "./components/HoneycombCursor";
 
 // ── Pages that require login ──────────────────────────────────────────────────
@@ -180,6 +181,7 @@ function AppInner() {
       <main className="flex-1 relative z-10">{renderPage()}</main>
       <Footer onNavigate={handleNavigate} />
       <WhatsAppButton />
+      <ChatBot onNavigate={handleNavigate} />
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => { setAuthModalOpen(false); setStartOnForgot(false); }}

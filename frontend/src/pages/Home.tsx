@@ -211,7 +211,7 @@ export default function Home({ onNavigate }: HomeProps) {
         </div>
 
         <div className="absolute bottom-16 left-1/2 -translate-x-1/2 animate-bounce opacity-40">
-          <div className="w-px h-24 rounded-full bg-gradient-to-b from-white via-white/50 to-transparent"></div>
+          <div className="rounded-full bg-gradient-to-b from-white via-white/50 to-transparent"></div>
         </div>
 
       </section>
