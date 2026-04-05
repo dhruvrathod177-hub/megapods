@@ -21,6 +21,182 @@ type ModalMode = "login" | "register" | "forgot" | "otp" | "reset";
 
 const API = import.meta.env.VITE_API_URL || "https://megapods.onrender.com/api";
 
+function AuthParticles() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mouseRef = useRef({ x: -9999, y: -9999 });
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d", { alpha: true });
+    if (!ctx) return;
+
+    let width = canvas.offsetWidth;
+    let height = canvas.offsetHeight;
+    let animId: number;
+
+    interface P {
+      x: number; y: number; vx: number; vy: number;
+      size: number; rotation: number; rotSpeed: number;
+      opacity: number; color: string;
+    }
+
+    const COLORS = [
+      'rgba(249,115,22,',  // orange
+      'rgba(234,88,12,',   // deep orange
+      'rgba(251,146,60,',  // light orange
+      'rgba(15,23,42,',    // near black
+      'rgba(30,41,59,',    // dark slate
+      'rgba(17,24,39,',    // dark gray-black
+    ];
+
+    const make = (): P => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: -(Math.random() * 0.4 + 0.1),
+      size: Math.random() * 2.2 + 1.8,
+      rotation: Math.random() * Math.PI * 2,
+      rotSpeed: (Math.random() - 0.5) * 0.016,
+      opacity: Math.random() * 0.45 + 0.15,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+    });
+
+    // ✅ Premium sparse count — max 20 particles
+    const COUNT = Math.min(Math.floor((width * height) / 8000), 50);
+    let particles: P[] = Array.from({ length: COUNT }, make);
+
+    const resize = () => {
+      width = canvas.offsetWidth;
+      height = canvas.offsetHeight;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      ctx.scale(dpr, dpr);
+    };
+
+    const onMouse = (e: MouseEvent) => {
+      const r = canvas.getBoundingClientRect();
+      mouseRef.current = { x: e.clientX - r.left, y: e.clientY - r.top };
+    };
+
+    window.addEventListener("resize", resize);
+    window.addEventListener("mousemove", onMouse);
+    resize();
+
+    const drawContainer = (p: P) => {
+      const size = p.size;
+      const w = size * 5.5;
+      const h = size * 2.8;
+      const r = size * 0.5;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation);
+      ctx.globalAlpha = p.opacity;
+
+      // Body fill
+      ctx.fillStyle = `${p.color}0.75)`;
+      ctx.beginPath();
+      ctx.roundRect(-w / 2, -h / 2, w, h, r);
+      ctx.fill();
+
+      // Outline
+      ctx.strokeStyle = `${p.color}0.9)`;
+      ctx.lineWidth = 0.4;
+      ctx.beginPath();
+      ctx.roundRect(-w / 2, -h / 2, w, h, r);
+      ctx.stroke();
+
+      // M label
+      const fs = Math.max(4, size * 1.5);
+      ctx.font = `700 ${fs}px sans-serif`;
+      ctx.fillStyle = "rgba(255,255,255,0.75)";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("M", 0, 0);
+
+      // Ribs
+      ctx.lineWidth = 0.25;
+      ctx.strokeStyle = `${p.color}0.5)`;
+      const ribCount = Math.max(2, Math.floor(w / (size * 1.8)));
+      for (let i = 1; i < ribCount; i++) {
+        const rx = -w / 2 + (w / ribCount) * i;
+        ctx.beginPath();
+        ctx.moveTo(rx, -h / 2 + r);
+        ctx.lineTo(rx, h / 2 - r);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    };
+
+    const render = () => {
+      ctx.clearRect(0, 0, width, height);
+      const mx = mouseRef.current.x;
+      const my = mouseRef.current.y;
+
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+
+        // Repel from cursor
+        const dx = p.x - mx;
+        const dy = p.y - my;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 100 && dist > 0) {
+          const force = (1 - dist / 120) * 1.6;
+          p.vx += (dx / dist) * force;
+          p.vy += (dy / dist) * force;
+        }
+
+        p.vx *= 0.98;
+        p.vy *= 0.98;
+        p.vy -= 0.003;
+
+        const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+        if (speed > 1.5) {
+          p.vx = (p.vx / speed) * 1.5;
+          p.vy = (p.vy / speed) * 1.5;
+        }
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rotation += p.rotSpeed;
+
+        // Boost near cursor
+        if (dist < 180) {
+          const boost = (1 - dist / 180) * 0.25;
+          p.opacity = Math.min(0.55, p.opacity + boost);
+        }
+
+        if (p.y < -20) { particles[i] = make(); particles[i].y = height + 10; continue; }
+        if (p.x < -20) p.x = width + 10;
+        if (p.x > width + 20) p.x = -10;
+
+        drawContainer(p);
+      }
+
+      animId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => {
+      window.removeEventListener("resize", resize);
+      window.removeEventListener("mousemove", onMouse);
+      cancelAnimationFrame(animId);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full pointer-events-none"
+    />
+  );
+}
+
 export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: AuthModalProps) {
   const { login } = useAuth();
   const modalRef = useRef<HTMLDivElement>(null);
@@ -55,12 +231,8 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
         onClose();
       }
     };
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    if (isOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen, onClose]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -153,159 +325,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     } catch (err: any) { setError(err.message); }
     finally { setLoading(false); }
   };
-  function AuthParticles() {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const mouseRef = useRef({ x: -9999, y: -9999 });
-  
-    useEffect(() => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext("2d", { alpha: true });
-      if (!ctx) return;
-  
-      let width = window.innerWidth;
-      let height = window.innerHeight;
-      let animId: number;
-  
-      interface P {
-        x: number; y: number; vx: number; vy: number;
-        w: number; h: number; rotation: number; rotSpeed: number;
-        opacity: number; color: string;
-      }
-  
-      const COLORS = [
-        "#ea580c", "#f97316", "#fb923c", "#fed7aa", "#c2410c",
-        "#fdba74", "#1e293b", "#334155", "#64748b", "#94a3b8",
-      ];
-  
-      const make = (fromBottom = false): P => ({
-        x: Math.random() * width,
-        y: fromBottom ? height + Math.random() * 100 : Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.2,
-        vy: -(Math.random() * 0.5 + 0.15),
-        w: Math.random() * 2.5 + 0.8,  // this is now "size", same as StarCursor
-        h: 0,  // unused, keep for interface compat
-        rotation: Math.random() * Math.PI * 2,
-        rotSpeed: (Math.random() - 0.5) * 0.018,
-        opacity: Math.random() * 0.45 + 0.15,
-        color: COLORS[Math.floor(Math.random() * COLORS.length)],
-      });
-  
-      let particles: P[] = Array.from({ length: 120 }, () => make(false));
-  
-      const resize = () => {
-        width = window.innerWidth;
-        height = window.innerHeight;
-        const dpr = window.devicePixelRatio || 1;
-        canvas.width = width * dpr;
-        canvas.height = height * dpr;
-        canvas.style.width = `${width}px`;
-        canvas.style.height = `${height}px`;
-        ctx.scale(dpr, dpr);
-      };
-  
-      const onMouse = (e: MouseEvent) => {
-        mouseRef.current = { x: e.clientX, y: e.clientY };
-      };
-  
-      window.addEventListener("resize", resize);
-      window.addEventListener("mousemove", onMouse);
-      resize();
-  
-      const drawPill = (p: P) => {
-        const size = p.w; // w holds the size value
-        const w = size * 5;
-        const h = size * 2.5;
-        const r = size * 0.4;
-      
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.rotation);
-        ctx.globalAlpha = p.opacity;
-        ctx.fillStyle = p.color;
-        ctx.strokeStyle = p.color;
-        ctx.lineWidth = 0.4;
-      
-        // Body
-        ctx.beginPath();
-        ctx.roundRect(-w / 2, -h / 2, w, h, r);
-        ctx.fill();
-      
-        // Outline
-        ctx.globalAlpha = p.opacity * 0.8;
-        ctx.beginPath();
-        ctx.roundRect(-w / 2, -h / 2, w, h, r);
-        ctx.stroke();
-      
-        // Ribs
-        ctx.globalAlpha = p.opacity * 0.35;
-        ctx.lineWidth = 0.3;
-        const ribCount = Math.max(2, Math.floor(w / (size * 1.5)));
-        for (let i = 1; i < ribCount; i++) {
-          const rx = -w / 2 + (w / ribCount) * i;
-          ctx.beginPath();
-          ctx.moveTo(rx, -h / 2 + r);
-          ctx.lineTo(rx, h / 2 - r);
-          ctx.stroke();
-        }
-      
-        // Door split
-        ctx.globalAlpha = p.opacity * 0.5;
-        ctx.lineWidth = 0.4;
-        ctx.beginPath();
-        ctx.moveTo(0, -h / 2 + r);
-        ctx.lineTo(0, h / 2 - r);
-        ctx.stroke();
-      
-        ctx.restore();
-      };
-  
-      const render = () => {
-        ctx.clearRect(0, 0, width, height);
-        const mx = mouseRef.current.x;
-        const my = mouseRef.current.y;
-  
-        for (let i = 0; i < particles.length; i++) {
-          const p = particles[i];
-          const dx = p.x - mx;
-          const dy = p.y - my;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 130 && dist > 0) {
-            const force = (1 - dist / 130) * 0.7;
-            p.vx += (dx / dist) * force;
-            p.vy += (dy / dist) * force;
-          }
-          p.vx *= 0.97;
-          p.vy *= 0.97;
-          p.vy -= 0.003;
-          p.x += p.vx;
-          p.y += p.vy;
-          p.rotation += p.rotSpeed;
-          if (p.y < -30) { particles[i] = make(true); continue; }
-          if (p.x < -40) p.x = width + 30;
-          if (p.x > width + 40) p.x = -30;
-          drawPill(p);
-        }
-  
-        animId = requestAnimationFrame(render);
-      };
-  
-      render();
-  
-      return () => {
-        window.removeEventListener("resize", resize);
-        window.removeEventListener("mousemove", onMouse);
-        cancelAnimationFrame(animId);
-      };
-    }, []);
-  
-    return (
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 w-full h-full pointer-events-none"
-      />
-    );
-  }
+
   if (!isOpen) return null;
 
   const titles: Record<ModalMode, string> = {
@@ -328,12 +348,12 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     forgot: "login", otp: "forgot", reset: "otp",
   };
 
-  // ── GLASSY WHITE THEME ──
   const inputStyle = {
     background: "rgba(255,255,255,0.7)",
     border: "1px solid rgba(255,255,255,0.9)",
     boxShadow: "inset 0 1px 3px rgba(0,0,0,0.06)",
   };
+
   const eyeButtonClass =
     "absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-500 transition-colors duration-200 cursor-pointer";
 
@@ -351,37 +371,26 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
-
         .auth-modal-overlay { animation: fadeIn 0.2s ease; }
         .auth-modal-card    { animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
-
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to   { opacity: 1; }
-        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp {
           from { opacity: 0; transform: translateY(28px) scale(0.96); }
-          to   { opacity: 1; transform: translateY(0)    scale(1);    }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
         }
-
         .auth-btn-primary { position: relative; overflow: hidden; }
         .auth-btn-primary::after {
-          content: '';
-          position: absolute;
-          inset: 0;
+          content: ''; position: absolute; inset: 0;
           background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 60%);
-          opacity: 0;
-          transition: opacity 0.3s ease;
+          opacity: 0; transition: opacity 0.3s ease;
         }
         .auth-btn-primary:hover::after { opacity: 1; }
         .auth-btn-primary span { position: relative; z-index: 1; }
-
         .auth-btn-ghost:hover {
           background: rgba(249,115,22,0.06) !important;
           border-color: #f97316 !important;
           color: #ea580c !important;
         }
-
         .glass-input:hover {
           background: rgba(255,255,255,0.85) !important;
           border-color: rgba(249,115,22,0.4) !important;
@@ -392,18 +401,11 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
           box-shadow: 0 0 0 3px rgba(249,115,22,0.12), inset 0 1px 3px rgba(0,0,0,0.04) !important;
           outline: none;
         }
-
-        .otp-input {
-          letter-spacing: 0.8rem;
-          font-family: 'Syne', sans-serif;
-        }
-
+        .otp-input { letter-spacing: 0.8rem; font-family: 'Syne', sans-serif; }
         .glass-divider {
-          flex: 1;
-          height: 1px;
+          flex: 1; height: 1px;
           background: linear-gradient(to right, transparent, rgba(0,0,0,0.1), transparent);
         }
-
         .blob-1 {
           position: absolute; width: 280px; height: 280px; border-radius: 50%;
           background: radial-gradient(circle, rgba(251,146,60,0.35) 0%, rgba(249,115,22,0.1) 50%, transparent 70%);
@@ -425,7 +427,8 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
         className="auth-modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
         style={{ fontFamily: "'DM Sans', sans-serif" }}
       >
-       <div
+        {/* ✅ Backdrop with AuthParticles */}
+        <div
           className="absolute inset-0"
           style={{
             background: "linear-gradient(135deg, rgba(255,237,213,0.55) 0%, rgba(251,191,36,0.15) 40%, rgba(255,255,255,0.4) 100%)",
@@ -436,14 +439,14 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
         >
           <AuthParticles />
         </div>
+
         <div
           ref={modalRef}
           className="auth-modal-card relative w-full max-w-[420px] rounded-3xl overflow-hidden"
           style={{
             background: "linear-gradient(145deg, rgba(255,255,255,0.82) 0%, rgba(255,250,245,0.88) 100%)",
             border: "1px solid rgba(255,255,255,0.95)",
-            boxShadow:
-              "0 8px 32px rgba(249,115,22,0.12), 0 24px 64px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,1)",
+            boxShadow: "0 8px 32px rgba(249,115,22,0.12), 0 24px 64px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,1)",
             backdropFilter: "blur(24px)",
             WebkitBackdropFilter: "blur(24px)",
           }}
@@ -452,13 +455,9 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
           <div className="blob-2" />
           <div className="blob-3" />
 
-          <div style={{
-            height: "3px",
-            background: "linear-gradient(90deg, #fed7aa, #f97316, #fb923c, #fed7aa)",
-          }} />
+          <div style={{ height: "3px", background: "linear-gradient(90deg, #fed7aa, #f97316, #fb923c, #fed7aa)" }} />
 
           <div className="relative p-8">
-
             <div className="flex justify-between items-start mb-7">
               <div className="flex items-center gap-3">
                 {backMode[currentMode] && (
@@ -493,15 +492,14 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                       Megapodsindia
                     </span>
                   </div>
-                  <h2 className="heading-3d" style={{
+                  <h2 style={{
                     fontFamily: "'Archivo Black', Georgia, serif",
                     fontSize: "28px", fontWeight: 900,
                     color: "#111111", lineHeight: 1.1, letterSpacing: "-0.01em",
-                    display: "inline-block", visibility: "visible",
                   }}>
                     {titles[currentMode]}
                   </h2>
-                  <p style={{ fontSize: "13px", color: "#78716c", marginTop: "4px", display: "block" }}>
+                  <p style={{ fontSize: "13px", color: "#78716c", marginTop: "4px" }}>
                     {subtitles[currentMode]}
                   </p>
                 </div>
@@ -533,7 +531,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
               </div>
             )}
 
-            {/* ── LOGIN ── */}
+            {/* LOGIN */}
             {currentMode === "login" && (
               <form className="space-y-4" onSubmit={handleLogin}>
                 <div>
@@ -562,7 +560,6 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                     </span>
                   </div>
                 </div>
-
                 <div style={{ paddingTop: "4px" }}>
                   <button type="submit" disabled={loading}
                     className="auth-btn-primary w-full py-3.5 rounded-2xl font-bold text-sm text-white disabled:opacity-60 transition-all duration-300"
@@ -574,27 +571,20 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                     <span>{loading ? "Signing in…" : "Sign In"}</span>
                   </button>
                 </div>
-
                 <div className="flex items-center gap-3 py-1">
                   <div className="glass-divider" />
                   <span style={{ fontSize: "11px", color: "#a8a29e", whiteSpace: "nowrap" }}>New here?</span>
                   <div className="glass-divider" />
                 </div>
-
                 <button type="button" onClick={() => setCurrentMode("register")}
                   className="auth-btn-ghost w-full py-3.5 rounded-2xl font-semibold text-sm transition-all duration-200"
-                  style={{
-                    background: "rgba(255,255,255,0.5)",
-                    border: "1px solid rgba(0,0,0,0.1)",
-                    color: "#78716c",
-                    letterSpacing: "0.02em",
-                  }}>
+                  style={{ background: "rgba(255,255,255,0.5)", border: "1px solid rgba(0,0,0,0.1)", color: "#78716c", letterSpacing: "0.02em" }}>
                   Create an Account
                 </button>
               </form>
             )}
 
-            {/* ── REGISTER ── */}
+            {/* REGISTER */}
             {currentMode === "register" && (
               <form className="space-y-3" onSubmit={handleRegister}>
                 {[
@@ -610,7 +600,6 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                     />
                   </div>
                 ))}
-
                 {[
                   { label: "Password", value: formData.password, name: "password", show: showPassword, toggle: () => setShowPassword(!showPassword) },
                   { label: "Confirm Password", value: formData.confirmPassword, name: "confirmPassword", show: showConfirmPassword, toggle: () => setShowConfirmPassword(!showConfirmPassword) },
@@ -628,7 +617,6 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                     </div>
                   </div>
                 ))}
-
                 <div style={{ paddingTop: "8px" }}>
                   <button type="submit" disabled={loading}
                     className="auth-btn-primary w-full py-3.5 rounded-2xl font-bold text-sm text-white disabled:opacity-60 transition-all duration-300"
@@ -640,20 +628,15 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                     <span>{loading ? "Processing…" : "Create Account"}</span>
                   </button>
                 </div>
-
                 <button type="button" onClick={() => setCurrentMode("login")}
                   className="auth-btn-ghost w-full py-3.5 rounded-2xl font-semibold text-sm transition-all duration-200 mt-2"
-                  style={{
-                    background: "rgba(255,255,255,0.5)",
-                    border: "1px solid rgba(0,0,0,0.1)",
-                    color: "#78716c",
-                  }}>
+                  style={{ background: "rgba(255,255,255,0.5)", border: "1px solid rgba(0,0,0,0.1)", color: "#78716c" }}>
                   Back to Sign In
                 </button>
               </form>
             )}
 
-            {/* ── FORGOT PASSWORD ── */}
+            {/* FORGOT PASSWORD */}
             {currentMode === "forgot" && (
               <form className="space-y-4" onSubmit={handleForgotPassword}>
                 <div>
@@ -674,7 +657,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
               </form>
             )}
 
-            {/* ── OTP ── */}
+            {/* OTP */}
             {currentMode === "otp" && (
               <form className="space-y-4" onSubmit={handleVerifyOtp}>
                 <div>
@@ -695,7 +678,7 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
               </form>
             )}
 
-            {/* ── RESET PASSWORD ── */}
+            {/* RESET PASSWORD */}
             {currentMode === "reset" && (
               <form className="space-y-4" onSubmit={handleResetPassword}>
                 <div>
@@ -727,7 +710,6 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
                 </button>
               </form>
             )}
-
           </div>
         </div>
       </div>

@@ -27,19 +27,16 @@ const StarCursor: React.FC = () => {
     let width = window.innerWidth;
     let height = window.innerHeight;
 
-    const PARTICLE_COUNT = Math.min(Math.floor((width * height) / 8000), 160);
+    const PARTICLE_COUNT = Math.min(Math.floor((width * height) / 8000), 50);
 
     const COLORS = [
-      'rgba(249,115,22,',
-      'rgba(234,88,12,',
-      'rgba(251,146,60,',
-      'rgba(253,186,116,',
-      'rgba(255,237,213,',
-      'rgba(15,23,42,',
-      'rgba(51,65,85,',
-      'rgba(100,116,139,',
+      'rgba(249,115,22,',  // orange
+      'rgba(234,88,12,',   // deep orange
+      'rgba(251,146,60,',  // light orange
+      'rgba(15,23,42,',    // near black
+      'rgba(30,41,59,',    // dark slate
+      'rgba(17,24,39,',    // dark gray-black
     ];
-
     const randomColor = () => COLORS[Math.floor(Math.random() * COLORS.length)];
 
     const makeParticle = (x?: number, y?: number): Particle => ({
@@ -47,11 +44,11 @@ const StarCursor: React.FC = () => {
       y: y ?? Math.random() * height,
       vx: (Math.random() - 0.5) * 0.3,
       vy: -(Math.random() * 0.4 + 0.1),
-      size: Math.random() * 2.5 + 0.8,
-      opacity: Math.random() * 0.5 + 0.1,
+      size: Math.random() * 2.2 + 1.8,
+      opacity: Math.random() * 0.45 + 0.15,
       color: randomColor(),
       rotation: Math.random() * Math.PI * 2,
-      rotationSpeed: (Math.random() - 0.5) * 0.015,
+      rotationSpeed: (Math.random() - 0.5) * 0.016,
     });
 
     particlesRef.current = Array.from({ length: PARTICLE_COUNT }, () => makeParticle());
@@ -75,11 +72,10 @@ const StarCursor: React.FC = () => {
     window.addEventListener('mousemove', handleMouseMove);
     resizeCanvas();
 
-    // Draw a mini shipping container centered at 0,0
     const drawContainer = (size: number) => {
-      const w = size * 5;
-      const h = size * 2.5;
-      const r = size * 0.4;
+      const w = size * 5.5;
+      const h = size * 2.8;
+      const r = size * 0.5;
 
       // Body fill
       ctx.beginPath();
@@ -91,8 +87,20 @@ const StarCursor: React.FC = () => {
       ctx.roundRect(-w / 2, -h / 2, w, h, r);
       ctx.stroke();
 
+      // M label
+      ctx.save();
+      const fs = Math.max(4, size * 1.5);
+      ctx.font = `700 ${fs}px sans-serif`;
+      ctx.fillStyle = 'rgba(255,255,255,0.88)';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('M', 0, 0);
+      ctx.restore();
+
       // Corrugation ribs
-      const ribCount = Math.max(2, Math.floor(w / (size * 1.5)));
+      const ribCount = Math.max(2, Math.floor(w / (size * 1.8)));
+      const savedLW = ctx.lineWidth;
+      ctx.lineWidth = 0.3;
       for (let i = 1; i < ribCount; i++) {
         const rx = -w / 2 + (w / ribCount) * i;
         ctx.beginPath();
@@ -100,12 +108,7 @@ const StarCursor: React.FC = () => {
         ctx.lineTo(rx, h / 2 - r);
         ctx.stroke();
       }
-
-      // Center door split
-      ctx.beginPath();
-      ctx.moveTo(0, -h / 2 + r);
-      ctx.lineTo(0, h / 2 - r);
-      ctx.stroke();
+      ctx.lineWidth = savedLW;
     };
 
     const render = () => {
@@ -116,8 +119,8 @@ const StarCursor: React.FC = () => {
 
       if (mx > 0 && my > 0) {
         const grd = ctx.createRadialGradient(mx, my, 0, mx, my, 200);
-        grd.addColorStop(0, 'rgba(249,115,22,0.07)');
-        grd.addColorStop(1, 'rgba(249,115,22,0)');
+        grd.addColorStop(0, 'rgba(232,68,42,0.07)');
+        grd.addColorStop(1, 'rgba(232,68,42,0)');
         ctx.fillStyle = grd;
         ctx.beginPath();
         ctx.arc(mx, my, 200, 0, Math.PI * 2);
@@ -166,7 +169,7 @@ const StarCursor: React.FC = () => {
         let alpha = p.opacity;
         let size = p.size;
         if (dist < 200) {
-          const boost = (1 - dist / 200) * 0.5;
+          const boost = (1 - dist / 200) * 0.45;
           alpha = Math.min(0.95, alpha + boost);
           size = p.size + boost * 3;
         }
@@ -175,9 +178,9 @@ const StarCursor: React.FC = () => {
         ctx.translate(p.x, p.y);
         ctx.rotate(p.rotation);
         ctx.globalAlpha = alpha;
-        ctx.fillStyle = `${p.color}1)`;
-        ctx.strokeStyle = `${p.color}0.6)`;
-        ctx.lineWidth = 0.4;
+        ctx.fillStyle = `${p.color}0.82)`;
+        ctx.strokeStyle = `${p.color}0.95)`;
+        ctx.lineWidth = 0.5;
 
         drawContainer(size);
 
