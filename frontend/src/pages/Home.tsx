@@ -295,11 +295,11 @@ export default function Home({ onNavigate }: HomeProps) {
 
                 <div
                   ref={(el) => (cardRefs.current[index + 4] = el)}
-                  className="glass-card rounded-[3.5rem] p-12 h-full transition-all duration-700 hover:bg-orange-600/5 group-hover:border-orange-600/40"
+                  className="glass-card rounded-[3.5rem] p-12 h-full text-center transition-all duration-700 hover:bg-orange-600/5 group-hover:border-orange-600/40"
                 >
 
-                  <div className="relative mb-12 tilt-inner">
-                    <div className="text-[10rem] font-black text-slate-950/5 absolute -top-16 -left-6 group-hover:text-orange-600/10 transition-colors duration-700">
+                  <div className="relative mb-12 flex justify-center tilt-inner">
+                    <div className="text-[10rem] font-black text-slate-950/5 absolute -top-16 left-1/2 -translate-x-1/2 group-hover:text-orange-600/10 transition-colors duration-700">
                       0{item.step}
                     </div>
                     <div className="bg-orange-600 text-white w-16 h-16 rounded-[1.5rem] flex items-center justify-center text-2xl font-black relative z-10 shadow-2xl shadow-orange-600/30">
@@ -312,9 +312,7 @@ export default function Home({ onNavigate }: HomeProps) {
 
                 </div>
 
-                {index < process.length - 1 && (
-                  <div className="hidden lg:block absolute top-1/2 -right-5 w-10 h-px bg-gradient-to-r from-orange-600/40 to-transparent z-0"></div>
-                )}
+
 
               </div>
 
@@ -358,7 +356,7 @@ export default function Home({ onNavigate }: HomeProps) {
                   <item.icon className="text-orange-600 group-hover:text-black transition-colors duration-700" size={44} />
                 </div>
 
-                <h3 className="text-3xl font-black text-slate-900 mb-6 group-hover:text-orange-600 transition-colors uppercase tracking-tighter tilt-inner"></h3>
+                <h3 className="text-3xl font-black text-slate-900 mb-6 group-hover:text-orange-600 transition-colors uppercase tracking-tighter tilt-inner">{item.title}</h3>
                 <p className="text-slate-500 text-sm leading-relaxed font-light tilt-inner">{item.description}</p>
 
               </div>
