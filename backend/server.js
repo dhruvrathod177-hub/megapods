@@ -3,6 +3,9 @@ require("dotenv").config()
 const express   = require("express")
 const mongoose  = require("mongoose")
 const cors      = require("cors")
+const helmet    = require("helmet")
+const ratelimit = require("express-rate-limit")
+
 
 const authRoutes         = require("./routes/auth")
 const quotationRoutes    = require("./routes/quotations")
@@ -11,6 +14,16 @@ const adminRoutes        = require("./routes/admin")
 
 const app = express()
 
+
+a.use(helmet())
+
+
+const limiter=ratelimit({
+  windowMs:20*60*1000,
+  max:100,
+  message:"Too many request try again later"
+});
+a.use(limiter)
 /* ── CORS ── */
 app.use(cors({
   origin: [
@@ -22,6 +35,8 @@ app.use(cors({
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 }))
+
+
 
 /* ── SECURITY HEADERS ── */
 app.use((req, res, next) => {
