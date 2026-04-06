@@ -141,7 +141,7 @@ function DonutChart({ pending, accepted, rejected, total }: Stats) {
   );
 }
 
-export default function AdminDashboard({ token,  onLogout }: AdminDashboardProps) {
+export default function AdminDashboard({ token, onLogout }: AdminDashboardProps) {
   const [negotiations,  setNegotiations]  = useState<Negotiation[]>([]);
   const [quotations,    setQuotations]    = useState<Quotation[]>([]);
   const [usersList,     setUsersList]     = useState<UserRecord[]>([]);
@@ -160,9 +160,6 @@ export default function AdminDashboard({ token,  onLogout }: AdminDashboardProps
   const [countdown,     setCountdown]     = useState(30);
   const [toast,         setToast]         = useState<string | null>(null);
   const prevPending = useRef(0);
-  const adminToken = token;
-
-  const hdrs = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -171,6 +168,7 @@ export default function AdminDashboard({ token,  onLogout }: AdminDashboardProps
 
   const fetchAll = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
+    const hdrs = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
     try {
       const [nr, sr, qr, ur] = await Promise.allSettled([
         fetch(`${API}/admin/negotiations`, { headers: hdrs }).then(r => r.json()),
@@ -202,6 +200,7 @@ export default function AdminDashboard({ token,  onLogout }: AdminDashboardProps
     if (userDetailId === id) { setUserDetailId(null); setUserDetail(null); return; }
     setUserDetailId(id);
     setUserDetailLoading(true);
+    const hdrs = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
     try {
       const res = await fetch(`${API}/admin/users/${id}`, { headers: hdrs });
       const data = await res.json();
@@ -212,6 +211,7 @@ export default function AdminDashboard({ token,  onLogout }: AdminDashboardProps
 
   const handleRespond = async (id: string, status: "accepted"|"rejected") => {
     setResponding(id);
+    const hdrs = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
     try {
       const res = await fetch(`${API}/admin/negotiations/${id}`, {
         method: 'PUT', headers: hdrs,
@@ -380,7 +380,6 @@ export default function AdminDashboard({ token,  onLogout }: AdminDashboardProps
 
         .s-badge { font-size:10px; font-weight:700; padding:3px 9px; border-radius:999px; border:1px solid; letter-spacing:0.04em; text-transform:uppercase; }
 
-        /* ── USER CARDS ── */
         .user-card {
           background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.07);
           border-radius:13px; overflow:hidden; margin-bottom:9px;
@@ -416,7 +415,6 @@ export default function AdminDashboard({ token,  onLogout }: AdminDashboardProps
 
       <div className="dash-root">
 
-        {/* Toast */}
         {toast && (
           <div className="toast">
             <Bell size={14} color="#ea580c"/>
@@ -425,7 +423,6 @@ export default function AdminDashboard({ token,  onLogout }: AdminDashboardProps
           </div>
         )}
 
-        {/* Header */}
         <header className="dash-header">
           <div className="h-brand">
             <div className="h-logo">
@@ -457,7 +454,6 @@ export default function AdminDashboard({ token,  onLogout }: AdminDashboardProps
 
         <div className="dash-body">
 
-          {/* Stat cards */}
           {stats && (
             <div className="stat-grid">
               {[
@@ -475,7 +471,6 @@ export default function AdminDashboard({ token,  onLogout }: AdminDashboardProps
                   onClick={() => {
                     setActiveTab(s.tab);
                     if (s.tab === 'negotiations') setFilter(s.filterVal as any);
-                    // scroll to tab bar
                     setTimeout(() => {
                       document.querySelector('.tab-bar')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }, 50);
@@ -489,11 +484,8 @@ export default function AdminDashboard({ token,  onLogout }: AdminDashboardProps
             </div>
           )}
 
-          {/* Charts — dynamic based on active tab */}
           {stats && (
             <div className="charts-row">
-
-              {/* LEFT chart */}
               <div className="chart-card">
                 {activeTab === 'negotiations' && (
                   <>
@@ -543,7 +535,6 @@ export default function AdminDashboard({ token,  onLogout }: AdminDashboardProps
                 )}
               </div>
 
-              {/* RIGHT chart */}
               <div className="chart-card">
                 {activeTab === 'negotiations' && (
                   <>
@@ -583,7 +574,6 @@ export default function AdminDashboard({ token,  onLogout }: AdminDashboardProps
                   <>
                     <div className="chart-title"><FileText size={12}/> Quotation Summary</div>
                     <div style={{display:'flex',flexDirection:'column',gap:10}}>
-                      {/* Top container sizes */}
                       {['10ft * 10ft','15ft * 10ft','20ft * 10ft','40ft * 10ft'].map(size => {
                         const cnt = quotations.filter(q=>q.containerSize===size).length;
                         const pct = quotations.length > 0 ? (cnt/quotations.length)*100 : 0;
@@ -602,7 +592,7 @@ export default function AdminDashboard({ token,  onLogout }: AdminDashboardProps
                     </div>
                     <div style={{display:'flex',flexDirection:'column',gap:5,borderTop:'1px solid rgba(255,255,255,0.06)',paddingTop:10,marginTop:14}}>
                       {[
-                        {label:'Total Quote Value', val:formatINR(totalQuoteValue),                                             color:'#818cf8'},
+                        {label:'Total Quote Value', val:formatINR(totalQuoteValue), color:'#818cf8'},
                         {label:'Avg Quote Value',   val:formatINR(quotations.length>0?Math.round(totalQuoteValue/quotations.length):0), color:'#a78bfa'},
                       ].map(r => (
                         <div key={r.label} style={{display:'flex',justifyContent:'space-between',fontSize:11}}>
@@ -618,9 +608,9 @@ export default function AdminDashboard({ token,  onLogout }: AdminDashboardProps
                     <div className="chart-title"><Users size={12}/> User Activity</div>
                     <div style={{display:'flex',flexDirection:'column',gap:10}}>
                       {[
-                        {label:'With Quotes',        val:usersList.filter(u=>u.quoteCount>0).length,  color:'#818cf8', total:usersList.length},
-                        {label:'With Negotiations',  val:usersList.filter(u=>u.negCount>0).length,    color:'#f59e0b', total:usersList.length},
-                        {label:'No Activity',        val:usersList.filter(u=>u.quoteCount===0).length,color:'rgba(255,255,255,0.3)', total:usersList.length},
+                        {label:'With Quotes',       val:usersList.filter(u=>u.quoteCount>0).length,   color:'#818cf8', total:usersList.length},
+                        {label:'With Negotiations', val:usersList.filter(u=>u.negCount>0).length,     color:'#f59e0b', total:usersList.length},
+                        {label:'No Activity',       val:usersList.filter(u=>u.quoteCount===0).length, color:'rgba(255,255,255,0.3)', total:usersList.length},
                       ].map(r => {
                         const pct = usersList.length > 0 ? (r.val/usersList.length)*100 : 0;
                         return (
@@ -650,11 +640,9 @@ export default function AdminDashboard({ token,  onLogout }: AdminDashboardProps
                   </>
                 )}
               </div>
-
             </div>
           )}
 
-          {/* Tabs */}
           <div className="tab-bar">
             {([
               {key:'negotiations', label:`Negotiations (${negotiations.length})`},
@@ -671,7 +659,6 @@ export default function AdminDashboard({ token,  onLogout }: AdminDashboardProps
             </span>
           </div>
 
-          {/* ── NEGOTIATIONS TAB ── */}
           {activeTab === 'negotiations' && (
             <>
               <div className="filter-bar">
@@ -809,7 +796,6 @@ export default function AdminDashboard({ token,  onLogout }: AdminDashboardProps
             </>
           )}
 
-          {/* ── QUOTATIONS TAB ── */}
           {activeTab==='quotations' && (
             <>
               {loading && <div style={{display:'flex',justifyContent:'center',padding:'44px 0'}}><RefreshCw size={24} style={{color:'#ea580c',animation:'spin 1s linear infinite'}}/></div>}
@@ -907,7 +893,6 @@ export default function AdminDashboard({ token,  onLogout }: AdminDashboardProps
                         </div>
                       </div>
 
-                      {/* ── Admin Response Section ── */}
                       {q.adminNote ? (
                         <div>
                           <div className="exp-label">✅ Response Already Sent</div>
@@ -956,10 +941,11 @@ export default function AdminDashboard({ token,  onLogout }: AdminDashboardProps
                             disabled={responding===q._id || !responseText[q._id]}
                             onClick={async () => {
                               setResponding(q._id);
+                              const hdrs = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
                               try {
                                 const res = await fetch(`${API}/admin/quotations/${q._id}/respond`, {
                                   method: 'PUT',
-                                  headers: { 'Content-Type':'application/json', Authorization:`Bearer ${adminToken}` },
+                                  headers: hdrs,
                                   body: JSON.stringify({
                                     adminNote:  responseText[q._id],
                                     adminPrice: adminPriceInput[q._id] || null,
@@ -991,7 +977,6 @@ export default function AdminDashboard({ token,  onLogout }: AdminDashboardProps
             </>
           )}
 
-          {/* ── USERS TAB ── */}
           {activeTab==='users' && (
             <>
               {loading && <div style={{display:'flex',justifyContent:'center',padding:'44px 0'}}><RefreshCw size={24} style={{color:'#ea580c',animation:'spin 1s linear infinite'}}/></div>}
@@ -1002,14 +987,13 @@ export default function AdminDashboard({ token,  onLogout }: AdminDashboardProps
                 </div>
               )}
 
-              {/* Users summary row */}
               {!loading && usersList.length>0 && (
                 <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:11,marginBottom:16}}>
                   {[
-                    {label:'Total Users',    val:usersList.length,                                                               color:'#34d399'},
-                    {label:'Total Quotes',   val:usersList.reduce((s,u)=>s+u.quoteCount,0),                                     color:'#818cf8'},
-                    {label:'Total Revenue',  val:formatINR(usersList.reduce((s,u)=>s+u.totalSpend,0)),                          color:'#fb923c'},
-                    {label:'Active (Negs)',  val:usersList.filter(u=>u.negCount>0).length,                                      color:'#f59e0b'},
+                    {label:'Total Users',   val:usersList.length,                                          color:'#34d399'},
+                    {label:'Total Quotes',  val:usersList.reduce((s,u)=>s+u.quoteCount,0),                color:'#818cf8'},
+                    {label:'Total Revenue', val:formatINR(usersList.reduce((s,u)=>s+u.totalSpend,0)),     color:'#fb923c'},
+                    {label:'Active (Negs)', val:usersList.filter(u=>u.negCount>0).length,                 color:'#f59e0b'},
                   ].map(s => (
                     <div key={s.label} style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:12,padding:'12px 14px'}}>
                       <div style={{fontSize:18,fontWeight:800,color:s.color,marginBottom:3}}>{s.val}</div>
@@ -1051,7 +1035,6 @@ export default function AdminDashboard({ token,  onLogout }: AdminDashboardProps
                     </div>
                   </button>
 
-                  {/* User detail expanded */}
                   {userDetailId===u._id && (
                     <div className="exp-section">
                       {userDetailLoading && (
@@ -1061,13 +1044,12 @@ export default function AdminDashboard({ token,  onLogout }: AdminDashboardProps
                       )}
                       {!userDetailLoading && userDetail && (
                         <>
-                          {/* Account info */}
                           <div>
                             <div className="exp-label">👤 Account Details</div>
                             <div className="info-grid">
                               {[
-                                {label:'Full Name', val:userDetail.user.fullName,  color:'#34d399'},
-                                {label:'Email',     val:userDetail.user.email,     color:'rgba(255,255,255,0.7)'},
+                                {label:'Full Name', val:userDetail.user.fullName,     color:'#34d399'},
+                                {label:'Email',     val:userDetail.user.email,        color:'rgba(255,255,255,0.7)'},
                                 {label:'Contact',   val:userDetail.user.contact||'—', color:'rgba(255,255,255,0.7)'},
                                 {label:'Joined',    val:new Date(userDetail.user.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}), color:'rgba(255,255,255,0.5)'},
                               ].map(c => (
@@ -1079,7 +1061,6 @@ export default function AdminDashboard({ token,  onLogout }: AdminDashboardProps
                             </div>
                           </div>
 
-                          {/* Their quotes */}
                           {userDetail.quotes.length>0 && (
                             <div>
                               <div className="exp-label">📦 Quotations ({userDetail.quotes.length})</div>
@@ -1100,7 +1081,6 @@ export default function AdminDashboard({ token,  onLogout }: AdminDashboardProps
                             </div>
                           )}
 
-                          {/* Their negotiations */}
                           {userDetail.negotiations.length>0 && (
                             <div>
                               <div className="exp-label">🤝 Negotiations ({userDetail.negotiations.length})</div>
