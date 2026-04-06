@@ -253,7 +253,7 @@ export default function Home({ onNavigate }: HomeProps) {
                   <service.icon size={40} />
                 </div>
 
-                <h3 className="text-lg md:text-xl xl:text-2xl font-black text-black mb-6 group-hover:text-orange-600 transition-colors uppercase tracking-tighter tilt-inner whitespace-nowrap">{service.title}</h3>
+                <h3 className="text-balance md:text-xl xl:text-2xl font-black text-black mb-6 group-hover:text-orange-600 transition-colors uppercase tracking-tighter tilt-inner whitespace-nowrap">{service.title}</h3>
                 <p className="text-slate-400 leading-relaxed font-light tilt-inner">{service.description}</p>
 
                 <div className="mt-12 flex items-center text-orange-600 font-black text-xs uppercase tracking-[0.3em] opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-20px] group-hover:translate-x-0 tilt-inner">
@@ -356,7 +356,7 @@ export default function Home({ onNavigate }: HomeProps) {
                   <item.icon className="text-orange-600 group-hover:text-black transition-colors duration-700" size={44} />
                 </div>
 
-                <h3 className="text-lg md:text-xl xl:text-2xl font-black text-slate-900 mb-6 group-hover:text-orange-600 transition-colors uppercase tracking-tighter tilt-inner whitespace-nowrap">{item.title}</h3>
+                <h3 className="text-balance md:text-xl xl:text-2xl font-black text-slate-900 mb-6 group-hover:text-orange-600 transition-colors uppercase tracking-tighter tilt-inner whitespace-nowrap">{item.title}</h3>
                 <p className="text-slate-500 text-sm leading-relaxed font-light tilt-inner">{item.description}</p>
 
               </div>
