@@ -19,7 +19,18 @@ interface FormData {
 
 type ModalMode = "login" | "register" | "forgot" | "otp" | "reset";
 
-const API = import.meta.env.VITE_API_URL || "https://megapods.onrender.com/api";
+const API = "https://megapods.onrender.com/api";
+
+const safeFetch = async (url: string, options: RequestInit) => {
+  const res = await fetch(url, options);
+  const contentType = res.headers.get("content-type");
+  if (!contentType?.includes("application/json")) {
+    throw new Error("Backend is waking up, please try again in 30 seconds.");
+  }
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Request failed");
+  return data;
+};
 
 function AuthParticles() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -42,12 +53,12 @@ function AuthParticles() {
     }
 
     const COLORS = [
-      'rgba(249,115,22,',  // orange
-      'rgba(234,88,12,',   // deep orange
-      'rgba(251,146,60,',  // light orange
-      'rgba(15,23,42,',    // near black
-      'rgba(30,41,59,',    // dark slate
-      'rgba(17,24,39,',    // dark gray-black
+      'rgba(249,115,22,',
+      'rgba(234,88,12,',
+      'rgba(251,146,60,',
+      'rgba(15,23,42,',
+      'rgba(30,41,59,',
+      'rgba(17,24,39,',
     ];
 
     const make = (): P => ({
@@ -62,7 +73,6 @@ function AuthParticles() {
       color: COLORS[Math.floor(Math.random() * COLORS.length)],
     });
 
-    // ✅ Premium sparse count — max 20 particles
     const COUNT = Math.min(Math.floor((width * height) / 8000), 50);
     let particles: P[] = Array.from({ length: COUNT }, make);
 
@@ -97,20 +107,17 @@ function AuthParticles() {
       ctx.rotate(p.rotation);
       ctx.globalAlpha = p.opacity;
 
-      // Body fill
       ctx.fillStyle = `${p.color}0.75)`;
       ctx.beginPath();
       ctx.roundRect(-w / 2, -h / 2, w, h, r);
       ctx.fill();
 
-      // Outline
       ctx.strokeStyle = `${p.color}0.9)`;
       ctx.lineWidth = 0.4;
       ctx.beginPath();
       ctx.roundRect(-w / 2, -h / 2, w, h, r);
       ctx.stroke();
 
-      // M label
       const fs = Math.max(4, size * 1.5);
       ctx.font = `700 ${fs}px sans-serif`;
       ctx.fillStyle = "rgba(255,255,255,0.75)";
@@ -118,7 +125,6 @@ function AuthParticles() {
       ctx.textBaseline = "middle";
       ctx.fillText("M", 0, 0);
 
-      // Ribs
       ctx.lineWidth = 0.25;
       ctx.strokeStyle = `${p.color}0.5)`;
       const ribCount = Math.max(2, Math.floor(w / (size * 1.8)));
@@ -141,7 +147,6 @@ function AuthParticles() {
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
 
-        // Repel from cursor
         const dx = p.x - mx;
         const dy = p.y - my;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -164,7 +169,6 @@ function AuthParticles() {
         p.y += p.vy;
         p.rotation += p.rotSpeed;
 
-        // Boost near cursor
         if (dist < 180) {
           const boost = (1 - dist / 180) * 0.25;
           p.opacity = Math.min(0.55, p.opacity + boost);
@@ -239,6 +243,22 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const data = await safeFetch(`${API}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email, password: formData.password }),
+      });
+      login(data.token, data.user);
+      onClose();
+    } catch (err: any) { setError(err.message); }
+    finally { setLoading(false); }
+  };
+
   const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
@@ -246,34 +266,14 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     if (formData.password.length < 6) { setError("Password must be at least 6 characters"); return; }
     setLoading(true);
     try {
-      const res = await fetch(`${API}/auth/register`, {
+      await safeFetch(`${API}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fullName: formData.fullName, contact: formData.contact, email: formData.email, password: formData.password }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Registration failed");
       setSuccess("Account created successfully! Please login.");
       setFormData({ fullName: "", contact: "", email: formData.email, password: "", confirmPassword: "" });
       setTimeout(() => { setSuccess(""); setCurrentMode("login"); }, 2000);
-    } catch (err: any) { setError(err.message); }
-    finally { setLoading(false); }
-  };
-
-  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    try {
-      const res = await fetch(`${API}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formData.email, password: formData.password }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Login failed");
-      login(data.token, data.user);
-      onClose();
     } catch (err: any) { setError(err.message); }
     finally { setLoading(false); }
   };
@@ -283,13 +283,11 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     setError("");
     setLoading(true);
     try {
-      const res = await fetch(`${API}/auth/forgot-password`, {
+      await safeFetch(`${API}/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to send OTP");
       setSuccess("OTP sent! Please check your email inbox.");
       setTimeout(() => { setSuccess(""); setCurrentMode("otp"); }, 2000);
     } catch (err: any) { setError(err.message); }
@@ -310,13 +308,11 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
     if (newPassword.length < 6) { setError("Password must be at least 6 characters"); return; }
     setLoading(true);
     try {
-      const res = await fetch(`${API}/auth/reset-password`, {
+      await safeFetch(`${API}/auth/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail, otp: otpValue, newPassword }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Reset failed");
       setSuccess("Password reset successfully! Please login.");
       setTimeout(() => {
         setCurrentMode("login");
@@ -427,7 +423,6 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
         className="auth-modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
         style={{ fontFamily: "'DM Sans', sans-serif" }}
       >
-        {/* ✅ Backdrop with AuthParticles */}
         <div
           className="absolute inset-0"
           style={{
@@ -531,7 +526,6 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
               </div>
             )}
 
-            {/* LOGIN */}
             {currentMode === "login" && (
               <form className="space-y-4" onSubmit={handleLogin}>
                 <div>
@@ -584,7 +578,6 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
               </form>
             )}
 
-            {/* REGISTER */}
             {currentMode === "register" && (
               <form className="space-y-3" onSubmit={handleRegister}>
                 {[
@@ -636,7 +629,6 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
               </form>
             )}
 
-            {/* FORGOT PASSWORD */}
             {currentMode === "forgot" && (
               <form className="space-y-4" onSubmit={handleForgotPassword}>
                 <div>
@@ -657,7 +649,6 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
               </form>
             )}
 
-            {/* OTP */}
             {currentMode === "otp" && (
               <form className="space-y-4" onSubmit={handleVerifyOtp}>
                 <div>
@@ -678,7 +669,6 @@ export default function AuthModal({ isOpen, onClose, mode, startOnForgot }: Auth
               </form>
             )}
 
-            {/* RESET PASSWORD */}
             {currentMode === "reset" && (
               <form className="space-y-4" onSubmit={handleResetPassword}>
                 <div>
