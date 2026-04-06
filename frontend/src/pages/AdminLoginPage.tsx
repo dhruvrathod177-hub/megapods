@@ -5,7 +5,18 @@ interface AdminLoginPageProps {
   onLogin: (token: string, admin: { email: string; name: string }) => void;
 }
 
-const API = import.meta.env.VITE_API_URL || "https://megapods.onrender.com/api";
+const API = "https://megapods.onrender.com/api";
+
+const safeFetch = async (url: string, options: RequestInit) => {
+  const res = await fetch(url, options);
+  const contentType = res.headers.get("content-type");
+  if (!contentType?.includes("application/json")) {
+    throw new Error("Backend is waking up, please try again in 30 seconds.");
+  }
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Request failed");
+  return data;
+};
 
 export default function AdminLoginPage({ onLogin }: AdminLoginPageProps) {
   const [email,    setEmail]    = useState("");
@@ -18,13 +29,11 @@ export default function AdminLoginPage({ onLogin }: AdminLoginPageProps) {
     if (!email || !password) { setError("Both fields are required"); return; }
     setLoading(true); setError("");
     try {
-      const res  = await fetch(`${API}/admin/login`, {
+      const data = await safeFetch(`${API}/admin/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Login failed");
       onLogin(data.token, data.admin);
     } catch (err: any) {
       setError(err.message);
@@ -61,8 +70,6 @@ export default function AdminLoginPage({ onLogin }: AdminLoginPageProps) {
           overflow: hidden;
           padding: 24px;
         }
-
-        /* ── BG effects ── */
         .alp-orb1 {
           position: absolute; top: -10%; left: -10%;
           width: 600px; height: 600px; border-radius: 50%;
@@ -101,15 +108,11 @@ export default function AdminLoginPage({ onLogin }: AdminLoginPageProps) {
           animation: scan 10s linear infinite;
           pointer-events: none;
         }
-
-        /* ── Card ── */
         .alp-card {
           position: relative; z-index: 2;
           width: 100%; max-width: 420px;
           animation: fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) both;
         }
-
-        /* ── Logo ── */
         .alp-logo-wrap {
           display: flex;
           flex-direction: column;
@@ -157,8 +160,6 @@ export default function AdminLoginPage({ onLogin }: AdminLoginPageProps) {
           font-size: 13px; color: rgba(255,255,255,0.25);
           text-align: center; letter-spacing: 0.01em;
         }
-
-        /* ── Form panel ── */
         .alp-panel {
           background: rgba(255,255,255,0.03);
           border: 1px solid rgba(255,255,255,0.07);
@@ -170,8 +171,6 @@ export default function AdminLoginPage({ onLogin }: AdminLoginPageProps) {
             0 0 0 1px rgba(255,255,255,0.025) inset,
             0 1px 0 rgba(255,255,255,0.06) inset;
         }
-
-        /* top accent line */
         .alp-panel::before {
           content: '';
           display: block;
@@ -180,7 +179,6 @@ export default function AdminLoginPage({ onLogin }: AdminLoginPageProps) {
           border-radius: 22px 22px 0 0;
           background: linear-gradient(90deg, transparent, rgba(234,88,12,0.6), rgba(251,146,60,0.8), rgba(234,88,12,0.6), transparent);
         }
-
         .alp-err {
           display: flex; align-items: center; gap: 9px;
           background: rgba(239,68,68,0.07);
@@ -190,7 +188,6 @@ export default function AdminLoginPage({ onLogin }: AdminLoginPageProps) {
           margin-bottom: 20px;
           color: #fca5a5; font-size: 13px;
         }
-
         .alp-field { margin-bottom: 18px; }
         .alp-label {
           display: block;
@@ -228,7 +225,6 @@ export default function AdminLoginPage({ onLogin }: AdminLoginPageProps) {
           display: flex; transition: color 0.2s;
         }
         .alp-eye:hover { color: rgba(255,255,255,0.6); }
-
         .alp-btn {
           width: 100%; padding: 14.5px;
           margin-top: 6px;
@@ -257,8 +253,6 @@ export default function AdminLoginPage({ onLogin }: AdminLoginPageProps) {
           position: relative; z-index: 1;
           display: flex; align-items: center; justify-content: center; gap: 9px;
         }
-
-        /* ── Divider stats row ── */
         .alp-stats {
           display: flex; align-items: center; justify-content: center;
           gap: 0; margin-top: 24px;
@@ -280,8 +274,6 @@ export default function AdminLoginPage({ onLogin }: AdminLoginPageProps) {
           font-size: 9.5px; color: rgba(255,255,255,0.22);
           letter-spacing: 0.07em; text-transform: uppercase;
         }
-
-        /* ── Footer ── */
         .alp-footer {
           text-align: center; margin-top: 22px;
           font-size: 11px; color: rgba(255,255,255,0.14);
@@ -291,18 +283,13 @@ export default function AdminLoginPage({ onLogin }: AdminLoginPageProps) {
       `}</style>
 
       <div className="alp-page">
-
-        {/* BG */}
         <div className="alp-orb1"/>
         <div className="alp-orb2"/>
         <div className="alp-orb3"/>
         <div className="alp-grid"/>
         <div className="alp-scan"/>
 
-        {/* Card */}
         <div className="alp-card">
-
-          {/* Logo */}
           <div className="alp-logo-wrap">
             <div className="alp-logo-ring">
               <img
@@ -323,16 +310,13 @@ export default function AdminLoginPage({ onLogin }: AdminLoginPageProps) {
             <p className="alp-sub">Megapodsindia Internal Dashboard</p>
           </div>
 
-          {/* Panel */}
           <div className="alp-panel">
-
             {error && (
               <div className="alp-err">
                 <span style={{fontSize:15}}>⚠</span> {error}
               </div>
             )}
 
-            {/* Email */}
             <div className="alp-field">
               <label className="alp-label">Email Address</label>
               <div className="alp-input-wrap">
@@ -348,7 +332,6 @@ export default function AdminLoginPage({ onLogin }: AdminLoginPageProps) {
               </div>
             </div>
 
-            {/* Password */}
             <div className="alp-field">
               <label className="alp-label">Password</label>
               <div className="alp-input-wrap">
@@ -377,7 +360,6 @@ export default function AdminLoginPage({ onLogin }: AdminLoginPageProps) {
               </span>
             </button>
 
-            {/* Mini stats */}
             <div className="alp-stats">
               {[
                 {val:'256-bit', lbl:'Encryption'},
@@ -390,7 +372,6 @@ export default function AdminLoginPage({ onLogin }: AdminLoginPageProps) {
                 </div>
               ))}
             </div>
-
           </div>
 
           <div className="alp-footer">
@@ -400,9 +381,7 @@ export default function AdminLoginPage({ onLogin }: AdminLoginPageProps) {
             <div className="alp-fdot"/>
             <span>Admin v2</span>
           </div>
-
         </div>
-
       </div>
     </>
   );
