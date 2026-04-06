@@ -243,7 +243,7 @@ export default function Home({ onNavigate }: HomeProps) {
               <div
                 key={index}
                 ref={(el) => (cardRefs.current[index] = el)}
-                className="glass-card rounded-[3rem] p-12 cursor-pointer group animate-fade-up relative overflow-hidden"
+                className="glass-card rounded-[3rem] px-6 py-12 md:px-8 lg:px-12 cursor-pointer group animate-fade-up relative overflow-hidden"
                 style={{ animationDelay: `${index * 0.15}s` }}
                 onClick={() => onNavigate('solutions')}
               >
@@ -253,7 +253,7 @@ export default function Home({ onNavigate }: HomeProps) {
                   <service.icon size={40} />
                 </div>
 
-                <h3 className="text-3xl font-black text-black mb-6 group-hover:text-orange-600 transition-colors uppercase tracking-tighter tilt-inner">{service.title}</h3>
+                <h3 className="text-lg md:text-xl xl:text-2xl font-black text-black mb-6 group-hover:text-orange-600 transition-colors uppercase tracking-tighter tilt-inner whitespace-nowrap">{service.title}</h3>
                 <p className="text-slate-400 leading-relaxed font-light tilt-inner">{service.description}</p>
 
                 <div className="mt-12 flex items-center text-orange-600 font-black text-xs uppercase tracking-[0.3em] opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-20px] group-hover:translate-x-0 tilt-inner">
@@ -295,7 +295,7 @@ export default function Home({ onNavigate }: HomeProps) {
 
                 <div
                   ref={(el) => (cardRefs.current[index + 4] = el)}
-                  className="glass-card rounded-[3.5rem] p-12 h-full text-center transition-all duration-700 hover:bg-orange-600/5 group-hover:border-orange-600/40"
+                  className="glass-card rounded-[3.5rem] px-4 py-12 md:px-6 lg:px-8 h-full text-center transition-all duration-700 hover:bg-orange-600/5 group-hover:border-orange-600/40"
                 >
 
                   <div className="relative mb-12 flex justify-center tilt-inner">
@@ -307,7 +307,7 @@ export default function Home({ onNavigate }: HomeProps) {
                     </div>
                   </div>
 
-                  <h3 className="text-2xl font-black text-slate-900 mb-6 uppercase tracking-tighter tilt-inner">{item.title}</h3>
+                  <h3 className="text-lg md:text-xl xl:text-2xl font-black text-slate-900 mb-6 uppercase tracking-tighter tilt-inner whitespace-nowrap">{item.title}</h3>
                   <p className="text-slate-500 text-sm leading-relaxed font-light tilt-inner">{item.description}</p>
 
                 </div>
@@ -348,7 +348,7 @@ export default function Home({ onNavigate }: HomeProps) {
               <div
                 key={index}
                 ref={(el) => (cardRefs.current[index + 8] = el)}
-                className="glass-card rounded-[3rem] p-12 text-center animate-fade-up relative group"
+                className="glass-card rounded-[3rem] px-6 py-12 md:px-8 lg:px-12 text-center animate-fade-up relative group"
                 style={{ animationDelay: `${index * 0.15}s` }}
               >
 
@@ -356,7 +356,7 @@ export default function Home({ onNavigate }: HomeProps) {
                   <item.icon className="text-orange-600 group-hover:text-black transition-colors duration-700" size={44} />
                 </div>
 
-                <h3 className="text-3xl font-black text-slate-900 mb-6 group-hover:text-orange-600 transition-colors uppercase tracking-tighter tilt-inner">{item.title}</h3>
+                <h3 className="text-lg md:text-xl xl:text-2xl font-black text-slate-900 mb-6 group-hover:text-orange-600 transition-colors uppercase tracking-tighter tilt-inner whitespace-nowrap">{item.title}</h3>
                 <p className="text-slate-500 text-sm leading-relaxed font-light tilt-inner">{item.description}</p>
 
               </div>
