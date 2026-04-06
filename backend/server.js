@@ -6,7 +6,6 @@ const cors      = require("cors")
 const helmet    = require("helmet")
 const ratelimit = require("express-rate-limit")
 
-
 const authRoutes         = require("./routes/auth")
 const quotationRoutes    = require("./routes/quotations")
 const negotiationRoutes  = require("./routes/negotiations")
@@ -14,17 +13,15 @@ const adminRoutes        = require("./routes/admin")
 
 const app = express()
 
+app.use(helmet())
 
-a.use(helmet())
+const limiter = ratelimit({
+  windowMs: 20 * 60 * 1000,
+  max: 100,
+  message: "Too many requests, try again later"
+})
+app.use(limiter)
 
-
-const limiter=ratelimit({
-  windowMs:20*60*1000,
-  max:100,
-  message:"Too many request try again later"
-});
-a.use(limiter)
-/* ── CORS ── */
 app.use(cors({
   origin: [
     "https://megapodsindia.shop",
@@ -36,9 +33,6 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
 }))
 
-
-
-/* ── SECURITY HEADERS ── */
 app.use((req, res, next) => {
   res.setHeader(
     "Content-Security-Policy",
@@ -47,16 +41,13 @@ app.use((req, res, next) => {
   next()
 })
 
-/* ── BODY PARSER ── */
 app.use(express.json())
 
-/* ── DATABASE ── */
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("✅  MongoDB Connected"))
   .catch((err) => console.log("❌  MongoDB Error:", err))
 
-/* ── ROUTES ── */
 app.use("/api/auth",         authRoutes)
 app.use("/api/quotations",   quotationRoutes)
 app.use("/api/negotiations", negotiationRoutes)
@@ -64,5 +55,4 @@ app.use("/api/admin",        adminRoutes)
 
 app.get("/", (req, res) => res.send("Megapods Backend ✅"))
 
-/* ── SERVER ── */
 app.listen(8080, () => console.log("🚀  Server running on port 8080"))
