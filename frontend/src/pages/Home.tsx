@@ -139,7 +139,7 @@ export default function Home({ onNavigate }: HomeProps) {
     <div className="bg-transparent overflow-hidden">
 
       {/* HERO */}
-      <section className="relative min-h-[100dvh] w-full flex items-center justify-center overflow-hidden pt-24 sm:pt-28">
+      <section className="relative min-h-[115dvh] w-full flex items-center justify-center overflow-hidden pt-24 sm:pt-28">
         <video
           autoPlay
           loop
