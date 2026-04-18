@@ -307,7 +307,7 @@ export default function Home({ onNavigate }: HomeProps) {
                     </div>
                   </div>
 
-                  <h3 className="text-lg md:text-xl xl:text-2xl font-black text-slate-900 mb-6 uppercase tracking-tighter tilt-inner whitespace-nowrap">{item.title}</h3>
+                  <h3 className="text-balance md:text-xl xl:text-2xl font-black text-black mb-6 group-hover:text-orange-600 transition-colors uppercase tracking-tighter tilt-inner whitespace-nowrap">{item.title}</h3>
                   <p className="text-slate-500 text-sm leading-relaxed font-light tilt-inner">{item.description}</p>
 
                 </div>
